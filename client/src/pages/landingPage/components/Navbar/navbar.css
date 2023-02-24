@@ -1,0 +1,15 @@
+.navbar {
+    height: 80px; /* set the desired height here */
+  }
+  
+.font24{
+    font-size: 24px
+}
+
+.fontcolor{
+    color: #1B2A37;
+}
+
+.activebackground{
+    background-color: #ECE8DD;
+}

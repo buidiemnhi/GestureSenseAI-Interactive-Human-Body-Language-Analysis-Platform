@@ -1,0 +1,48 @@
+.profileImg{
+    max-width: 75px;
+    object-fit:cover;
+    border-radius: 50%;
+}
+
+.UserName{
+    font-size: 22px;
+    margin-bottom: 0px;
+}
+
+.UserEmail{
+    font-size: 12px;
+}
+
+.SideNavBar {
+    list-style-type: none;
+    padding: 0;
+    margin: 0; 
+}
+
+.SideNavBar li {
+    font-size: 23px;
+    width: 200px;
+    
+}
+
+.SideNavBar li a {
+    color: inherit;
+    display: block;
+    text-decoration: none;
+    padding: 15px 5px 15px 0px;
+}
+
+.SideNavBar li:hover a {
+    opacity: .5;
+    cursor: pointer;
+
+}
+
+.logOutButton{
+    color: rgb(207, 0, 0) !important;
+    border: 2px solid rgb(207, 0, 0);
+
+}
+.logOutButton:hover{
+    background-color: whitesmoke !important;
+}
