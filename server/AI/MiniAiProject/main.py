@@ -16,6 +16,40 @@ import mediapipe as mp
 
 
 
+def draw_styled_landmarks(image, results):
+    mp_drawing = mp.solutions.drawing_utils
+    mp_holistic = mp.solutions.holistic
+    # Draw face connections
+    mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION,
+                              mp_drawing.DrawingSpec(color=(80, 110, 10), thickness=1, circle_radius=1),
+                              mp_drawing.DrawingSpec(color=(80, 256, 121), thickness=1, circle_radius=1)
+                              )
+    # Draw pose connections
+    mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
+                              mp_drawing.DrawingSpec(color=(80, 22, 10), thickness=2, circle_radius=4),
+                              mp_drawing.DrawingSpec(color=(80, 44, 121), thickness=2, circle_radius=2)
+                              )
+    # Draw left hand connections
+    mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
+                              mp_drawing.DrawingSpec(color=(121, 22, 76), thickness=2, circle_radius=4),
+                              mp_drawing.DrawingSpec(color=(121, 44, 250), thickness=2, circle_radius=2)
+                              )
+    # Draw right hand connections
+    mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
+                              mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=4),
+                              mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
+                              )
+
+
+def mediapipe_detection(image, model):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # COLOR CONVERSION BGR 2 RGB
+    image.flags.writeable = False  # Image is no longer writeable
+    results = model.process(image)  # Make prediction
+    image.flags.writeable = True  # Image is now writeable
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # COLOR COVERSION RGB 2 BGR
+    return image, results
+
+
 # creation of csv file for the landmarks cords
 def create_landmarks_cords():
     num_cords = 543
@@ -112,6 +146,19 @@ def extract_landmarks(results, action_name):
     # Append action name
     row.insert(0, action_name)
     return row
+
+
+def extract_keypoints(results):
+    pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                     results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
+    face = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                    results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+    lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                   results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 4)
+    rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                   results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
+        21 * 4)
+    return np.concatenate([pose,face, lh, rh])
 
 
 def train_model():
@@ -260,12 +307,21 @@ def meaning_action(action):
             return row[2]
 
 # new model code
-def test_model_new(path_with_file_extension,destination):
+def test_model_new():
+    path_with_file_extension = filedialog.askopenfilename(initialdir="/",
+                                                          title="Select a File",
+                                                          filetypes=[
+                                                              ("video", ".mp4"),
+                                                              ("video", ".MP4"),
+                                                              ("video", ".avi"),
+                                                              ("video", ".AVI"),
+                                                          ])
 
     res = path_with_file_extension.split('/')
     x = res[-1]
     x = x[::-1].split('.', 1)[1][::-1]
     filename = x
+    destination = 'C:/Users/amr12/OneDrive/Documents/GitHub/graduationProject/server/AI/MiniAiProject'
 
     with open('action_detection.pkl', 'rb') as f:
         model = pickle.load(f)
@@ -444,53 +500,6 @@ def test_model_new(path_with_file_extension,destination):
         counter.append(counter[-1] + 1)
         cap.release()
         cv2.destroyAllWindows()
-
-
-def draw_styled_landmarks(image, results):
-    mp_drawing = mp.solutions.drawing_utils
-    mp_holistic = mp.solutions.holistic
-    # Draw face connections
-    mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION,
-                              mp_drawing.DrawingSpec(color=(80, 110, 10), thickness=1, circle_radius=1),
-                              mp_drawing.DrawingSpec(color=(80, 256, 121), thickness=1, circle_radius=1)
-                              )
-    # Draw pose connections
-    mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
-                              mp_drawing.DrawingSpec(color=(80, 22, 10), thickness=2, circle_radius=4),
-                              mp_drawing.DrawingSpec(color=(80, 44, 121), thickness=2, circle_radius=2)
-                              )
-    # Draw left hand connections
-    mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
-                              mp_drawing.DrawingSpec(color=(121, 22, 76), thickness=2, circle_radius=4),
-                              mp_drawing.DrawingSpec(color=(121, 44, 250), thickness=2, circle_radius=2)
-                              )
-    # Draw right hand connections
-    mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
-                              mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=4),
-                              mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
-                              )
-
-
-def mediapipe_detection(image, model):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # COLOR CONVERSION BGR 2 RGB
-    image.flags.writeable = False  # Image is no longer writeable
-    results = model.process(image)  # Make prediction
-    image.flags.writeable = True  # Image is now writeable
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # COLOR COVERSION RGB 2 BGR
-    return image, results
-
-
-def extract_keypoints(results):
-    pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                     results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
-    face = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                    results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
-    lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                   results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 4)
-    rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                   results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
-        21 * 4)
-    return np.concatenate([pose,face, lh, rh])
 
 
 window = Tk()
