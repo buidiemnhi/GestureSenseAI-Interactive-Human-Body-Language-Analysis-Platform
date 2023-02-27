@@ -20,7 +20,6 @@ function App() {
           <Route path='/signin' element={<LoginForm/>} />
           <Route path='/Signup' element={<RegistrationForm/>} />
           <Route path='/' element={<LandingPage/>} />
-          <Route path='/p' element={<ProfilePage/>} />
           <Route path='/Profilepage' element={<RequireAuth loginPath={'/signin'}> <ProfilePage/> </RequireAuth>}/>
         </Routes>
     </div>

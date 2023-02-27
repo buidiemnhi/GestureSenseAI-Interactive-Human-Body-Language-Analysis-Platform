@@ -22,7 +22,7 @@ function WhatWeOffer() {
                         .then it's our machine learning model GTKY which takes the landmarks extracted and analyze them to detect the non verbal actions and what they mean based on the context.
                         <span className='bold'>so what are you waiting for?? join us and get to know the language of your body and your non verbal actions meaning.</span>
                     </p>
-                    <a className='btn shadow px-5 py-3'>Get started now</a>
+                    <a className='btn blackbg white px-5 py-3'>Get started now</a>
                 </div>
 
             </div>

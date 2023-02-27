@@ -3,13 +3,12 @@ import React, { useState } from 'react';
 export default function EditProfile() {
 
     const [formData, setformData] = useState({
-        firstName:"First name",
-        lastName:" Last name",
-        email: "Email@something.com",
-        password: "*@^$&$^&(#^@*$",
-        confirmPassword: "@^$&$^&(#^@*$",
-        profileImage: "",
-        userBD:"1/1/2000"
+        firstName:"",
+        lastName:" ",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        userBD:""
     })
 
     const [ErrorData, SetErrorData] = useState({
@@ -17,7 +16,7 @@ export default function EditProfile() {
         email: "",
         password: "",
         // userBDError:"",
-        userRoleError:"user",
+        // userRoleError:"user",
     })
 
     function handleData(event){
@@ -34,13 +33,21 @@ export default function EditProfile() {
 
     async function handleSubmit(event) {
         event.preventDefault()
-        fetch('http://127.0.0.1:5000//register', {method: "POST", headers: {
-          
-          'Content-Type': 'application/json' 
-        },body: JSON.stringify(formData)
-      })
-          .then(response => response.json())
-          .then(res =>{ if(res.isError){
+        // request header
+        let jwtToken = localStorage.getItem('jwt_token');
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", `Bearer ${jwtToken}`);
+        myHeaders.append("Cookie", `session=.${jwtToken}`);
+        myHeaders.append("Content-Type", "application/json");
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: JSON.stringify(formData),
+      };
+        fetch('http://localhost:5000/edit-profile', requestOptions
+      )
+          .then(response =>  response.json())
+          .then(res =>{if(res.isError){
     
             const dataObject = res.Data // data object of the response 
     
@@ -50,7 +57,7 @@ export default function EditProfile() {
               name : "",
               email: "",
               password: "",
-              userRoleError:"user",
+            //   userRoleError:"user",
           } // temp structure to set the state in one step 
     
           objectKeysArr.map(async (key)=>{ 
@@ -73,14 +80,18 @@ export default function EditProfile() {
         <div className='container p-0 my-5 card w-100'>
 
             <div className='row w-100 m-0 justify-content-center my-3'>
-                <div className='col-5  d-flex justify-content-center'><h2>Edit personal data</h2></div>
-            </div>
+                <div className='col-12 d-flex justify-content-start fontw'><h2>Edit personal data</h2></div>
 
+                <div className='col-12 d-flex justify-content-center'>
+                    <img class="profileImg " src="https://www.alguardian.com/img/22/06/17/66193-16554468526337002.jpeg" />
+                    </div>
+            </div>
+{/* 
             <div className='row justify-content-center mb-4'>
                     <div className='col-5 d-flex justify-content-center'>
                     <img class="profileImg " src="https://www.alguardian.com/img/22/06/17/66193-16554468526337002.jpeg" />
                     </div>
-            </div>
+            </div> */}
 
             <div className='row w-100 m-0 justify-content-center'>
             <form className='col-12 '>
@@ -146,7 +157,7 @@ export default function EditProfile() {
 
                 <div className='row row mb-3'>
                     <div className='col-10 offset-1'>
-                    <input className='form-control' name='email' type="password" placeholder='Password Confiramtion' value={formData.confirmPassword} onChange={handleData}/>
+                    <input className='form-control' name='confirmPassword' type="password" placeholder='Password Confiramtion' value={formData.confirmPassword} onChange={handleData}/>
                     </div>
                     { ErrorData.confirmPassword &&
                     <p className='col-8 '>{ErrorData.confirmPassword}</p>
@@ -154,8 +165,8 @@ export default function EditProfile() {
                 </div>
 
                 <div className='row row mb-3'>
-                    <div className='col-6 offset-3'>
-                        <button className='btn btn-primary form-control' onClick={handleSubmit}>submit</button>
+                    <div className='col-4 offset-4'>
+                        <button className='btn blackbg white py-1 form-control' onClick={handleSubmit}>submit</button>
                     </div>
                 </div>
 

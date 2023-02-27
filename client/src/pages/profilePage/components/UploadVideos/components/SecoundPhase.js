@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 export default function SecoundPhase(props) {
 
@@ -49,7 +49,7 @@ export default function SecoundPhase(props) {
                     <label className="form-check-label">Add landmarks to the Video ?</label>
                     </div>
 
-                    <button className='mt-4 actionButt px-4 py-2' onClick={()=>props.SubmitVideoData()} > Submit the Video</button>
+                    <button className='mt-4 btn blackbg white px-4 py-2' onClick={()=>props.SubmitVideoData()} > Submit the Video</button>
 
                 </div>
                 <div className='col-4 '>

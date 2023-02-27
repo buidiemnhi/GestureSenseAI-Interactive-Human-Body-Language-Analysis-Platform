@@ -1,4 +1,5 @@
-import React from 'react'
+import React from 'react';
+
 import { GoCloudDownload } from 'react-icons/go';
 
 export default function FirstPhase(props) {
@@ -70,7 +71,7 @@ export default function FirstPhase(props) {
       </div>
     )}
     <div>
-      <button className="mt-3 actionButt px-5 py-3" onClick={()=>props.MoveToSecoundPhase()}> Continue </button>
+      <button className="mt-3 btn blackbg white px-5 py-3" onClick={()=>props.MoveToSecoundPhase()}> Continue </button>
     </div>
   </div>
 )

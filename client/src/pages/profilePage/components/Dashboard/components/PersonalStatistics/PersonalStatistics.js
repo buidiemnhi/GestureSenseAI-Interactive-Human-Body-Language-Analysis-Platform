@@ -54,7 +54,7 @@ export default function PersonalStatistics() {
       };
 
     return (
-        <div className='m-5 SecondSection'>
+        <div className='m-5'>
             <div>
                 <div className='d-flex Container-fluid'>
                     <h2 className="display-5">Personal statistics</h2>

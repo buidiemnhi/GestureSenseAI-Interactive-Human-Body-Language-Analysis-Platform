@@ -2,29 +2,31 @@ import './navbar.css';
 
 import React from 'react';
 
+import { Link } from 'react-router-dom';
+
 function Navbar() {
   return (
-    <nav class="navbar sticky-top navbar-expand-md">
+    <nav className="navbar navbar-expand-md w-100">
 
-    <a class="navbar-brand font24 fontcolor ml-5" href="#">
-      Bootstrap
+    <a className="navbar-brand font30 fontcolor ml-5 nohover" href="#">
+      GTKY
     </a>
 
-    <div class="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
-      <div class="navbar-nav">
+    <div className="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
+      <div className="navbar-nav">
 
-        <ul class="nav nav-pills ">
-            <li class="nav-item m-3">
-                <a class="nav-link font24 fontcolor px-3 shadow"  aria-current="page" href="#">Home</a>
+        <ul className="nav nav-pills ">
+            <li className="nav-item m-3">
+                <Link className='nav-link font24 fontcolor px-3' to="/"> Home</Link>
             </li>
-            <li class="nav-item m-3">
-                <a class="nav-link font24 fontcolor px-3" href="#">About</a>
+            <li className="nav-item m-3">
+                <a className="nav-link font24 fontcolor px-3" href="">About</a>
             </li>
-            <li class="nav-item m-3">
-                <a class="nav-link font24 fontcolor px-3" href="#">Features</a>
+            <li className="nav-item m-3">
+                <a className="nav-link font24 fontcolor px-3" href="">Features</a>
             </li>
-            <li class="nav-item m-3">
-                <a class="nav-link font24 fontcolor px-3"  href="#">Sign in</a>
+            <li className="nav-item m-3">
+                <Link className="nav-link font24 fontcolor px-3"  to="/signin">Sign in</Link>
             </li>
         </ul>
         

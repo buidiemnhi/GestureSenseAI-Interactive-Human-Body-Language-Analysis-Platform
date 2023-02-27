@@ -111,6 +111,7 @@ export default function VideoStatistics() {
             <div className='m-auto row'  >
                 <Player
                     autoPlay
+                    muted
                     fluid={false}
                     width={440}
                     height={280}
@@ -143,7 +144,7 @@ export default function VideoStatistics() {
                     </div>
                 </div>
             </div>
-            <hr className='my-4' />
+            <hr className='my-5' />
             <div className='mx-auto row justify-content-between'>
                 <div className='col-5'>
                     <Chart options={tempData.options} series={tempData.series} type="radar" height={250} width={270} />
