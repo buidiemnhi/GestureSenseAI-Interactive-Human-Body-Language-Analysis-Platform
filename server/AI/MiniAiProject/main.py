@@ -52,7 +52,7 @@ def mediapipe_detection(image, model):
 
 # creation of csv file for the landmarks cords
 def create_landmarks_cords():
-    num_cords = 543
+    num_cords = 75
     landmarks = ['action']
     for val in range(1, num_cords + 1):
         landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
@@ -85,7 +85,7 @@ def save_landmarks(filename, action_name):
 
             # Make Detections
             results = holistic.process(image)
-            if not os.path.isfile('D:/Coding/BodyLanguageDecoderV2/coords.csv'):
+            if not os.path.isfile('C:/Users/amr12/OneDrive/Documents/GitHub/graduationProject/server/AI/MiniAiProject/coords.csv'):
                 create_landmarks_cords()
 
             # make image writeable again
@@ -135,14 +135,14 @@ def save_landmarks(filename, action_name):
 def extract_landmarks(results, action_name):
     pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
                      results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
-    face = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                     results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+    #face = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                     #results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
     lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
                    results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 4)
     rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
                    results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
         21 * 4)
-    row = list(np.concatenate([pose, face, lh, rh]))
+    row = list(np.concatenate([pose, lh, rh]))
     # Append action name
     row.insert(0, action_name)
     return row
@@ -151,14 +151,18 @@ def extract_landmarks(results, action_name):
 def extract_keypoints(results):
     pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
                      results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
-    face = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                     results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+
+    #face = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                    #results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+
     lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
                    results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 4)
     rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
                    results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
         21 * 4)
-    return np.concatenate([pose, face, lh, rh])
+
+    return np.concatenate([pose, lh, rh])
+
 
 
 def train_model():
@@ -185,7 +189,7 @@ def train_model():
         yhat = model.predict(X_test)
         print(algo, accuracy_score(y_test, yhat))
 
-    with open('action_detection.pkl', 'wb') as f:
+    with open('body_language.pkl', 'wb') as f:
         pickle.dump(fit_models['rf'], f)
 
 
@@ -307,6 +311,7 @@ def meaning_action(action):
             return row[2]
 
 
+
 def test_model_new():
     filename = filedialog.askopenfilename(initialdir="/",
                                           title="Select a File",
@@ -317,7 +322,26 @@ def test_model_new():
                                               ("video", ".AVI"),
                                           ])
 
-    with open('action_detection.pkl', 'rb') as f:
+# new model code
+def test_model_new():
+    path_with_file_extension = filedialog.askopenfilename(initialdir="/",
+                                                          title="Select a File",
+                                                          filetypes=[
+                                                              ("video", ".mp4"),
+                                                              ("video", ".MP4"),
+                                                              ("video", ".avi"),
+                                                              ("video", ".AVI"),
+                                                              ("video", ".mov"),
+                                                              ("video", ".MOV"),
+                                                          ])
+
+    res = path_with_file_extension.split('/')
+    x = res[-1]
+    x = x[::-1].split('.', 1)[1][::-1]
+    filename = x
+    destination = 'C:/Users/amr12/OneDrive/Documents/GitHub/graduationProject/server/AI/MiniAiProject/video landmark +SRT'
+
+    with open('body_language.pkl', 'rb') as f:
         model = pickle.load(f)
 
     mp_drawing = mp.solutions.drawing_utils
@@ -496,6 +520,31 @@ def test_model_new():
         cv2.destroyAllWindows()
 
 
+# DataSet extract keypoints folder loop
+def loop():
+    from pathlib import Path
+
+    # assign directory
+    directory = 'ashraf viedo/Arms Akimbo'
+
+    # iterate over files in
+    # that directory
+    files = Path(directory).glob('*')
+    x = []
+    for file in files:
+        i = str(file).split('\\')
+        i.pop(0)
+        x.append(i[1])
+
+    # Actions that we try to detect
+    actions = np.array(x)
+    print(actions)
+
+    for action in actions:
+        save_landmarks(f'C:/Users/amr12/OneDrive/Documents/GitHub/graduationProject/server/AI/MiniAiProject/ashraf viedo/Arms Akimbo/{action}'
+                       , 'Arms Akimbo')
+
+
 window = Tk()
 
 # Set window title
@@ -519,6 +568,11 @@ button_test = Button(window,
                      text="Test Model",
                      command=test_model_new)
 button_test.pack()
+
+button_loop = Button(window,
+                     text="file loop",
+                     command=loop)
+button_loop.pack()
 
 button_exit = Button(window,
                      text="Exit",
@@ -618,34 +672,6 @@ def UploadAndDownloadVideoLandmarks(filename):
 #print('land marks are ',UploadAndDownloadVideoLandmarks("arms 1.mp4"))
 '''
 
-
-'''
-#DataSet extract keypoints folder loop
-# import required module
-from pathlib import Path
-
-# assign directory
-directory = 'ActionDataSet/catch'
-
-# iterate over files in
-# that directory
-files = Path(directory).glob('*')
-x=[]
-for file in files:
-    i = str(file).split('\\')
-    i.pop(0)
-    x.append(i[1])
-
-
-
-# Actions that we try to detect
-actions = np.array(x)
-print(actions)
-
-for action in actions:
-    save_landmarks(f'D:/Coding/BodyLanguageDecoderV2/ActionDataSet/catch/{action}','catch')
-
-'''
 
 '''
 #multi threading code for future improvement of the model
