@@ -87,8 +87,8 @@ class User(UserMixin, db.Model):
     user_email = db.Column(db.String(60), nullable=False, unique=True)
     user_password = db.Column(db.String(250), nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
-    user_image = db.Column(db.String(250), nullable=False)
-    user_birthdate = db.Column(db.String(50), nullable=True)
+    user_image = db.Column(db.String(250), nullable=True)  # will be changed to False
+    user_birthdate = db.Column(db.String(50), nullable=True)  # will be changed to False
     lastLogin = db.Column(db.String(50), nullable=True, default=False)
     user_state = db.Column(db.String(50), nullable=False, default="Active")  # active, deactivate, blocked
     isOnline = db.Column(db.Boolean, nullable=False, default=False)
@@ -139,12 +139,16 @@ class Video(db.Model):
     video_path = db.Column(db.String(255), nullable=False)
     video_subtitle_path = db.Column(db.String(255), nullable=True)
     video_date = db.Column(db.String(250), nullable=False)
+    video_description = db.Column(db.String(255), nullable=True)
+
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
 
-    def __init__(self, video_title, video_path, video_date, user_id):
+    def __init__(self, video_title, video_path, video_subtitle_path, video_date, user_id, video_description):
         self.video_title = video_title
         self.video_path = video_path
+        self.video_subtitle_path = video_subtitle_path
         self.video_date = video_date
+        self.video_description = video_description
         self.user_id = user_id
 
 
@@ -154,14 +158,16 @@ def upload_video():
         if request.method == "POST" and "video" in request.files:
             _video = request.files["video"]
             _action = request.form['action']
+            _description = request.form['video_description']
             _video_title = request.form['video_title']
             current_date = datetime.now()
 
             file_name = videos.save(_video)
             full_path = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + file_name
+
             dest_path = basedir + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-            print(dest_path)
-            video = Video(_video_title, full_path, current_date, current_user.user_id)
+
+            video = Video(_video_title, full_path, dest_path, current_date, _description, current_user.user_id)
             test_model_new(full_path, dest_path)
             current_user.add_video(video)
 
@@ -176,18 +182,30 @@ def remove_video(video_id):
     current_user.remove_video(video_id)
 
 
-@app.route('/display-user-videos', methods=['GET', "POST"])
+@app.route('/display-videos', methods=['GET'])
+@jwt_required()
 def display_all_videos():
-    x = current_user.get_videos()
-    for i in x:
-        print(i)
+    token = get_jwt()
+    user = method_name(token)
+    videos = Video.query.filter_by(user_id=user.user_id)
+    allRows = []
+    for video in videos:
+        allRows.append({
+            'videoTitle': video.video_title,
+            'video_path': video.video_path,
+            # 'videoDate': video.video_date,
+            'video_description': video.video_description,
+            'video_subtitle': video.video_subtitle_path
 
-    # user = User.query.filter_by(user_id=current_user.user_id)
-    # video_list = user.videos
-    # return what?,json? convert the list to json format?
-    # whatever the returned videos to front must include the video id
-    # because we will need video id to display the clicked video from the list
-    return "ok"
+        })
+
+    return jsonify({
+        'response_data':
+            {
+                'videos': allRows
+            }
+
+    })
 
 
 @app.route('/display-video', methods=['GET', "POST"])
@@ -199,7 +217,7 @@ def display_video():
     return
 
 
-@app.route("/edit-profile", methods=['PUT'])
+@app.route("/edit-profile", methods=['POST'])
 @jwt_required()
 def edit_profile():
     token = get_jwt()
@@ -210,8 +228,8 @@ def edit_profile():
     _email = _json['email']
     _password = _json['password']
     _confirm_password = _json['confirmPassword']
-    _user_image = _json['userImage']
-    _user_birthdate = _json['userBirthDate']
+    # _user_image = _json['profileImage']
+    _user_birthdate = _json['userBD']
 
     is_first_name_invalid = not validate_first_name(_first_name)
     is_last_name_invalid = not validate_last_Name(_last_name)
@@ -243,10 +261,10 @@ def edit_profile():
 
         User.query.filter_by(user_id=user.user_id) \
             .update(dict(first_name=_first_name, last_name=_last_name, user_email=_email, user_password=hashed_password,
-                         user_image=_user_image,
+                         # user_image=_user_image,
                          user_birthdate=_user_birthdate))
         db.session.commit()
-        return jsonify("Data edited successfully.")
+        return jsonify(SUCCESS_MESSAGE['Data'])
 
 
 # Create Database
@@ -322,6 +340,7 @@ def login():
                 #     app.secret_key,
                 #     algorithm='HS256'
                 # )
+
                 access_token = create_access_token(identity=user.user_id)
                 return jsonify({
 
@@ -394,10 +413,10 @@ def register():
                     _user_birthdate)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify(REGISTRATION_SUCCESS_MESSAGE['Data'])
+    return jsonify(SUCCESS_MESSAGE['Data'])
 
 
-REGISTRATION_SUCCESS_MESSAGE = ({
+SUCCESS_MESSAGE = ({
     'Data': {
         'response_data':
             {
