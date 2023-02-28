@@ -13,6 +13,7 @@ import pickle
 from tkinter import *
 from tkinter import filedialog
 import mediapipe as mp
+from pathlib import Path
 
 
 
@@ -85,7 +86,7 @@ def save_landmarks(filename, action_name):
 
             # Make Detections
             results = holistic.process(image)
-            if not os.path.isfile('C:/Users/amr12/OneDrive/Documents/GitHub/graduationProject/server/AI/MiniAiProject/coords.csv'):
+            if not os.path.isfile('C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\coords.csv'):
                 create_landmarks_cords()
 
             # make image writeable again
@@ -126,9 +127,9 @@ def save_landmarks(filename, action_name):
             cv2.imshow('video', image)
             if cv2.waitKey(10) & 0xFF == ord('q'):
                 break
-
     cap.release()
     cv2.destroyAllWindows()
+
 
 
 # extract the landmarks and put zero if didn't detect the landmark
@@ -162,7 +163,6 @@ def extract_keypoints(results):
         21 * 4)
 
     return np.concatenate([pose, lh, rh])
-
 
 
 def train_model():
@@ -311,17 +311,6 @@ def meaning_action(action):
             return row[2]
 
 
-
-def test_model_new():
-    filename = filedialog.askopenfilename(initialdir="/",
-                                          title="Select a File",
-                                          filetypes=[
-                                              ("video", ".mp4"),
-                                              ("video", ".MP4"),
-                                              ("video", ".avi"),
-                                              ("video", ".AVI"),
-                                          ])
-
 # new model code
 def test_model_new():
     path_with_file_extension = filedialog.askopenfilename(initialdir="/",
@@ -348,8 +337,6 @@ def test_model_new():
     mp_holistic = mp.solutions.holistic
 
     # 1. decleration of variables
-    start=0
-    end=0
     sequence = []
     sentence = []
     predictions = []
@@ -367,7 +354,7 @@ def test_model_new():
     frame_no = 0
 
     #puting the video wirter into variable
-    writer= cv2.VideoWriter(
+    writer = cv2.VideoWriter(
         'C:/Users/amr12/Downloads/Video/video.mp4', cv2.VideoWriter_fourcc(*'DIVX'), fps, (width,height)
     )
 
@@ -522,28 +509,26 @@ def test_model_new():
 
 # DataSet extract keypoints folder loop
 def loop():
-    from pathlib import Path
-
     # assign directory
-    directory = 'ashraf viedo/Arms Akimbo'
-
-    # iterate over files in
-    # that directory
-    files = Path(directory).glob('*')
+    directory = 'ashraf viedo\\'
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    folders = Path(directory).glob('*')
     x = []
-    for file in files:
-        i = str(file).split('\\')
-        i.pop(0)
-        x.append(i[1])
-
-    # Actions that we try to detect
-    actions = np.array(x)
-    print(actions)
-
-    for action in actions:
-        save_landmarks(f'C:/Users/amr12/OneDrive/Documents/GitHub/graduationProject/server/AI/MiniAiProject/ashraf viedo/Arms Akimbo/{action}'
-                       , 'Arms Akimbo')
-
+    y = []
+    for folder in folders:
+        i = str(folder).split('\\')
+        y.append(i[1])
+        foldernames = np.array(y)
+        files = Path(f"{directory}{i[1]}").glob('*')
+        for file in files:
+            j = str(file).split('\\')
+            x.append(j[2])
+            videos = np.array(x)
+            save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\ashraf viedo\\{foldernames[0]}\\{videos[0]}'
+                           , f'{foldernames[0]}')
+            x.pop(0)
+        y.pop(0)
 
 window = Tk()
 
