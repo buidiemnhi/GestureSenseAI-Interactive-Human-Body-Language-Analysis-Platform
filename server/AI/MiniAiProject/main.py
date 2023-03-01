@@ -19,7 +19,7 @@ from pathlib import Path
 
 # creation of csv file for the landmarks cords
 def create_landmarks_cords():
-    num_cords = 75
+    num_cords = 543
     landmarks = ['action']
     for val in range(1, num_cords + 1):
         landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
@@ -28,7 +28,7 @@ def create_landmarks_cords():
             csv_writer.writerow(landmarks)
 
 # put filename to be string and action name to be string too
-def save_landmarks(filename, action_name):
+def save_landmarks(filename, action_name,pose,face,hands):
     # putting the solutions into small variables to call them
     mp_drawing = mp.solutions.drawing_utils
     mp_holistic = mp.solutions.holistic
@@ -87,7 +87,7 @@ def save_landmarks(filename, action_name):
             # Export to CSV
             with open('coords.csv', mode='a', newline='') as f:
                 csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                csv_writer.writerow(extract_landmarks(results, action_name))
+                csv_writer.writerow(extract_landmarks(results, action_name,pose,face,hands))
 
             cv2.imshow('video', image)
             if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -96,17 +96,75 @@ def save_landmarks(filename, action_name):
     cv2.destroyAllWindows()
 
 # extract the landmarks and put zero if didn't detect the landmark
-def extract_landmarks(results, action_name):
-    pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                     results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
-    #face = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                     #results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
-    lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                   results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 4)
-    rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                   results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
-        21 * 4)
-    row = list(np.concatenate([pose, lh, rh]))
+def extract_landmarks(results, action_name,pose,face,hands):
+    if pose and not face and not hands:
+        savedpose = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                         results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
+        savedface = np.zeros(468 * 4)
+        lh = np.zeros(21 * 4)
+        rh = np.zeros(21 * 4)
+    elif not pose and face and not hands:
+        savedpose = np.zeros(33 * 4)
+        savedface = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                         results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+        lh = np.zeros(21 * 4)
+        rh = np.zeros(21 * 4)
+    elif not pose and not face and hands:
+        savedpose = np.zeros(33 * 4)
+        savedface = np.zeros(468 * 4)
+        lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(
+            21 * 4)
+        rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
+            21 * 4)
+    elif pose and face and not hands:
+        savedpose = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                              results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(
+            33 * 4)
+        savedface = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                              results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(
+            468 * 4)
+        lh = np.zeros(21 * 4)
+        rh = np.zeros(21 * 4)
+    elif pose and not face and hands:
+        savedpose = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                              results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(
+            33 * 4)
+        savedface = np.zeros(468 * 4)
+        lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(
+            21 * 4)
+        rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
+            21 * 4)
+    elif not pose and face and hands:
+        savedpose = np.zeros(33 * 4)
+        savedface = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                              results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(
+            468 * 4)
+        lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(
+            21 * 4)
+        rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
+            21 * 4)
+    elif pose and face and hands:
+        savedpose = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                              results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(
+            33 * 4)
+        savedface = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                              results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(
+            468 * 4)
+        lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(
+            21 * 4)
+        rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                       results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
+            21 * 4)
+    else:
+        print("No boolean values set to True")
+    row = list(np.concatenate([savedpose,savedface, lh, rh]))
     # Append action name
     row.insert(0, action_name)
     return row
@@ -116,16 +174,16 @@ def extract_keypoints(results):
     pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
                      results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
 
-    #face = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                    #results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+    face = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                    results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
 
     lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
                    results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 4)
-    rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                   results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
-        21 * 4)
 
-    return np.concatenate([pose, lh, rh])
+    rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
+                   results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21 * 4)
+
+    return np.concatenate([pose,face,lh, rh])
 
 # training of the four classification models with the coords file
 def train_model():
@@ -134,13 +192,10 @@ def train_model():
     X = df.drop('action', axis=1)  # features
     y = df['action']  # target value
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.01, random_state=1234)
 
     pipelines = {
-        'lr': make_pipeline(StandardScaler(), LogisticRegression()),
-        'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
         'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
-        'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
     }
 
     fit_models = {}
@@ -431,35 +486,38 @@ def test_model_new():
                 break
 
         # this allows for the last action/prediction to be saved even if there is only one action (492->524)
-        def f(x, decimals=3):
-            r = str(round(x, decimals))  # round and convert to string
-            r = r.split('.')[-1]  # split at the dot and keep the decimals
-            return r
+        try:
+            def f(x, decimals=3):
+                r = str(round(x, decimals))  # round and convert to string
+                r = r.split('.')[-1]  # split at the dot and keep the decimals
+                return r
 
-        milliseconds_start = start2 % 1
-        seconds_start = int(start2) % 60
-        minutes_start = int(start2 / 60) % 60
-        hours_start = int(start2 / 3600)
+            milliseconds_start = start2 % 1
+            seconds_start = int(start2) % 60
+            minutes_start = int(start2 / 60) % 60
+            hours_start = int(start2 / 3600)
 
-        end = framcount / fps
-        milliseconds_end = end % 1
-        seconds_end = int(end) % 60
-        minutes_end = int(end / 60) % 60
-        hours_end = int(end / 3600)
-        print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
+            end = framcount / fps
+            milliseconds_end = end % 1
+            seconds_end = int(end) % 60
+            minutes_end = int(end / 60) % 60
+            hours_end = int(end / 3600)
+            print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
 
-        with open(f"{destination}\\{filename}.srt", "a") as srt_file:
-            srt_file.write(
-                f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
+            with open(f"{destination}\\{filename}.srt", "a") as srt_file:
+                srt_file.write(
+                    f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
+                    f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
 
-        with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
-            srt_file.write(
-                f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
+            with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
+                srt_file.write(
+                    f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
+                    f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
 
-        # counter for the SRT file action
-        counter.append(counter[-1] + 1)
+            # counter for the SRT file action
+            counter.append(counter[-1] + 1)
+        except:
+            pass
         cap.release()
         cv2.destroyAllWindows()
 
@@ -527,7 +585,7 @@ def loop():
             x.append(j[2])
             videos = np.array(x)
             save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\ashraf viedo\\{foldernames[0]}\\{videos[0]}'
-                           , f'{foldernames[0]}')
+                           , f'{foldernames[0]}',1 ,0 ,1)
             x.pop(0)
         y.pop(0)
 
