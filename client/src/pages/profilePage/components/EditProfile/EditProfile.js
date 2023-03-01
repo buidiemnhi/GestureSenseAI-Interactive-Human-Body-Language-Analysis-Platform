@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 
-export default function EditProfile() {
+export default function EditProfile(props) {
 
     const [formData, setformData] = useState({
-        firstName:"",
-        lastName:" ",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        userBD:""
+        firstName:props.profileData.firstName,
+        lastName:props.profileData.lastName,
+        email:props.profileData.email,
+        password:"",
+        confirmPassword:"",
+        userBD:props.profileData.userBD,
+        profileImage: "",
     })
 
     const [ErrorData, SetErrorData] = useState({
-        name : "",
+        firstName : "",
+        lastName : "",
         email: "",
         password: "",
         // userBDError:"",
@@ -33,31 +35,43 @@ export default function EditProfile() {
 
     async function handleSubmit(event) {
         event.preventDefault()
+
+        const formData2 = new FormData();
+        formData2.append("firstName", formData.firstName);
+        formData2.append('lastName', formData.lastName);
+        formData2.append('userBD', formData.userBD);
+        formData2.append('password', formData.password);
+        formData2.append('email', formData.email);
+        formData2.append('confirmPassword', formData.confirmPassword);
+        formData2.append('profileImage', formData.profileImage);
         // request header
         let jwtToken = localStorage.getItem('jwt_token');
         var myHeaders = new Headers();
         myHeaders.append("Authorization", `Bearer ${jwtToken}`);
         myHeaders.append("Cookie", `session=.${jwtToken}`);
-        myHeaders.append("Content-Type", "application/json");
+       
+        
         var requestOptions = {
         method: 'POST',
         headers: myHeaders,
-        body: JSON.stringify(formData),
+        body: formData2,
       };
-        fetch('http://localhost:5000/edit-profile', requestOptions
-      )
+      
+        fetch('http://localhost:5000/edit-profile', requestOptions)
           .then(response =>  response.json())
           .then(res =>{if(res.isError){
     
             const dataObject = res.Data // data object of the response 
-    
+            console.log(dataObject)
             const objectKeysArr = Object.keys(dataObject); // array of the data object attributes name
     
             let temp = {    
-              name : "",
-              email: "",
-              password: "",
-            //   userRoleError:"user",
+            firstName : "",
+        	lastName : "",
+        	email: "",
+        	password: "",
+        // userBDError:"",
+        // userRoleError:"user",
           } // temp structure to set the state in one step 
     
           objectKeysArr.map(async (key)=>{ 
@@ -76,22 +90,15 @@ export default function EditProfile() {
       })
     }
 
-    return (
-        <div className='container p-0 my-5 card w-100'>
+    return (<div className='container p-0 my-5 card w-100'>
 
             <div className='row w-100 m-0 justify-content-center my-3'>
                 <div className='col-12 d-flex justify-content-start fontw'><h2>Edit personal data</h2></div>
 
                 <div className='col-12 d-flex justify-content-center'>
-                    <img class="profileImg " src="https://www.alguardian.com/img/22/06/17/66193-16554468526337002.jpeg" />
+                    <img class="profileImg " src={props.profileData.userImage} />
                     </div>
             </div>
-{/* 
-            <div className='row justify-content-center mb-4'>
-                    <div className='col-5 d-flex justify-content-center'>
-                    <img class="profileImg " src="https://www.alguardian.com/img/22/06/17/66193-16554468526337002.jpeg" />
-                    </div>
-            </div> */}
 
             <div className='row w-100 m-0 justify-content-center'>
             <form className='col-12 '>
@@ -106,9 +113,16 @@ export default function EditProfile() {
                     <div className='col-5'>
                         <input className='form-control' placeholder='last name' name='lastName' value={formData.lastName} onChange={handleData}/>
                     </div>
-                    { ErrorData.name &&
-                        <div className='col-10'>
-                            <p className='danger'>{ErrorData.name}</p>
+
+                    { ErrorData.firstName &&
+                        <div className='col-5'>
+                            <p className='text-danger'>{ErrorData.firstName}</p>
+                        </div>
+                    }
+
+                    { ErrorData.lastName &&
+                        <div className='col-5'>
+                            <p className='text-danger'>{ErrorData.lastName}</p>
                         </div>
                     }
                 </div>
@@ -121,7 +135,7 @@ export default function EditProfile() {
                         <input type="date" className='form-control' name='userBD' value={formData.userBD} onChange={handleData}/>
                     </div>
                     <div className='col-5'>
-                        <input type="file" className='form-control' name='profileImage' value={formData.profileImage} onChange={handleData}/>
+                        <input type="file" className="form-control pb-4" aria-describedby="inputGroupFileAddon04" aria-label="Upload" name='profileImage' onChange={handleData} required />
                     </div>
                 </div>
 
@@ -159,8 +173,8 @@ export default function EditProfile() {
                     <div className='col-10 offset-1'>
                     <input className='form-control' name='confirmPassword' type="password" placeholder='Password Confiramtion' value={formData.confirmPassword} onChange={handleData}/>
                     </div>
-                    { ErrorData.confirmPassword &&
-                    <p className='col-8 '>{ErrorData.confirmPassword}</p>
+                    { ErrorData.password &&
+                    <p className='col-8 '>{ErrorData.password}</p>
                     }
                 </div>
 

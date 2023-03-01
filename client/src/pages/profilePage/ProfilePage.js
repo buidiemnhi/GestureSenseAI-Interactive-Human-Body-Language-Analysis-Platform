@@ -2,6 +2,7 @@ import './profilePage.css';
 
 import {
   React,
+  useEffect,
   useState
 } from 'react';
 
@@ -14,6 +15,47 @@ import VideoGallery from './components/VideoGallery/VideoGallery';
 export default function ProfilePage() {
   const [currentView, setCurrentView] = useState(1)
 
+  // profiled data state 
+  const [profileData,setProfileData] = useState({
+    firstName:"",
+    lastName:"",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    userBD:"",
+    userImage:""
+  })
+
+  useEffect(() => 
+    async function fetchData(){
+      let jwtToken = localStorage.getItem('jwt_token');
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", `Bearer ${jwtToken}`);
+        myHeaders.append("Cookie", `session=.${jwtToken}`);
+        myHeaders.append("Content-Type", "application/json");
+        var requestOptions = {
+        method: 'GET',
+        headers: myHeaders,
+      };
+      
+      fetch('http://localhost:5000/profile-page',requestOptions)
+      .then(response => response.json())
+      .then(res =>{
+        const data = res.Data.response_data
+      console.log(data)
+        setProfileData({
+        firstName:data.firstName,
+        lastName:data.lastName,
+        email: data.email,
+        userBD:data.userBirthDate,
+        userImage:`${process.env.PUBLIC_URL + '/imgs/'}${data.userImage}`
+      })
+    })
+    }
+    
+  ,[]);
+
+    console.log(profileData)
   function ChangeViewFuntion(viewID){
     setCurrentView(viewID)
   }
@@ -24,13 +66,13 @@ export default function ProfilePage() {
         <div className="container-fluid ">
           <div className="row">
             <div className="col-sm-2 SideBar">
-              <SideBar changeViewFuntion={ChangeViewFuntion} />
+              <SideBar changeViewFuntion={ChangeViewFuntion} sideBarData={profileData}/>
             </div>
             <div className="col-sm-10">
             {currentView == 1?  <Dashboard/> : ""}
             {currentView == 2?  <VideoGallery/>: ""}
             {currentView == 3?  <UploadVideos/> : ""}
-            {currentView == 4?  <EditProfile/> : ""}
+            {currentView == 4?  <EditProfile profileData={profileData}/> : ""}
             </div>
             {/*<div className="col-sm-10 StatisticsPage" >
               <StatisticsPage />

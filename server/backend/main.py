@@ -1,27 +1,18 @@
-import jwt
-from flask import Flask, request, jsonify, flash, render_template, send_from_directory
-from functools import wraps
 import os
 import re
-from flask_login import LoginManager, login_user, current_user, login_required, logout_user, UserMixin
-from flask_sqlalchemy import SQLAlchemy
-from AI import *
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    create_refresh_token,
-    jwt_required,
-    get_jwt_identity,
-    get_jwt
-)
-from werkzeug.security import check_password_hash, generate_password_hash
-from datetime import date, datetime, timedelta
-from flask import Flask, request
-from flask_uploads import UploadSet, configure_uploads, IMAGES, ALL
-from flask_cors import CORS, cross_origin
-from werkzeug.utils import secure_filename
-from werkzeug.datastructures import FileStorage
+from datetime import date, datetime
 
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
+from flask_jwt_extended import (JWTManager, create_access_token, get_jwt, jwt_required)
+from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
+from flask_sqlalchemy import SQLAlchemy
+from flask_uploads import UploadSet, configure_uploads
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from AI import *
+
+# region app
 # Initialize app
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY'
@@ -39,7 +30,7 @@ app.config['UPLOADED_PHOTOS_DEST'] = 'files\\photos\\'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
 app.config['CORS_HEADERS'] = 'Content-Type'
-
+# endregion
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -238,7 +229,11 @@ def get_video(filename):
     directroy = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST']
     return send_from_directory(directroy, filename)
 
+@app.route('/photo/<path:filename>')
+def get_photo(filename):
 
+    directroy = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST']
+    return send_from_directory(directroy, filename)
 
 
 @app.route("/edit-profile", methods=['POST'])
@@ -246,15 +241,15 @@ def get_video(filename):
 def edit_profile():
     token = get_jwt()
     user = method_name(token)
-    _json = request.form
-    _first_name = _json['firstName']
-    _last_name = _json['lastName']
-    _email = _json['email']
-    _password = _json['password']
-    _confirm_password = _json['confirmPassword']
+    formm = request.form
+    _first_name = formm['firstName']
+    _last_name = formm['lastName']
+    _email = formm['email']
+    _password = formm['password']
+    _confirm_password = formm['confirmPassword']
     _user_image = request.files['profileImage']
 
-    _user_birthdate = _json['userBD']
+    _user_birthdate = formm['userBD']
 
     imageFile = photos.save(_user_image)
     user_image_path = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + imageFile
@@ -385,18 +380,17 @@ def logout():
 
 @app.route('//register', methods=['POST'])
 def register():
-    _json = request.json
-    _first_name = _json['firstName']
-    _last_name = _json['lastName']
-    _email = _json['email']
-    _password = _json['password']
-    _confirm_password = _json['confirmPassword']
+    _first_name = request.form['firstName']
+    _last_name = request.form['lastName']
     _user_image = request.files['profileImage']
-    _user_birthdate = _json['userBD']
-
+    _email = request.form['email']
+    _password = request.form['password']
+    _confirm_password = request.form['confirmPassword']
+    _user_birthdate = request.form['userBD']
+    print(_user_birthdate == "")
     # imageFile = photos.save(_user_image)
     # user_image_path = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + imageFile
-
+    # region code
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
     is_last_name_invalid = not validate_last_Name(_last_name)
@@ -405,15 +399,15 @@ def register():
     is_password_invalid = not validate_password(_password)
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
     is_exiting_email = existing_email is not None
-
+    # endregion
     if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_exiting_email \
             | is_birth_date_invalid | is_password_confirmation_not_match | is_password_invalid:
         return jsonify({
             'isError': True,
             'Data': {
-                'first_name': {'isError': is_first_name_invalid,
+                'firstName': {'isError': is_first_name_invalid,
                                'msg': first_name_error(is_first_name_invalid)},
-                'last_name': {'isError': is_last_name_invalid,
+                'lastName': {'isError': is_last_name_invalid,
                               'msg': last_name_error(is_last_name_invalid)},
                 'email': {'isError': is_email_invalid | is_exiting_email,
                           'msg': registration_email_error(is_email_invalid, is_exiting_email)},
@@ -421,7 +415,7 @@ def register():
                               'msg': birth_date_error(is_birth_date_invalid)},
                 'password': {'isError': is_password_invalid | is_password_confirmation_not_match,
                              'msg': registration_password_error(is_password_invalid,
-                                                                is_password_confirmation_not_match)},
+                                                                is_password_confirmation_not_match)}
 
             }})
 
@@ -429,8 +423,12 @@ def register():
         _password, method='pbkdf2:sha256',
         salt_length=8
     )
-    new_user = User(_first_name, _last_name, _email, hashed_password, # user_image_path,
-                    _user_birthdate)
+
+    photo = photos.save(_user_image)
+
+    photo_path = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + photo
+
+    new_user = User(_first_name, _last_name, _email, hashed_password, photo_path, _user_birthdate)
     db.session.add(new_user)
     db.session.commit()
     return jsonify(SUCCESS_MESSAGE['Data'])

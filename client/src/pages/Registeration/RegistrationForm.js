@@ -15,7 +15,7 @@ export default function RegistrationForm() {
     email: "",
     password: "",
     confirmPassword: "",
-    profileImage: "",
+    profileImage: null,
     userBD: ""
   })
 
@@ -29,11 +29,12 @@ export default function RegistrationForm() {
 
   // state for the form data errors
   const [ErrorData, SetErrorData] = useState({
-    name: "",
+    firstName: "",
+lastName:"",	
     email: "",
     password: "",
-    // userBDError:"",
-    userRoleError: "user",
+Birthdate:""
+
   })
 
   //Ad any input data into one object
@@ -59,11 +60,16 @@ export default function RegistrationForm() {
       formData2.append('lastName', formData.lastName);
       formData2.append('userBD', formData.userBD);
       formData2.append('password', formData.password);
+      formData2.append('email', formData.email);
       formData2.append('confirmPassword', formData.confirmPassword);
       formData2.append('profileImage', formData.profileImage);
-      console.log(formData2)
+      console.log(formData2.getAll("password"))
+
     fetch('http://127.0.0.1:5000//register', {
-      method: "POST",  body: formData2
+      method: "POST",  body: formData2,
+      // headers: {
+      //   "Content-Type": "multipart/form-data",
+      // },
     })
       .then(response => response.json())
       .then(res => {
@@ -74,11 +80,13 @@ export default function RegistrationForm() {
           const objectKeysArr = Object.keys(dataObject); // array of the data object attributes name
 
           let temp = {
-            name: "",
-            email: "",
-            password: "",
-            userRoleError: "user",
-          } // temp structure to set the state in one step 
+    firstName: "",
+lastName:"",	
+    email: "",
+    password: "",
+Birthdate:""
+
+  } // temp structure to set the state in one step 
 
           objectKeysArr.map(async (key) => {
             if (dataObject[key].isError) {
@@ -123,16 +131,17 @@ export default function RegistrationForm() {
                 </div>
               </div>
               <div className="row my-1">
-                <div className="col-md-12">
-                  {ErrorData.name &&
-                    <div className="row my-1">
-                      <div className="col-12">
-                        <p className="text-danger"> {ErrorData.name} </p>
+                      {ErrorData.firstName &&
+                      <div className="col-6">
+                        <p className="text-danger"> {ErrorData.firstName} </p>
                       </div>
+                      }
+                      {ErrorData.lastName &&
+                      <div className="col-6">
+                        <p className="text-danger"> {ErrorData.lastName} </p>
+                      </div>
+                      }
                     </div>
-                  }
-                </div>
-              </div>
               <div className="row my-1 mb-3">
                 <div className="col-md-12">
                   <div className="row ">
@@ -146,6 +155,9 @@ export default function RegistrationForm() {
                     <div className="col-6">
                       <div className="row "><label className="col-form-label col-8">Birth date</label>
                         <div className="col-12" ><input type="date" className="form-control" value={formData.userBD} name='userBD' onChange={handleData} required /></div>
+			<div className="col-12 ">
+                          <p className="text-danger"> {ErrorData.Birthdate} </p>
+                        </div>
                       </div>
                     </div>
                   </div>
