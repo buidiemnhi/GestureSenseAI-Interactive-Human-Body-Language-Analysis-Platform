@@ -1,5 +1,5 @@
 import jwt
-from flask import Flask, request, jsonify, flash, render_template
+from flask import Flask, request, jsonify, flash, render_template, send_from_directory
 from functools import wraps
 import os
 import re
@@ -139,48 +139,74 @@ class Video(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
 
-    def __init__(self, video_title, video_path, video_subtitle1_path, video_subtitle2_path, video_date, user_id, video_description):
+    def __init__(self, video_title, video_path, video_date, user_id, video_description):
         self.video_title = video_title
         self.video_path = video_path
-        self.video_subtitle_path = video_subtitle1_path
-        self.video_subtitle2_path = video_subtitle2_path
         self.video_date = video_date
-        self.video_description = video_description
         self.user_id = user_id
-
-
-@app.route('/upload-video', methods=['POST'])
-def upload_video():
-    if current_user.is_authenticated:
-        if request.method == "POST" and "video" in request.files:
-            _video = request.files["video"]
-            _video_title = request.form['video_title']
-            _description = request.form['video_description']
-            _landMarks = request.form['landMarks']
-            # hstlm el viarbale da ezay.
-            current_date = datetime.now()
-
-            videoFile = videos.save(_video)
-
-            video_path = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + videoFile
-            dest_path = basedir + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-
-            #3awz amr yb3tly el suptitle 3shan asyfhom fel datbase.
-            video = Video(_video_title, video_path, dest_path, current_date, _description, current_user.user_id)
-
-            # amr hy3dl el function 3shan yst2blo.
-            test_model_new(video_path, dest_path)
-
-            current_user.add_video(video)
-
-            return "File has been uploaded."
-    else:
-        return "You should log in first."
+        self.video_description = video_description
 
 
 # @app.route('/remove-video', methods=['GET', "POST"])
 def remove_video(video_id):
     current_user.remove_video(video_id)
+
+
+# @app.route('/display-videos', methods=['GET'])
+# @jwt_required()
+# def display_all_videos():
+#     token = get_jwt()
+#     user = method_name(token)
+#     videos = Video.query.filter_by(user_id=user.user_id)
+#     allRows = []
+#     for video in videos:
+#         allRows.append({
+#             'videoTitle': video.video_title,
+#             'video_path': video.video_path,
+#             # 'videoDate': video.video_date,
+#             'video_description': video.video_description,
+#             'video_subtitle1': video.video_subtitle1_path,
+#             'video_subtitle2': video.video_subtitle2_path,
+#
+#         })
+#
+#     return jsonify({
+#         'response_data':
+#             {
+#                 'videos': allRows
+#             }
+#
+#     })
+
+
+@app.route('/upload-video', methods=['POST'])
+@jwt_required()
+def upload_video():
+    token = get_jwt()
+    user = method_name(token)
+    if request.method == "POST" and "video" in request.files:
+        _video = request.files["video"]
+        _video_title = request.form['video_title']
+        _description = request.form['video_description']
+        _landMarks = request.form['landMarks']
+        # hstlm el viarbale da ezay.
+        current_date = datetime.now()
+
+        videoFile = videos.save(_video)
+
+        video_path = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + videoFile
+        dest_path = basedir + '\\' + app.config['VIDEO_WITH_LANDMARKS']
+
+        video = Video(_video_title, video_path, current_date, user.user_id, _description)
+
+        # amr hy3dl el function 3shan yst2blo.
+        test_model_new(video_path, dest_path)
+
+        user.add_video(video)
+
+        return "File has been uploaded."
+    else:
+        return "You should log in first."
 
 
 @app.route('/display-videos', methods=['GET'])
@@ -189,34 +215,30 @@ def display_all_videos():
     token = get_jwt()
     user = method_name(token)
     videos = Video.query.filter_by(user_id=user.user_id)
-    allRows = []
+    all_videos = []
+    video_des = app.config['UPLOADED_VIDEOS_DEST']
     for video in videos:
-        allRows.append({
-            'videoTitle': video.video_title,
-            'video_path': video.video_path,
-            # 'videoDate': video.video_date,
-            'video_description': video.video_description,
-            'video_subtitle1': video.video_subtitle1_path,
-            'video_subtitle2': video.video_subtitle2_path,
-
-        })
-
-    return jsonify({
-        'response_data':
-            {
-                'videos': allRows
-            }
-
-    })
+        video_without_path = remove_path(video.video_path, video_des)
+        all_videos.append(video_without_path)
+    video_urls = [f'http://localhost:5000/videos/{video}' for video in all_videos]
+    return {'videos': video_urls}
 
 
-@app.route('/display-video', methods=['GET', "POST"])
-def display_video():
-    _video_id = request.json['video_id']
+def remove_path(file_with_path, remove_path):
+    file_without_path = get_path() + remove_path
+    return file_with_path.replace(file_without_path, "")
 
-    displayed_video = filter(lambda video: video.video_id == _video_id, current_user.videos)
-    # return the displayed_video
-    return
+
+def get_path():
+    return basedir + '\\'
+
+
+@app.route('/videos/<path:filename>')
+def get_video(filename):
+    directroy = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST']
+    return send_from_directory(directroy, filename)
+
+
 
 
 @app.route("/edit-profile", methods=['POST'])
@@ -286,15 +308,6 @@ with app.app_context():
 def profilePage():
     token = get_jwt()
     user = method_name(token)
-    videos = Video.query.filter_by(user_id=user.user_id)
-    allRows = []
-    for video in videos:
-        allRows.append({
-            'videoTitle': video.video_title,
-            'videoPath': video.video_path,
-            'videoDate': video.video_date,
-
-        })
     return jsonify({
         'Data': {
             'response_data':
@@ -305,7 +318,6 @@ def profilePage():
                     'userImage': user.user_image,
                     'userBirthDate': user.user_birthdate,
                     'isAdmin': user.is_admin,
-                    'videos': allRows
                 }
         }
     })
@@ -373,7 +385,7 @@ def logout():
 
 @app.route('//register', methods=['POST'])
 def register():
-    _json = request.form
+    _json = request.json
     _first_name = _json['firstName']
     _last_name = _json['lastName']
     _email = _json['email']
@@ -382,14 +394,14 @@ def register():
     _user_image = request.files['profileImage']
     _user_birthdate = _json['userBD']
 
-    imageFile = photos.save(_user_image)
-    user_image_path = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + imageFile
+    # imageFile = photos.save(_user_image)
+    # user_image_path = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + imageFile
 
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
     is_last_name_invalid = not validate_last_Name(_last_name)
     is_email_invalid: bool = not validate_email(_email)
-    is_birth_date_invalid = validate_birth_date(_user_birthdate)
+    is_birth_date_invalid = not validate_birth_date(_user_birthdate)
     is_password_invalid = not validate_password(_password)
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
     is_exiting_email = existing_email is not None
@@ -417,7 +429,7 @@ def register():
         _password, method='pbkdf2:sha256',
         salt_length=8
     )
-    new_user = User(_first_name, _last_name, _email, hashed_password, user_image_path,
+    new_user = User(_first_name, _last_name, _email, hashed_password, # user_image_path,
                     _user_birthdate)
     db.session.add(new_user)
     db.session.commit()
@@ -524,10 +536,10 @@ def validate_email(email):
 
 
 def validate_birth_date(_user_birthdate):
-    if _user_birthdate is None:
-        return True
-    else:
+    if _user_birthdate == "":
         return False
+    else:
+        return True
 
 
 def validate_password(password):

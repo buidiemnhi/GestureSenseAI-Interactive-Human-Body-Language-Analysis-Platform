@@ -53,11 +53,17 @@ export default function RegistrationForm() {
   //Handel submiting of the data
   async function handleSubmit(event) {
     event.preventDefault()
-    fetch('http://127.0.0.1:5000//register', {
-      method: "POST", headers: {
 
-        'Content-Type': 'application/json'
-      }, body: JSON.stringify(formData)
+      const formData2 = new FormData();
+      formData2.append("firstName", formData.firstName);
+      formData2.append('lastName', formData.lastName);
+      formData2.append('userBD', formData.userBD);
+      formData2.append('password', formData.password);
+      formData2.append('confirmPassword', formData.confirmPassword);
+      formData2.append('profileImage', formData.profileImage);
+      console.log(formData2)
+    fetch('http://127.0.0.1:5000//register', {
+      method: "POST",  body: formData2
     })
       .then(response => response.json())
       .then(res => {
