@@ -19,7 +19,30 @@ export default function UploadVideos() {
     const SubmitVideoData = async () => {
         setCurrentView(3)
         //Send the data
-        console.log(JSON.stringify(fullInputData))
+        let jwtToken = localStorage.getItem('jwt_token');
+        var myHeaders = new Headers();
+        myHeaders.append('Authorization', `Bearer ${jwtToken}`);
+        myHeaders.append('Cookie', `session=.${jwtToken}`);
+
+        const fullInputData2 = new fullInputData();
+        fullInputData2.append("video", fullInputData.video);
+        fullInputData2.append('videoTitle', fullInputData.videoTitle);
+        fullInputData2.append('videoDescription', fullInputData.videoDescription);
+        fullInputData2.append('IsShowLandmarksSelected', fullInputData.IsShowLandmarksSelected);
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: fullInputData2,
+          };
+
+          async function apiSubmit(requestOptions) {
+            fetch('http://127.0.0.1:5000//upload-video', requestOptions);
+          }
+            await apiSubmit(requestOptions);
+        
+
+        // console.log(JSON.stringify(fullInputData))
         setFullInputData({
             video: null,
             videoTitle: null,

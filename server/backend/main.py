@@ -191,7 +191,7 @@ def upload_video():
         video = Video(_video_title, video_path, current_date, user.user_id, _description)
 
         # amr hy3dl el function 3shan yst2blo.
-        test_model_new(video_path, dest_path)
+        # test_model_new(video_path, dest_path)
 
         user.add_video(video)
 
@@ -205,18 +205,16 @@ def upload_video():
 def display_all_videos():
     token = get_jwt()
     user = method_name(token)
-    videos = Video.query.filter_by(user_id=user.user_id)
-    all_videos = []
+    all_videos = Video.query.filter_by(user_id=user.user_id)
     video_des = app.config['UPLOADED_VIDEOS_DEST']
-    for video in videos:
-        video_without_path = remove_path(video.video_path, video_des)
-        all_videos.append(video_without_path)
-    video_urls = [f'http://localhost:5000/videos/{video}' for video in all_videos]
-    return {'videos': video_urls}
+    video_data = [{'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, video_des)}',
+                   'video_title': video.video_title, 'video_description': video.video_description}
+                  for video in all_videos]
+    return {'videos': video_data}
 
 
-def remove_path(file_with_path, remove_path):
-    file_without_path = get_path() + remove_path
+def remove_path(file_with_path, path_to_be_removed):
+    file_without_path = get_path() + path_to_be_removed
     return file_with_path.replace(file_without_path, "")
 
 
@@ -229,9 +227,9 @@ def get_video(filename):
     directroy = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST']
     return send_from_directory(directroy, filename)
 
+
 @app.route('/photo/<path:filename>')
 def get_photo(filename):
-
     directroy = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST']
     return send_from_directory(directroy, filename)
 
@@ -254,24 +252,26 @@ def edit_profile():
     imageFile = photos.save(_user_image)
     user_image_path = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + imageFile
 
+    existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
     is_last_name_invalid = not validate_last_Name(_last_name)
     is_email_invalid: bool = not validate_email(_email)
     is_password_invalid = not validate_password(_password)
+    is_exiting_email = existing_email is not None
 
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
 
-    if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_password_invalid | \
+    if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_exiting_email | is_password_invalid | \
             is_password_confirmation_not_match:
         return jsonify({
             'isError': True,
             'Data': {
-                'first_name': {'isError': is_first_name_invalid,
-                               'msg': first_name_error(is_first_name_invalid)},
-                'last_name': {'isError': is_last_name_invalid,
-                              'msg': last_name_error(is_last_name_invalid)},
-                'email': {'isError': is_email_invalid,
-                          'msg': edit_email_error(is_email_invalid)},
+                'firstName': {'isError': is_first_name_invalid,
+                              'msg': first_name_error(is_first_name_invalid)},
+                'lastName': {'isError': is_last_name_invalid,
+                             'msg': last_name_error(is_last_name_invalid)},
+                'email': {'isError': is_email_invalid | is_exiting_email,
+                          'msg': edit_email_error(is_email_invalid, is_exiting_email)},
                 'password': {'isError': is_password_invalid | is_password_confirmation_not_match,
                              'msg': registration_password_error(is_password_invalid,
                                                                 is_password_confirmation_not_match)},
@@ -406,9 +406,9 @@ def register():
             'isError': True,
             'Data': {
                 'firstName': {'isError': is_first_name_invalid,
-                               'msg': first_name_error(is_first_name_invalid)},
+                              'msg': first_name_error(is_first_name_invalid)},
                 'lastName': {'isError': is_last_name_invalid,
-                              'msg': last_name_error(is_last_name_invalid)},
+                             'msg': last_name_error(is_last_name_invalid)},
                 'email': {'isError': is_email_invalid | is_exiting_email,
                           'msg': registration_email_error(is_email_invalid, is_exiting_email)},
                 'Birthdate': {'isError': is_birth_date_invalid,
@@ -448,7 +448,7 @@ REGISTRATION_ERROR_MESSAGES = {
     'lastName_error': 'Last name must be at least 3 characters and contain no special symbols.',
     'invalid_email': 'Email is invalid.',
     'email_exists': 'Email already exists.',
-    'invalid_birthDate': 'Birth date must be valid',
+    'invalid_birthDate': 'Birth date is required',
     'invalid_password': 'Password is invalid.',
     'dose_not_match': 'Password and Confirm Password dose not match.',
     # 'name_error': 'First and Last name must be at least 3 characters and contain no special symbols.',
@@ -502,9 +502,11 @@ def login_password_error(is_password_confirmation_not_match):
         return LOGIN_ERROR_MESSAGES['password_login_error']
 
 
-def edit_email_error(is_email_invalid):
+def edit_email_error(is_email_invalid, is_exiting_email):
     if is_email_invalid:
         return REGISTRATION_ERROR_MESSAGES['invalid_email']
+    if is_exiting_email:
+        return REGISTRATION_ERROR_MESSAGES['email_exists']
 
 
 # def name_error(is_first_name_invalid, is_last_name_invalid):

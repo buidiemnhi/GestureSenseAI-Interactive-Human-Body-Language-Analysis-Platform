@@ -6,7 +6,7 @@ import sampleVTT from '../Dashboard/components/VideoStatistics/Sample.vtt';
 
 export default  function VideoGallery() {
  const [videos, setvideos] = useState([]);
-
+  console.log(videos)
   useEffect(() => {
     async function fetchData() {
       try {
@@ -20,7 +20,7 @@ export default  function VideoGallery() {
           }
         });
         let data = await response.json();
-        setvideos(data.response_data.videos)
+        setvideos(data.videos)
 
       } catch (error) {
         console.error(error);
@@ -28,6 +28,26 @@ export default  function VideoGallery() {
     }
     fetchData()
   }, []);
+
+
+
+  const vids = videos.map((video, index) => (
+    <div key={index} className="col-4">
+      <video width="350" height="270" controls >
+        <source src={video.URL}  />
+        <track src={sampleVTT} label="Body language" kind="captions" srclang="en-us" default />
+        <track src={sampleVTT} label="Body 2" kind="captions" srclang="en-us" default />
+      </video>
+
+      <h2 className="video-title">{video.video_title}</h2>
+      <p className=''>
+      Description:{video.video_description}
+      </p>
+
+    </div>
+  ))
+
+
 
   return (
     <div className='m-5 videoGallery'>
@@ -40,23 +60,10 @@ export default  function VideoGallery() {
 
       <div className=" row">
         {videos.length ===0 ? 
-        <div>No videos to show</div> :
-        videos.map((video, index) => (
+        <div>No videos to show</div> : vids
 
-          <div key={index} className="col-4">
-            <video width="350" height="270" controls >
-              <source src={video.video_path}  />
-              <track src={sampleVTT} label="Body language" kind="captions" srclang="en-us" default />
-              <track src={sampleVTT} label="Body 2" kind="captions" srclang="en-us" default />
-            </video>
 
-            <h2 className="video-title">{video.videoTitle}</h2>
-            <p className=''>
-              {video.video_description}
-            </p>
-
-          </div>
-        ))}
+        }
       </div>
     </div>
   )

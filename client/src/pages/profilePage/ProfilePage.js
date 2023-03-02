@@ -42,7 +42,7 @@ export default function ProfilePage() {
       .then(response => response.json())
       .then(res =>{
         const data = res.Data.response_data
-      console.log(data)
+        
         setProfileData({
         firstName:data.firstName,
         lastName:data.lastName,
@@ -55,7 +55,7 @@ export default function ProfilePage() {
     
   ,[]);
 
-    console.log(profileData)
+ 
   function ChangeViewFuntion(viewID){
     setCurrentView(viewID)
   }

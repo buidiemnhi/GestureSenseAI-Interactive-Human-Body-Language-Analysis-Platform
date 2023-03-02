@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 export default function EditProfile(props) {
-
+    const navigate = useNavigate();
     const [formData, setformData] = useState({
         firstName:props.profileData.firstName,
         lastName:props.profileData.lastName,
@@ -32,7 +32,7 @@ export default function EditProfile(props) {
         })
     
     }
-
+    console.log(ErrorData)
     async function handleSubmit(event) {
         event.preventDefault()
 
@@ -56,13 +56,12 @@ export default function EditProfile(props) {
         headers: myHeaders,
         body: formData2,
       };
-      
         fetch('http://localhost:5000/edit-profile', requestOptions)
           .then(response =>  response.json())
           .then(res =>{if(res.isError){
     
-            const dataObject = res.Data // data object of the response 
-            console.log(dataObject)
+            const dataObject = res.Data // data object of the response
+
             const objectKeysArr = Object.keys(dataObject); // array of the data object attributes name
     
             let temp = {    
@@ -85,7 +84,7 @@ export default function EditProfile(props) {
           SetErrorData(temp)
         }// end of the if 
         else{
-            console.log(formData)
+            navigate('/Profilepage')
         }// end of the else
       })
     }
@@ -114,17 +113,21 @@ export default function EditProfile(props) {
                         <input className='form-control' placeholder='last name' name='lastName' value={formData.lastName} onChange={handleData}/>
                     </div>
 
-                    { ErrorData.firstName &&
                         <div className='col-5'>
+                            { ErrorData.firstName &&
                             <p className='text-danger'>{ErrorData.firstName}</p>
+                            }
                         </div>
-                    }
+    
 
-                    { ErrorData.lastName &&
+                    
                         <div className='col-5'>
+                        { ErrorData.lastName &&
                             <p className='text-danger'>{ErrorData.lastName}</p>
+                        }
                         </div>
-                    }
+                    
+                    
                 </div>
                 
                 <div className='row justify-content-center row mb-3'>
@@ -148,7 +151,7 @@ export default function EditProfile(props) {
                     <input className='form-control' name='email' placeholder='Email' value={formData.email} onChange={handleData}/>
                     </div>
                     { ErrorData.email &&
-                    <p className='col-8 '>{ErrorData.email}</p>
+                    <p className='col-10 offset-1 mt-1 text-danger'>{ErrorData.email}</p>
                     }
                 </div>
 
@@ -161,21 +164,18 @@ export default function EditProfile(props) {
                     <input className='form-control' name='password' placeholder='Password' type="password" value={formData.password} onChange={handleData}/>
                     </div>
                     { ErrorData.password &&
-                    <p className='col-8 '>{ErrorData.password}</p>
+                    <p className='col-10 offset-1 mt-1 text-danger'>{ErrorData.password}</p>
                     }
                 </div>
 
                 <div className='row'>
-                    <label className='col-8 offset-1'>Password Confiramtion</label>
+                    <label className='col-8 offset-1'> Confirm Password </label>
                 </div>
 
                 <div className='row row mb-3'>
                     <div className='col-10 offset-1'>
                     <input className='form-control' name='confirmPassword' type="password" placeholder='Password Confiramtion' value={formData.confirmPassword} onChange={handleData}/>
                     </div>
-                    { ErrorData.password &&
-                    <p className='col-8 '>{ErrorData.password}</p>
-                    }
                 </div>
 
                 <div className='row row mb-3'>
