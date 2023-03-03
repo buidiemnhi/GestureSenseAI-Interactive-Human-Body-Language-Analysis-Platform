@@ -8,6 +8,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 import pickle
 from tkinter import *
@@ -23,7 +24,7 @@ def create_landmarks_cords():
     landmarks = ['action']
     for val in range(1, num_cords + 1):
         landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
-        with open('coords.csv', mode='w', newline='') as f:
+        with open('pose.csv', mode='w', newline='') as f:
             csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             csv_writer.writerow(landmarks)
 
@@ -51,7 +52,7 @@ def save_landmarks(filename, action_name,pose,face,hands):
 
             # Make Detections
             results = holistic.process(image)
-            if not os.path.isfile('C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\coords.csv'):
+            if not os.path.isfile('D:\\Coding\\BodyLanguageDecoderV2\\pose.csv'):
                 create_landmarks_cords()
 
             # make image writeable again
@@ -85,7 +86,7 @@ def save_landmarks(filename, action_name,pose,face,hands):
                                       mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                                       )
             # Export to CSV
-            with open('coords.csv', mode='a', newline='') as f:
+            with open('pose.csv', mode='a', newline='') as f:
                 csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 csv_writer.writerow(extract_landmarks(results, action_name,pose,face,hands))
 
@@ -187,15 +188,18 @@ def extract_keypoints(results):
 
 # training of the four classification models with the coords file
 def train_model():
-    df = pd.read_csv('coords.csv')
+    df = pd.read_csv('pose.csv')
 
     X = df.drop('action', axis=1)  # features
     y = df['action']  # target value
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.01, random_state=1234)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
 
     pipelines = {
         'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
+        'lr':make_pipeline(StandardScaler(), LogisticRegression()),
+        'dt': make_pipeline(StandardScaler(), DecisionTreeClassifier()),
+        'gb':make_pipeline(StandardScaler(), GradientBoostingClassifier()),
     }
 
     fit_models = {}
@@ -207,8 +211,14 @@ def train_model():
         yhat = model.predict(X_test)
         print(algo, accuracy_score(y_test, yhat))
 
-    with open('body_language.pkl', 'wb') as f:
+    with open('pose_rf.pkl', 'wb') as f:
         pickle.dump(fit_models['rf'], f)
+    with open('pose_lr.pkl', 'wb') as f:
+        pickle.dump(fit_models['lr'], f)
+    with open('pose_dt.pkl', 'wb') as f:
+        pickle.dump(fit_models['dt'], f)
+    with open('pose_gb.pkl', 'wb') as f:
+        pickle.dump(fit_models['gb'], f)
 
 # old model
 def test_model():
@@ -342,7 +352,7 @@ def test_model_new():
     if not os.path.exists(destination):
         os.mkdir(destination)
 
-    with open('body_language.pkl', 'rb') as f:
+    with open('pose_lr.pkl', 'rb') as f:
         model = pickle.load(f)
 
     mp_holistic = mp.solutions.holistic
@@ -352,7 +362,7 @@ def test_model_new():
     sentence = []
     predictions = []
     counter = [0]
-    threshold = 0.6
+    threshold = 0.95
 
     # read video frames
     cap = cv2.VideoCapture(path_with_file_extension)
@@ -558,7 +568,7 @@ def mediapipe_detection(image, model):
 #this is used to get the action meaning from the dataset.csv
 def meaning_action(action):
     csv_file = csv.reader(open(
-        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet.csv',
+        'D:\\Coding\\BodyLanguageDecoderV2\\DataSet.csv',
         'r'
     ))
 
@@ -569,7 +579,7 @@ def meaning_action(action):
 # DataSet extract keypoints folder loop
 def loop():
     # assign directory
-    directory = 'ashraf viedo\\'
+    directory = 'Dataset Videos\\'
     if not os.path.exists(directory):
         os.mkdir(directory)
     folders = Path(directory).glob('*')
@@ -584,7 +594,7 @@ def loop():
             j = str(file).split('\\')
             x.append(j[2])
             videos = np.array(x)
-            save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\ashraf viedo\\{foldernames[0]}\\{videos[0]}'
+            save_landmarks(f'D:\\Coding\\BodyLanguageDecoderV2\\Dataset Videos\\{foldernames[0]}\\{videos[0]}'
                            , f'{foldernames[0]}',1 ,0 ,1)
             x.pop(0)
         y.pop(0)
@@ -629,52 +639,39 @@ window.mainloop()
 '''
 #don't use the uploadanddownlad function
 def UploadAndDownloadVideoLandmarks(filename):
-
     landmarks=[]
     destination_path ="C:/Users/amr12/PycharmProjects/MiniAiProject/"
     source_path ="C:/Users/amr12/OneDrive/Desktop/amr videos/"
-
     # putting the solutions into small variables to call them
     mp_drawing = mp.solutions.drawing_utils
     mp_holistic = mp.solutions.holistic
-
     # capturing the video applicable to change in the future
     cap = cv2.VideoCapture(source_path+filename)
-
     # getting the width and the height of the video for the viedo writer
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
     # puting the video wirter into variable
     writer = cv2.VideoWriter(
         '{path}{filename}'.format(path=destination_path, filename=filename)
         , cv2.VideoWriter_fourcc(*'mp4v'), 20, (width, height)
     )
-
     # Initiate holistic model
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
-
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-
             # Recolor Feed
             image = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
-
             # make image not writeable for extra performance that doesn't exist ?
             image.flags.writeable = False
-
             # Make Detections
             results = holistic.process(image)
-
             #print(results.face_landmarks)
             landmarks.append(results.face_landmarks.landmark)
             # make image writeable again
             image.flags.writeable = True
-
             # face_landmarks, pose_landmarks, left_hand_landmarks, right_hand_landmarks
-
             # Recolor image back to BGR for rendering
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             # 1. Draw face landmarks
@@ -682,19 +679,16 @@ def UploadAndDownloadVideoLandmarks(filename):
                                       mp_drawing.DrawingSpec(color=(80, 110, 10), thickness=1, circle_radius=1),
                                       mp_drawing.DrawingSpec(color=(80, 256, 121), thickness=1, circle_radius=1)
                                       )
-
             # 2. Right hand
             mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
                                       mp_drawing.DrawingSpec(color=(80, 22, 10), thickness=2, circle_radius=4),
                                       mp_drawing.DrawingSpec(color=(80, 44, 121), thickness=2, circle_radius=2)
                                       )
-
             # 3. Left Hand
             mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
                                       mp_drawing.DrawingSpec(color=(121, 22, 76), thickness=2, circle_radius=4),
                                       mp_drawing.DrawingSpec(color=(121, 44, 250), thickness=2, circle_radius=2)
                                       )
-
             # 4. Pose Detections
             mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
                                       mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=4),
@@ -702,11 +696,9 @@ def UploadAndDownloadVideoLandmarks(filename):
                                       )
             # write on disk the video with holistics
             writer.write(image)
-
             cv2.imshow('video', image)
             if cv2.waitKey(10) & 0xFF == ord('q'):
                 break
-
     cap.release()
     writer.release()
     cv2.destroyAllWindows()
@@ -721,32 +713,26 @@ def UploadAndDownloadVideoLandmarks(filename):
 #multi threading code for future improvement of the model
 from threading import Thread
 import cv2, time
-
 class ThreadedCamera(object):
     def __init__(self, src=0):
         self.capture = cv2.VideoCapture(src)
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
-
         # FPS = 1/X
         # X = desired FPS
         self.FPS = 1/30
         self.FPS_MS = int(self.FPS * 1000)
-
         # Start frame retrieval thread
         self.thread = Thread(target=self.update, args=())
         self.thread.daemon = True
         self.thread.start()
-
     def update(self):
         while True:
             if self.capture.isOpened():
                 (self.status, self.frame) = self.capture.read()
             time.sleep(self.FPS)
-
     def show_frame(self):
         cv2.imshow('frame', self.frame)
         cv2.waitKey(self.FPS_MS)
-
 if __name__ == '__main__':
     src = 'C:/Users/Asus/Documents/Studio Project — Kapwing.mp4'
     threaded_camera = ThreadedCamera(src)
