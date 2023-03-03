@@ -27,6 +27,8 @@ app.config["SECRET_KEY"] = 'SECRET_KEY'
 app.config['UPLOAD_FOLDER'] = 'files\\videos\\'
 app.config['UPLOADED_VIDEOS_DEST'] = 'files\\videos\\'
 app.config['UPLOADED_PHOTOS_DEST'] = 'files\\photos\\'
+app.config['DEFAULT_PHOTO'] = 'files\\default_photos\\'
+app.config['DEFAULT_PHOTO_NAME'] = 'default.jpg'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -174,7 +176,7 @@ def remove_video(video_id):
 @jwt_required()
 def upload_video():
     token = get_jwt()
-    user = method_name(token)
+    user = get_userID(token)
     if request.method == "POST" and "video" in request.files:
         _video = request.files["video"]
         _video_title = request.form['video_title']
@@ -191,7 +193,7 @@ def upload_video():
         video = Video(_video_title, video_path, current_date, user.user_id, _description)
 
         # amr hy3dl el function 3shan yst2blo.
-        # test_model_new(video_path, dest_path)
+        test_model_new(video_path, dest_path)
 
         user.add_video(video)
 
@@ -204,7 +206,7 @@ def upload_video():
 @jwt_required()
 def display_all_videos():
     token = get_jwt()
-    user = method_name(token)
+    user = get_userID(token)
     all_videos = Video.query.filter_by(user_id=user.user_id)
     video_des = app.config['UPLOADED_VIDEOS_DEST']
     video_data = [{'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, video_des)}',
@@ -228,7 +230,7 @@ def get_video(filename):
     return send_from_directory(directroy, filename)
 
 
-@app.route('/photo/<path:filename>')
+@app.route('/photos/<path:filename>')
 def get_photo(filename):
     directroy = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST']
     return send_from_directory(directroy, filename)
@@ -238,7 +240,7 @@ def get_photo(filename):
 @jwt_required()
 def edit_profile():
     token = get_jwt()
-    user = method_name(token)
+    user = get_userID(token)
     formm = request.form
     _first_name = formm['firstName']
     _last_name = formm['lastName']
@@ -302,7 +304,8 @@ with app.app_context():
 @jwt_required()
 def profilePage():
     token = get_jwt()
-    user = method_name(token)
+    user = get_userID(token)
+    photo_des = app.config['UPLOADED_PHOTOS_DEST']
     return jsonify({
         'Data': {
             'response_data':
@@ -310,7 +313,7 @@ def profilePage():
                     'firstName': user.first_name,
                     'lastName': user.last_name,
                     'email': user.user_email,
-                    'userImage': user.user_image,
+                    'userImage': f'http://localhost:5000/photos/{remove_path(user.user_image, photo_des)}',
                     'userBirthDate': user.user_birthdate,
                     'isAdmin': user.is_admin,
                 }
@@ -382,23 +385,23 @@ def logout():
 def register():
     _first_name = request.form['firstName']
     _last_name = request.form['lastName']
-    _user_image = request.files['profileImage']
     _email = request.form['email']
     _password = request.form['password']
     _confirm_password = request.form['confirmPassword']
     _user_birthdate = request.form['userBD']
-    print(_user_birthdate == "")
-    # imageFile = photos.save(_user_image)
-    # user_image_path = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + imageFile
-    # region code
+
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
     is_last_name_invalid = not validate_last_Name(_last_name)
     is_email_invalid: bool = not validate_email(_email)
+    is_exiting_email = existing_email is not None
     is_birth_date_invalid = not validate_birth_date(_user_birthdate)
     is_password_invalid = not validate_password(_password)
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
-    is_exiting_email = existing_email is not None
+
+    _user_image = request.files['profileImage']
+    is_profile_image_empty = check_profileImage_empty(_user_image)
+
     # endregion
     if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_exiting_email \
             | is_birth_date_invalid | is_password_confirmation_not_match | is_password_invalid:
@@ -424,9 +427,7 @@ def register():
         salt_length=8
     )
 
-    photo = photos.save(_user_image)
-
-    photo_path = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + photo
+    photo_path = return_image(is_profile_image_empty, _user_image)
 
     new_user = User(_first_name, _last_name, _email, hashed_password, photo_path, _user_birthdate)
     db.session.add(new_user)
@@ -509,6 +510,14 @@ def edit_email_error(is_email_invalid, is_exiting_email):
         return REGISTRATION_ERROR_MESSAGES['email_exists']
 
 
+def return_image(is_profile_image_empty_, _user_image):
+    if is_profile_image_empty_:
+        return get_path() + app.config['DEFAULT_PHOTO'] + app.config['DEFAULT_PHOTO_NAME']
+    else:
+        photo = photos.save(_user_image)
+        return basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + photo
+
+
 # def name_error(is_first_name_invalid, is_last_name_invalid):
 #     if is_first_name_invalid:
 #         return REGISTRATION_ERROR_MESSAGES['name_error']
@@ -531,8 +540,8 @@ def validate_last_Name(_last_name):
         return True
 
 
-def validate_email(email):
-    return re.match(r'[^@]+@[^@]+\.[^@]+', email)
+def validate_email(_email):
+    return re.match(r'[^@]+@[^@]+\.[^@]+', _email)
 
 
 def validate_birth_date(_user_birthdate):
@@ -557,6 +566,13 @@ def check_password_match(password, _confirm_password):
         return True
 
 
+def check_profileImage_empty(_user_image):
+    if 'profileImage' in request.files and bool(request.files['profileImage'].filename):
+        return False
+    else:
+        return True
+
+
 def updateLastLogin():
     User.query.filter_by(user_id=current_user.user_id).update(dict(lastLogin=date.today()))
 
@@ -565,15 +581,7 @@ def updateIsOnline():
     User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=False))
 
 
-# def validate_password(password):
-#     if len(password) < 8:
-#         return False
-#     if not re.search("[!@#$%^&*(),.?\":{}|<>]", password):
-#         return False
-#     return True
-
-
-def method_name(token):
+def get_userID(token):
     return User.query.filter_by(user_id=token['sub']).first()
 
 
