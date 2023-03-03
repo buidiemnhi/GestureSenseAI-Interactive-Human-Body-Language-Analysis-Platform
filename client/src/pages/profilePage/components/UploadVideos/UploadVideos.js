@@ -9,9 +9,9 @@ import ThirdPhase from './components/ThirdPhase';
 export default function UploadVideos() {
     const [fullInputData, setFullInputData] = useState({
         video: null,
-        videoTitle: null,
-        videoDescription: null,
-        IsShowLandmarksSelected: false
+        video_title: null,
+        video_description: null,
+        landMarks: false
     })
     const [videoUrl, setVideoUrl] = useState(null);
     const [currentView, setCurrentView] = useState(1)
@@ -24,11 +24,11 @@ export default function UploadVideos() {
         myHeaders.append('Authorization', `Bearer ${jwtToken}`);
         myHeaders.append('Cookie', `session=.${jwtToken}`);
 
-        const fullInputData2 = new fullInputData();
+        const fullInputData2 = new FormData();
         fullInputData2.append("video", fullInputData.video);
-        fullInputData2.append('videoTitle', fullInputData.videoTitle);
-        fullInputData2.append('videoDescription', fullInputData.videoDescription);
-        fullInputData2.append('IsShowLandmarksSelected', fullInputData.IsShowLandmarksSelected);
+        fullInputData2.append('video_title', fullInputData.videoTitle);
+        fullInputData2.append('video_description', fullInputData.videoDescription);
+        fullInputData2.append('landMarks', fullInputData.IsShowLandmarksSelected);
 
         var requestOptions = {
             method: 'POST',
@@ -36,11 +36,21 @@ export default function UploadVideos() {
             body: fullInputData2,
           };
 
-          async function apiSubmit(requestOptions) {
-            fetch('http://127.0.0.1:5000//upload-video', requestOptions);
+          try {
+            const response = await fetch("http://127.0.0.1:5000//upload-video", requestOptions);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error(error);
           }
-            await apiSubmit(requestOptions);
+
         
+        
+        
+
 
         // console.log(JSON.stringify(fullInputData))
         setFullInputData({

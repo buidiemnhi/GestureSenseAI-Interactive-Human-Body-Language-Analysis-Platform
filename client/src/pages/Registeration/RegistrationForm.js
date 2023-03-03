@@ -15,25 +15,17 @@ export default function RegistrationForm() {
     email: "",
     password: "",
     confirmPassword: "",
-    profileImage: null,
+    profileImage: new File([], "", { type: "application/octet-stream" }),
     userBD: ""
   })
-
-  // style for the second column background image
-  const style = {
-    backgroundImage: `url(${process.env.PUBLIC_URL + '/imgs/ai.jpg'})`,
-    backgroundPosition: "center",
-    backgroundSize: "cover",
-    backgroundRepeat: "no-repeat"
-  }
 
   // state for the form data errors
   const [ErrorData, SetErrorData] = useState({
     firstName: "",
-lastName:"",	
+    lastName: "",
     email: "",
     password: "",
-Birthdate:""
+    Birthdate: ""
 
   })
 
@@ -55,23 +47,31 @@ Birthdate:""
   async function handleSubmit(event) {
     event.preventDefault()
 
-      const formData2 = new FormData();
-      formData2.append("firstName", formData.firstName);
-      formData2.append('lastName', formData.lastName);
-      formData2.append('userBD', formData.userBD);
-      formData2.append('password', formData.password);
-      formData2.append('email', formData.email);
-      formData2.append('confirmPassword', formData.confirmPassword);
-      formData2.append('profileImage', formData.profileImage);
-      console.log(formData2.getAll("password"))
+    const formData2 = new FormData();
+    formData2.append("firstName", formData.firstName);
+    formData2.append('lastName', formData.lastName);
+    formData2.append('userBD', formData.userBD);
+    formData2.append('password', formData.password);
+    formData2.append('email', formData.email);
+    formData2.append('confirmPassword', formData.confirmPassword);
+    formData2.append('profileImage', formData.profileImage);
+    console.log(formData2.getAll("password"))
+
+    for (let [key, value] of formData2.entries()) {
+      console.log(key, value);
+    }
+
+
+
 
     fetch('http://127.0.0.1:5000//register', {
-      method: "POST",  body: formData2,
+      method: "POST", body: formData2,
       // headers: {
       //   "Content-Type": "multipart/form-data",
       // },
     })
-      .then(response => response.json())
+      .then(
+        response => response.json())
       .then(res => {
         if (res.isError) {
 
@@ -80,13 +80,13 @@ Birthdate:""
           const objectKeysArr = Object.keys(dataObject); // array of the data object attributes name
 
           let temp = {
-    firstName: "",
-lastName:"",	
-    email: "",
-    password: "",
-Birthdate:""
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+            Birthdate: ""
 
-  } // temp structure to set the state in one step 
+          } // temp structure to set the state in one step 
 
           objectKeysArr.map(async (key) => {
             if (dataObject[key].isError) {
@@ -131,17 +131,17 @@ Birthdate:""
                 </div>
               </div>
               <div className="row my-1">
-                      {ErrorData.firstName &&
-                      <div className="col-6">
-                        <p className="text-danger"> {ErrorData.firstName} </p>
-                      </div>
-                      }
-                      {ErrorData.lastName &&
-                      <div className="col-6">
-                        <p className="text-danger"> {ErrorData.lastName} </p>
-                      </div>
-                      }
-                    </div>
+                {ErrorData.firstName &&
+                  <div className="col-6">
+                    <p className="text-danger"> {ErrorData.firstName} </p>
+                  </div>
+                }
+                {ErrorData.lastName &&
+                  <div className="col-6">
+                    <p className="text-danger"> {ErrorData.lastName} </p>
+                  </div>
+                }
+              </div>
               <div className="row my-1 mb-3">
                 <div className="col-md-12">
                   <div className="row ">
@@ -155,7 +155,7 @@ Birthdate:""
                     <div className="col-6">
                       <div className="row "><label className="col-form-label col-8">Birth date</label>
                         <div className="col-12" ><input type="date" className="form-control" value={formData.userBD} name='userBD' onChange={handleData} required /></div>
-			<div className="col-12 ">
+                        <div className="col-12 ">
                           <p className="text-danger"> {ErrorData.Birthdate} </p>
                         </div>
                       </div>
