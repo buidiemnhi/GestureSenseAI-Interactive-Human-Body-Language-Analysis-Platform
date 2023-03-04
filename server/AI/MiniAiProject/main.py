@@ -382,10 +382,10 @@ def test_model_new():
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while cap.isOpened():
 
-            # Read feed
             frame_exists, curr_frame = cap.read()
             if not frame_exists:
                 break
+
             # Make detections
             image, results = mediapipe_detection(curr_frame, holistic)
             # frame with timestamp in seconds
@@ -566,7 +566,7 @@ def mediapipe_detection(image, model):
 #this is used to get the action meaning from the dataset.csv
 def meaning_action(action):
     csv_file = csv.reader(open(
-        'D:\\Coding\\BodyLanguageDecoderV2\\DataSet.csv',
+        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet.csv',
         'r'
     ))
 
