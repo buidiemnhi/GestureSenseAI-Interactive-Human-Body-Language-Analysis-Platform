@@ -10,6 +10,10 @@ from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder
+from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense, LSTM
 import pickle
 from tkinter import *
 from tkinter import filedialog
@@ -188,18 +192,11 @@ def extract_keypoints(results):
 
 # training of the four classification models with the coords file
 def train_model():
-    df = pd.read_csv('pose.csv')
-
-    X = df.drop('action', axis=1)  # features
-    y = df['action']  # target value
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
-
     pipelines = {
         'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
-        'lr':make_pipeline(StandardScaler(), LogisticRegression()),
+        'lr': make_pipeline(StandardScaler(), LogisticRegression()),
         'dt': make_pipeline(StandardScaler(), DecisionTreeClassifier()),
-        'gb':make_pipeline(StandardScaler(), GradientBoostingClassifier()),
+        'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
     }
 
     fit_models = {}
@@ -219,6 +216,7 @@ def train_model():
         pickle.dump(fit_models['dt'], f)
     with open('pose_gb.pkl', 'wb') as f:
         pickle.dump(fit_models['gb'], f)
+
 
 # old model
 def test_model():
