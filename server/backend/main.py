@@ -9,6 +9,7 @@ from flask_login import LoginManager, UserMixin, current_user, login_required, l
 from flask_sqlalchemy import SQLAlchemy
 from flask_uploads import UploadSet, configure_uploads
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 from AI import *
 
@@ -185,9 +186,15 @@ def upload_video():
         # hstlm el viarbale da ezay.
         current_date = datetime.now()
 
-        videoFile = videos.save(_video)
+        folder_name = create_user_folder(user)
+        folder_path = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], folder_name)
+        os.makedirs(folder_path, exist_ok=True)
 
-        video_path = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + videoFile
+        # Save the uploaded video to the user's folder
+        video_filename = secure_filename(_video.filename)
+        video_path = get_app_path() + os.path.join(folder_path, video_filename)
+        _video.save(video_path)
+
         dest_path = basedir + '\\' + app.config['VIDEO_WITH_LANDMARKS']
 
         video = Video(_video_title, video_path, current_date, user.user_id, _description)
@@ -208,20 +215,11 @@ def display_all_videos():
     token = get_jwt()
     user = get_userID(token)
     all_videos = Video.query.filter_by(user_id=user.user_id)
-    video_des = app.config['UPLOADED_VIDEOS_DEST']
-    video_data = [{'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, video_des)}',
+    path_to_be_removed = app.config['UPLOADED_VIDEOS_DEST'] + create_user_folder(user) + '\\'
+    video_data = [{'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, path_to_be_removed)}',
                    'video_title': video.video_title, 'video_description': video.video_description}
                   for video in all_videos]
     return {'videos': video_data}
-
-
-def remove_path(file_with_path, path_to_be_removed):
-    file_without_path = get_path() + path_to_be_removed
-    return file_with_path.replace(file_without_path, "")
-
-
-def get_path():
-    return basedir + '\\'
 
 
 @app.route('/videos/<path:filename>')
@@ -435,6 +433,8 @@ def register():
     return jsonify(SUCCESS_MESSAGE['Data'])
 
 
+########################################################################################################################
+
 SUCCESS_MESSAGE = ({
     'Data': {
         'response_data':
@@ -512,20 +512,14 @@ def edit_email_error(is_email_invalid, is_exiting_email):
 
 def return_image(is_profile_image_empty_, _user_image):
     if is_profile_image_empty_:
-        return get_path() + app.config['DEFAULT_PHOTO'] + app.config['DEFAULT_PHOTO_NAME']
+        return get_app_path() + app.config['DEFAULT_PHOTO'] + app.config['DEFAULT_PHOTO_NAME']
     else:
         photo = photos.save(_user_image)
         return basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + photo
 
 
-# def name_error(is_first_name_invalid, is_last_name_invalid):
-#     if is_first_name_invalid:
-#         return REGISTRATION_ERROR_MESSAGES['name_error']
-#     elif is_last_name_invalid:
-#         return REGISTRATION_ERROR_MESSAGES['name_error']
-
-
 ######################################################################################
+
 def validate_first_name(_first_name):
     if len(_first_name) < 3:
         return False
@@ -583,6 +577,20 @@ def updateIsOnline():
 
 def get_userID(token):
     return User.query.filter_by(user_id=token['sub']).first()
+
+
+def remove_path(file_with_path, path_to_be_removed):
+    file_without_path = get_app_path() + path_to_be_removed
+    return file_with_path.replace(file_without_path, "")
+
+
+def get_app_path():
+    return basedir + '\\'
+
+
+def create_user_folder(user):
+    folder_name = user.first_name + "_" + user.last_name
+    return folder_name
 
 
 # Run server
