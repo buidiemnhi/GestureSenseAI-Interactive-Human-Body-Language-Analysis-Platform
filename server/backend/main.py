@@ -25,9 +25,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = 'SECRET_KEY'
-app.config['UPLOAD_FOLDER'] = 'files\\videos\\'
-app.config['UPLOADED_VIDEOS_DEST'] = 'files\\videos\\'
-app.config['UPLOADED_PHOTOS_DEST'] = 'files\\photos\\'
+app.config['UPLOAD_FOLDER'] = 'files\\'
+app.config['UPLOADED_VIDEOS_DEST'] = 'files\\'
+app.config['UPLOADED_PHOTOS_DEST'] = 'files\\'
 app.config['DEFAULT_PHOTO'] = 'files\\default_photos\\'
 app.config['DEFAULT_PHOTO_NAME'] = 'default.jpg'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
@@ -182,17 +182,14 @@ def upload_video():
         _video = request.files["video"]
         _video_title = request.form['video_title']
         _description = request.form['video_description']
-        _landMarks = request.form['landMarks']
+        # _landMarks = request.form['landMarks']
         # hstlm el viarbale da ezay.
         current_date = datetime.now()
 
-        folder_name = create_user_folder(user)
-        folder_path = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], folder_name)
-        os.makedirs(folder_path, exist_ok=True)
-
         # Save the uploaded video to the user's folder
         video_filename = secure_filename(_video.filename)
-        video_path = get_app_path() + os.path.join(folder_path, video_filename)
+        video_path = get_app_path() + os.path.join(get_videos_folder_path(user.first_name, user.last_name),
+                                                   video_filename)
         _video.save(video_path)
 
         dest_path = basedir + '\\' + app.config['VIDEO_WITH_LANDMARKS']
@@ -215,7 +212,8 @@ def display_all_videos():
     token = get_jwt()
     user = get_userID(token)
     all_videos = Video.query.filter_by(user_id=user.user_id)
-    path_to_be_removed = app.config['UPLOADED_VIDEOS_DEST'] + create_user_folder(user) + '\\'
+    path_to_be_removed = app.config['UPLOADED_VIDEOS_DEST'] + get_videos_folder_path(user.first_name,
+                                                                                     user.last_name) + '\\'
     video_data = [{'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, path_to_be_removed)}',
                    'video_title': video.video_title, 'video_description': video.video_description}
                   for video in all_videos]
@@ -425,7 +423,8 @@ def register():
         salt_length=8
     )
 
-    photo_path = return_image(is_profile_image_empty, _user_image)
+    create_folder_for_user(_first_name, _last_name)
+    photo_path = return_image_m(is_profile_image_empty, _user_image, _first_name, _last_name)
 
     new_user = User(_first_name, _last_name, _email, hashed_password, photo_path, _user_birthdate)
     db.session.add(new_user)
@@ -518,6 +517,16 @@ def return_image(is_profile_image_empty_, _user_image):
         return basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + photo
 
 
+def return_image_m(is_profile_image_empty_, _user_image, _first_name, _last_name):
+    if is_profile_image_empty_:
+        return get_app_path() + app.config['DEFAULT_PHOTO'] + app.config['DEFAULT_PHOTO_NAME']
+    else:
+        photo_filename = secure_filename(_user_image.filename)
+        photo_path = get_app_path() + os.path.join(get_photo_folder_path(_first_name, _last_name), photo_filename)
+        _user_image.save(photo_path)
+        return photo_path
+
+
 ######################################################################################
 
 def validate_first_name(_first_name):
@@ -588,9 +597,20 @@ def get_app_path():
     return basedir + '\\'
 
 
-def create_user_folder(user):
-    folder_name = user.first_name + "_" + user.last_name
-    return folder_name
+def get_photo_folder_path(first_name, last_name):
+    return app.config['UPLOAD_FOLDER'] + first_name + "_" + last_name + '\\' + 'photos' + '\\'
+
+
+def get_videos_folder_path(first_name, last_name):
+    return app.config['UPLOAD_FOLDER'] + first_name + "_" + last_name + '\\' + 'videos' + '\\'
+
+
+def create_folder_for_user(first_name, last_name):
+    folder_name = first_name + "_" + last_name
+    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+    os.mkdir(os.path.join(folder_path, 'photos'))
+    os.mkdir(os.path.join(folder_path, 'videos'))
 
 
 # Run server
