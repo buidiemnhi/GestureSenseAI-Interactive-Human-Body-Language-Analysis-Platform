@@ -7,19 +7,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import LabelEncoder
-from keras.utils import to_categorical
-from keras.models import Sequential
-from keras.layers import Dense, LSTM
 import pickle
 from tkinter import *
 from tkinter import filedialog
 import mediapipe as mp
 from pathlib import Path
-
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
 
 
 # creation of csv file for the landmarks cords
@@ -28,7 +27,7 @@ def create_landmarks_cords():
     landmarks = ['action']
     for val in range(1, num_cords + 1):
         landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
-        with open('pose.csv', mode='w', newline='') as f:
+        with open('pose_images.csv', mode='w', newline='') as f:
             csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             csv_writer.writerow(landmarks)
 
@@ -49,14 +48,14 @@ def save_landmarks(filename, action_name,pose,face,hands):
                 break
 
             # Recolor Feed
-            image = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
+            image = cv2.cvtColor(cv2.flip(frame, 0), cv2.COLOR_BGR2RGB)
 
             # make image not writeable for extra performance that doesn't exist ?
             image.flags.writeable = False
 
             # Make Detections
             results = holistic.process(image)
-            if not os.path.isfile('D:\\Coding\\BodyLanguageDecoderV2\\pose.csv'):
+            if not os.path.isfile('D:\\Coding\\BodyLanguageDecoderV2\\pose_images.csv'):
                 create_landmarks_cords()
 
             # make image writeable again
@@ -90,7 +89,7 @@ def save_landmarks(filename, action_name,pose,face,hands):
                                       mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                                       )
             # Export to CSV
-            with open('pose.csv', mode='a', newline='') as f:
+            with open('pose_images.csv', mode='a', newline='') as f:
                 csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 csv_writer.writerow(extract_landmarks(results, action_name,pose,face,hands))
 
@@ -192,30 +191,29 @@ def extract_keypoints(results):
 
 # training of the four classification models with the coords file
 def train_model():
+    df = pd.read_csv('pose.csv')
+
+    X = df.drop('action', axis=1)  # features
+    y = df['action']  # target value
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
+
     pipelines = {
-        'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
-        'lr': make_pipeline(StandardScaler(), LogisticRegression()),
-        'dt': make_pipeline(StandardScaler(), DecisionTreeClassifier()),
-        'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
+        'nb':make_pipeline(StandardScaler(), GaussianNB()),
+        'knn':make_pipeline(StandardScaler(), KNeighborsClassifier()),
+        
     }
 
     fit_models = {}
     for algo, pipeline in pipelines.items():
         model = pipeline.fit(X_train, y_train)
         fit_models[algo] = model
-
     for algo, model in fit_models.items():
         yhat = model.predict(X_test)
         print(algo, accuracy_score(y_test, yhat))
 
-    with open('pose_rf.pkl', 'wb') as f:
-        pickle.dump(fit_models['rf'], f)
-    with open('pose_lr.pkl', 'wb') as f:
-        pickle.dump(fit_models['lr'], f)
-    with open('pose_dt.pkl', 'wb') as f:
-        pickle.dump(fit_models['dt'], f)
-    with open('pose_gb.pkl', 'wb') as f:
-        pickle.dump(fit_models['gb'], f)
+    with open('pose_knn.pkl', 'wb') as f:
+        pickle.dump(fit_models['knn'], f)
 
 
 # old model
@@ -360,7 +358,7 @@ def test_model_new():
     sentence = []
     predictions = []
     counter = [0]
-    threshold = 0.95
+    threshold = 0.9
 
     # read video frames
     cap = cv2.VideoCapture(path_with_file_extension)
@@ -382,12 +380,12 @@ def test_model_new():
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while cap.isOpened():
 
+            # Read feed
             frame_exists, curr_frame = cap.read()
             if not frame_exists:
                 break
-
             # Make detections
-            image, results = mediapipe_detection(curr_frame, holistic)
+            image, results = mediapipe_detection(cv2.flip(curr_frame,0), holistic)
             # frame with timestamp in seconds
             print("for frame : " + str(frame_no) + "   timestamp is: ", str((cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)))
 
@@ -406,64 +404,67 @@ def test_model_new():
                 body_language_prob = model.predict_proba(sequence)[0]
                 print(res)
                 predictions.append(res)
-
+                unique_value, frequencies = np.unique(predictions[-25:],return_counts=True)
+                
                 # if the last 10 predictions are the same
-                if np.unique(predictions[-10:])[0] == res:
-                    # if the prediction is higher than threshold
+                if np.unique(predictions[-25:])[0] == res:
                     if body_language_prob[np.argmax(body_language_prob)] > threshold:
-                        # if it is not the first prediction
-                        if len(sentence) > 0:
-                            # if the predictions is not equal to the last prediction
-                            if res != sentence[-1]:
-                                # end time
-                                end = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-
-                                def f(x, decimals=3):
-                                    r = str(round(x, decimals))  # round and convert to string
-                                    r = r.split('.')[-1]  # split at the dot and keep the decimals
-                                    return r
-
-                                milliseconds_start = start2 % 1
-                                seconds_start = int(start2) % 60
-                                minutes_start = int(start2 / 60) % 60
-                                hours_start = int(start2 / 3600)
-                                print(
-                                    f"{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}")
-
-                                print("start", start2)
-                                print("end", end)
-
-                                milliseconds_end = end % 1
-                                seconds_end = int(end) % 60
-                                minutes_end = int(end / 60) % 60
-                                hours_end = int(end / 3600)
-                                print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
-
-                                with open(f"{destination}\\{filename}.srt", "a") as srt_file:
-                                    srt_file.write(
-                                        f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                                        f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
-
-                                with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
-                                    srt_file.write(
-                                        f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                                        f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
-
-                                # counter for the SRT file action
+                        # if the prediction is higher than threshold
+                        if frequencies[0] == 25:
+                            print(frequencies[0])
+                            # if it is not the first prediction
+                            if len(sentence) > 0:
+                                # if the predictions is not equal to the last prediction
+                                if res != sentence[-1]:
+                                    # end time
+                                    end = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
+    
+                                    def f(x, decimals=3):
+                                        r = str(round(x, decimals))  # round and convert to string
+                                        r = r.split('.')[-1]  # split at the dot and keep the decimals
+                                        return r
+    
+                                    milliseconds_start = start2 % 1
+                                    seconds_start = int(start2) % 60
+                                    minutes_start = int(start2 / 60) % 60
+                                    hours_start = int(start2 / 3600)
+                                    print(
+                                        f"{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}")
+    
+                                    print("start", start2)
+                                    print("end", end)
+    
+                                    milliseconds_end = end % 1
+                                    seconds_end = int(end) % 60
+                                    minutes_end = int(end / 60) % 60
+                                    hours_end = int(end / 3600)
+                                    print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
+    
+                                    with open(f"{destination}\\{filename}.srt", "a") as srt_file:
+                                        srt_file.write(
+                                            f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
+                                            f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
+    
+                                    with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
+                                        srt_file.write(
+                                            f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
+                                            f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
+    
+                                    # counter for the SRT file action
+                                    counter.append(counter[-1] + 1)
+                                    sentence.append(res)
+                                    print(sentence)
+    
+                                    # start time again
+                                    start2 = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
+    
+                            # else of the first prediction
+                            else:
+                                # start time
+                                start2 = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
+                                # counter for the SRT file actions
                                 counter.append(counter[-1] + 1)
                                 sentence.append(res)
-                                print(sentence)
-
-                                # start time again
-                                start2 = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-
-                        # else of the first prediction
-                        else:
-                            # start time
-                            start2 = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-                            # counter for the SRT file actions
-                            counter.append(counter[-1] + 1)
-                            sentence.append(res)
 
                 if len(sentence) > 5:
                     sentence = sentence[-5:]
@@ -526,6 +527,7 @@ def test_model_new():
             counter.append(counter[-1] + 1)
         except:
             pass
+
         cap.release()
         cv2.destroyAllWindows()
 
@@ -566,7 +568,7 @@ def mediapipe_detection(image, model):
 #this is used to get the action meaning from the dataset.csv
 def meaning_action(action):
     csv_file = csv.reader(open(
-        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet.csv',
+        'D:\\Coding\\BodyLanguageDecoderV2\\DataSet.csv',
         'r'
     ))
 
@@ -577,7 +579,7 @@ def meaning_action(action):
 # DataSet extract keypoints folder loop
 def loop():
     # assign directory
-    directory = 'Dataset Videos\\'
+    directory = 'Dataset Images\\'
     if not os.path.exists(directory):
         os.mkdir(directory)
     folders = Path(directory).glob('*')
@@ -592,7 +594,7 @@ def loop():
             j = str(file).split('\\')
             x.append(j[2])
             videos = np.array(x)
-            save_landmarks(f'D:\\Coding\\BodyLanguageDecoderV2\\Dataset Videos\\{foldernames[0]}\\{videos[0]}'
+            save_landmarks(f'D:\\Coding\\BodyLanguageDecoderV2\\Dataset Images\\{foldernames[0]}\\{videos[0]}'
                            , f'{foldernames[0]}',1 ,0 ,1)
             x.pop(0)
         y.pop(0)
