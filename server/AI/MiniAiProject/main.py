@@ -15,6 +15,7 @@ from tkinter import filedialog
 import mediapipe as mp
 
 
+<<<<<<< Updated upstream
 
 def draw_styled_landmarks(image, results):
     mp_drawing = mp.solutions.drawing_utils
@@ -50,6 +51,8 @@ def mediapipe_detection(image, model):
     return image, results
 
 
+=======
+>>>>>>> Stashed changes
 # creation of csv file for the landmarks cords
 def create_landmarks_cords():
     num_cords = 543
@@ -162,7 +165,11 @@ def extract_keypoints(results):
 
 
 def train_model():
+<<<<<<< Updated upstream
     df = pd.read_csv('coords.csv')
+=======
+    df = pd.read_csv('PoseAfterReshape.csv')
+>>>>>>> Stashed changes
 
     X = df.drop('action', axis=1)  # features
     y = df['action']  # target value
@@ -174,6 +181,7 @@ def train_model():
         'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
         'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
         'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
+        'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
     }
 
     fit_models = {}
@@ -187,8 +195,22 @@ def train_model():
 
     with open('action_detection.pkl', 'wb') as f:
         pickle.dump(fit_models['rf'], f)
+<<<<<<< Updated upstream
 
 # old model code
+=======
+    with open('pose_lr.pkl', 'wb') as f:
+        pickle.dump(fit_models['lr'], f)
+    with open('pose_dt.pkl', 'wb') as f:
+        pickle.dump(fit_models['dt'], f)
+    with open('pose_gb.pkl', 'wb') as f:
+        pickle.dump(fit_models['gb'], f)
+    with open('pose_rc.pkl', 'wb') as f:
+        pickle.dump(fit_models['rc'], f)
+
+'''
+# old model
+>>>>>>> Stashed changes
 def test_model():
     with open('body_language.pkl', 'rb') as f:
         model = pickle.load(f)
@@ -297,7 +319,7 @@ def test_model():
 
     cap.release()
     cv2.destroyAllWindows()
-
+'''
 
 def meaning_action(action):
     csv_file = csv.reader(open('C:/Users/amr12/PycharmProjects/MiniAiProject/DataSet.csv', 'r'))
@@ -323,9 +345,14 @@ def test_model_new():
     filename = x
     destination = 'C:/Users/amr12/OneDrive/Documents/GitHub/graduationProject/server/AI/MiniAiProject'
 
+<<<<<<< Updated upstream
     with open('action_detection.pkl', 'rb') as f:
         model = pickle.load(f)
 
+=======
+    with open('pose_lr.pkl', 'rb') as f:
+       model = pickle.load(f)
+>>>>>>> Stashed changes
     mp_holistic = mp.solutions.holistic
 
     # 1. declaration of variables
@@ -333,7 +360,11 @@ def test_model_new():
     sentence = []
     predictions = []
     counter = [0]
+<<<<<<< Updated upstream
     threshold = 0.6
+=======
+    threshold = 0.99
+>>>>>>> Stashed changes
 
     # read video frames
     cap = cv2.VideoCapture(path_with_file_extension)
@@ -501,7 +532,133 @@ def test_model_new():
         cap.release()
         cv2.destroyAllWindows()
 
+<<<<<<< Updated upstream
+=======
+#this code allows for the landmarks to be drawn on the body
+def draw_styled_landmarks(image, results):
+    mp_drawing = mp.solutions.drawing_utils
+    mp_holistic = mp.solutions.holistic
+    # Draw face connections
+    mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION,
+                              mp_drawing.DrawingSpec(color=(80, 110, 10), thickness=1, circle_radius=1),
+                              mp_drawing.DrawingSpec(color=(80, 256, 121), thickness=1, circle_radius=1)
+                              )
+    # Draw pose connections
+    mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
+                              mp_drawing.DrawingSpec(color=(80, 22, 10), thickness=2, circle_radius=4),
+                              mp_drawing.DrawingSpec(color=(80, 44, 121), thickness=2, circle_radius=2)
+                              )
+    # Draw left hand connections
+    mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
+                              mp_drawing.DrawingSpec(color=(121, 22, 76), thickness=2, circle_radius=4),
+                              mp_drawing.DrawingSpec(color=(121, 44, 250), thickness=2, circle_radius=2)
+                              )
+    # Draw right hand connections
+    mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
+                              mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=4),
+                              mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
+                              )
 
+#the detection of the landmarks on the body
+def mediapipe_detection(image, model):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # COLOR CONVERSION BGR 2 RGB
+    image.flags.writeable = False  # Image is no longer writeable
+    results = model.process(image)  # Make prediction
+    image.flags.writeable = True  # Image is now writeable
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # COLOR COVERSION RGB 2 BGR
+    return image, results
+
+#this is used to get the action meaning from the dataset.csv
+def meaning_action(action):
+    csv_file = csv.reader(open(
+        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet.csv',
+        'r'
+    ))
+
+    for row in csv_file:
+        if action == row[0]:
+            return row[2]
+
+# DataSet extract keypoints folder loop
+def loop():
+    # assign directory
+    directory = 'Dataset Videos\\'
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    folders = Path(directory).glob('*')
+    x = []
+    y = []
+    for folder in folders:
+        i = str(folder).split('\\')
+        y.append(i[1])
+        foldernames = np.array(y)
+        files = Path(f"{directory}{i[1]}").glob('*')
+        for file in files:
+            j = str(file).split('\\')
+            x.append(j[2])
+            videos = np.array(x)
+            save_landmarks(f'D:\\Coding\\BodyLanguageDecoderV2\\Dataset Videos\\{foldernames[0]}\\{videos[0]}'
+                           , f'{foldernames[0]}',1 ,0 ,1)
+            x.pop(0)
+        y.pop(0)
+'''
+def balance_data():
+    df = pd.read_csv('pose.csv')
+    # Get the counts of each label
+    label_counts = df['action'].value_counts()
+>>>>>>> Stashed changes
+
+    # Find the maximum count of any label
+    max_count = label_counts.max()
+
+    # Initialize an empty DataFrame to store the balanced data
+    balanced_df = pd.DataFrame(columns=['label', 'features'])
+
+    # Loop through each label
+    for label in label_counts.index:
+        # Get the subset of the data for this label
+        subset_df = df[df['action'] == label]
+
+        # If the count of this label is less than the maximum count,
+        # duplicate the existing records to fill in the missing data
+        if label_counts[label] < max_count:
+            num_copies = int(np.ceil(max_count / label_counts[label]))
+            new_subset_df = pd.concat([subset_df] * num_copies)
+            new_subset_df = new_subset_df.iloc[:max_count]
+        else:
+            new_subset_df = subset_df
+
+        # Append the balanced data for this label to the overall balanced data
+        balanced_df = pd.concat([balanced_df, new_subset_df])
+    balanced_df = balanced_df.drop(balanced_df.columns[0:2],axis=1)
+    balanced_df.to_csv('PoseAfterReshape.csv')
+
+
+def myLSTM():
+    df = pd.read_csv('PoseAfterReshape.csv')
+
+    le = LabelEncoder()
+    X = df.drop('action', axis=1)  # features
+    y = le.fit_transform(df['action'])
+    y = to_categorical(y).astype(int)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05)
+    X_train,y_train = np.array(X_train),np.array(y_train)
+    print(y_train.shape)
+    model = Sequential()
+    model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(2172,8)))
+    model.add(LSTM(128, return_sequences=True, activation='relu'))
+    model.add(LSTM(64, return_sequences=False, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(y_train.shape[1], activation='softmax'))
+    print(model.summary())
+
+    model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+
+    model.fit(X_train, y_train, epochs=20)
+
+    model.save('action.h5')
+'''
 window = Tk()
 
 # Set window title
@@ -526,6 +683,25 @@ button_test = Button(window,
                      command=test_model_new)
 button_test.pack()
 
+<<<<<<< Updated upstream
+=======
+button_loop = Button(window,
+                     text="file loop",
+                     command=loop)
+button_loop.pack()
+'''
+button_CSVreshape = Button(window,
+                     text="change csv shape for lstm",
+                     command=balance_data)
+button_CSVreshape.pack()
+
+
+button_LSTM = Button(window,
+                     text="lstm model train",
+                     command=myLSTM)
+button_LSTM.pack()
+'''
+>>>>>>> Stashed changes
 button_exit = Button(window,
                      text="Exit",
                      command=window.destroy)
