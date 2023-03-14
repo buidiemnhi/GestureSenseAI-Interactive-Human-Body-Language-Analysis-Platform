@@ -17,8 +17,7 @@ from tkinter import *
 from tkinter import filedialog
 import mediapipe as mp
 from pathlib import Path
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+
 
 
 # creation of csv file for the landmarks cords
@@ -385,7 +384,7 @@ def test_model_new():
             if not frame_exists:
                 break
             # Make detections
-            image, results = mediapipe_detection(cv2.flip(curr_frame,0), holistic)
+            image, results = mediapipe_detection(cv2.flip(curr_frame,1), holistic)
             # frame with timestamp in seconds
             print("for frame : " + str(frame_no) + "   timestamp is: ", str((cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)))
 
