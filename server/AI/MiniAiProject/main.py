@@ -26,7 +26,7 @@ def create_landmarks_cords():
     landmarks = ['action']
     for val in range(1, num_cords + 1):
         landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
-        with open('pose_images.csv', mode='w', newline='') as f:
+        with open('pose.csv', mode='w', newline='') as f:
             csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             csv_writer.writerow(landmarks)
 
@@ -47,14 +47,14 @@ def save_landmarks(filename, action_name,pose,face,hands):
                 break
 
             # Recolor Feed
-            image = cv2.cvtColor(cv2.flip(frame, 0), cv2.COLOR_BGR2RGB)
+            image = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
 
             # make image not writeable for extra performance that doesn't exist ?
             image.flags.writeable = False
 
             # Make Detections
             results = holistic.process(image)
-            if not os.path.isfile('D:\\Coding\\BodyLanguageDecoderV2\\pose_images.csv'):
+            if not os.path.isfile('pose.csv'):
                 create_landmarks_cords()
 
             # make image writeable again
@@ -88,7 +88,7 @@ def save_landmarks(filename, action_name,pose,face,hands):
                                       mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                                       )
             # Export to CSV
-            with open('pose_images.csv', mode='a', newline='') as f:
+            with open('pose.csv', mode='a', newline='') as f:
                 csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 csv_writer.writerow(extract_landmarks(results, action_name,pose,face,hands))
 
@@ -188,19 +188,24 @@ def extract_keypoints(results):
 
     return np.concatenate([pose,face,lh, rh])
 
-# training of the four classification models with the coords file
+# training of the four classification models with the coordinates file
 def train_model():
     df = pd.read_csv('pose.csv')
 
     X = df.drop('action', axis=1)  # features
     y = df['action']  # target value
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
     pipelines = {
-        'nb':make_pipeline(StandardScaler(), GaussianNB()),
-        'knn':make_pipeline(StandardScaler(), KNeighborsClassifier()),
-        
+        'lr': make_pipeline(StandardScaler(), LogisticRegression()),
+        #'nb': make_pipeline(StandardScaler(), GaussianNB()),
+        #'knn': make_pipeline(StandardScaler(), KNeighborsClassifier()),
+        #'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
+        #'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
+        #'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
+        #'dt': make_pipeline(StandardScaler(), DecisionTreeClassifier()),
+
     }
 
     fit_models = {}
@@ -211,8 +216,26 @@ def train_model():
         yhat = model.predict(X_test)
         print(algo, accuracy_score(y_test, yhat))
 
-    with open('pose_knn.pkl', 'wb') as f:
-        pickle.dump(fit_models['knn'], f)
+    with open('pose_lr.pkl', 'wb') as f:
+        pickle.dump(fit_models['lr'], f)
+
+    # with open('pose_nb.pkl', 'wb') as f:
+    #     pickle.dump(fit_models['nb'], f)
+    #
+    # with open('pose_knn.pkl', 'wb') as f:
+    #     pickle.dump(fit_models['knn'], f)
+    #
+    # with open('pose_rc.pkl', 'wb') as f:
+    #     pickle.dump(fit_models['rc'], f)
+    #
+    # with open('pose_rf.pkl', 'wb') as f:
+    #     pickle.dump(fit_models['rf'], f)
+    #
+    # with open('pose_gb.pkl', 'wb') as f:
+    #     pickle.dump(fit_models['gb'], f)
+    #
+    # with open('pose_dt.pkl', 'wb') as f:
+    #     pickle.dump(fit_models['dt'], f)
 
 
 # old model
@@ -328,6 +351,36 @@ def test_model():
 
 # new model code
 def test_model_new():
+    def srt(start2,end):
+        def f(x, decimals=3):
+            r = str(round(x, decimals))  # round and convert to string
+            r = r.split('.')[-1]  # split at the dot and keep the decimals
+            return r
+
+        milliseconds_start = start2 % 1
+        seconds_start = int(start2) % 60
+        minutes_start = int(start2 / 60) % 60
+        hours_start = int(start2 / 3600)
+
+        milliseconds_end = end % 1
+        seconds_end = int(end) % 60
+        minutes_end = int(end / 60) % 60
+        hours_end = int(end / 3600)
+        print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
+
+        with open(f"{destination}\\{filename}.srt", "a") as srt_file:
+            srt_file.write(
+                f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
+                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
+
+        with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
+            srt_file.write(
+                f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
+                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
+
+        # counter for the SRT file action
+        counter.append(counter[-1] + 1)
+
     path_with_file_extension = filedialog.askopenfilename(initialdir="/",
                                                           title="Select a File",
                                                           filetypes=[
@@ -344,6 +397,9 @@ def test_model_new():
     x = x[::-1].split('.', 1)[1][::-1]
     filename = x
     destination = 'video landmark +SRT'
+    if os.path.exists(f"{destination}\\{filename}.srt") and os.path.exists(f"{destination}\\{filename}_meaning.srt") :
+        os.remove(f"{destination}\\{filename}.srt")
+        os.remove(f"{destination}\\{filename}_meaning.srt")
     if not os.path.exists(destination):
         os.mkdir(destination)
 
@@ -362,14 +418,14 @@ def test_model_new():
     # read video frames
     cap = cv2.VideoCapture(path_with_file_extension)
 
-    # getting the width, height, frame_no, framerate(fps) and the frame number of the video for the video writer
+    # getting the width, height, frame_no, frame_rate(fps) and the frame number of the video for the video writer
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
     framcount = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     frame_no = 0
 
-    # puting the video wirter into variable
+    # putting the video writer into variable
     writer = cv2.VideoWriter(
         '{path}\\{filename}'.format(path=destination, filename=res[-1])
         , cv2.VideoWriter_fourcc(*'DIVX'), fps, (width, height)
@@ -394,8 +450,6 @@ def test_model_new():
             draw_styled_landmarks(image, results)
             # 2. Prediction logic
             keypoints = extract_keypoints(results)
-            #         sequence.insert(0,keypoints)
-            #         sequence = sequence[:30]
             sequence.append(keypoints)
             sequence = sequence[-30:]
             if len(sequence) == 30:
@@ -404,7 +458,7 @@ def test_model_new():
                 print(res)
                 predictions.append(res)
                 unique_value, frequencies = np.unique(predictions[-25:],return_counts=True)
-                
+
                 # if the last 10 predictions are the same
                 if np.unique(predictions[-25:])[0] == res:
                     if body_language_prob[np.argmax(body_language_prob)] > threshold:
@@ -417,46 +471,17 @@ def test_model_new():
                                 if res != sentence[-1]:
                                     # end time
                                     end = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-    
-                                    def f(x, decimals=3):
-                                        r = str(round(x, decimals))  # round and convert to string
-                                        r = r.split('.')[-1]  # split at the dot and keep the decimals
-                                        return r
-    
-                                    milliseconds_start = start2 % 1
-                                    seconds_start = int(start2) % 60
-                                    minutes_start = int(start2 / 60) % 60
-                                    hours_start = int(start2 / 3600)
-                                    print(
-                                        f"{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}")
-    
+
+                                    srt(start2,end)
                                     print("start", start2)
                                     print("end", end)
-    
-                                    milliseconds_end = end % 1
-                                    seconds_end = int(end) % 60
-                                    minutes_end = int(end / 60) % 60
-                                    hours_end = int(end / 3600)
-                                    print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
-    
-                                    with open(f"{destination}\\{filename}.srt", "a") as srt_file:
-                                        srt_file.write(
-                                            f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                                            f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
-    
-                                    with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
-                                        srt_file.write(
-                                            f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                                            f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
-    
-                                    # counter for the SRT file action
-                                    counter.append(counter[-1] + 1)
+
                                     sentence.append(res)
                                     print(sentence)
-    
+
                                     # start time again
                                     start2 = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-    
+
                             # else of the first prediction
                             else:
                                 # start time
@@ -472,7 +497,7 @@ def test_model_new():
                 writer.write(image)
 
                 # Get status box
-                cv2.rectangle(image, (0, 0), (250, 60), (245, 117, 16), -1)
+                cv2.rectangle(image, (0, 0), (1000, 60), (245, 117, 16), -1)
                 cv2.putText(image, 'PROB'
                             , (15, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
                 cv2.putText(image, str(round(body_language_prob[np.argmax(body_language_prob)], 2))
@@ -495,40 +520,16 @@ def test_model_new():
 
         # this allows for the last action/prediction to be saved even if there is only one action (492->524)
         try:
-            def f(x, decimals=3):
-                r = str(round(x, decimals))  # round and convert to string
-                r = r.split('.')[-1]  # split at the dot and keep the decimals
-                return r
-
-            milliseconds_start = start2 % 1
-            seconds_start = int(start2) % 60
-            minutes_start = int(start2 / 60) % 60
-            hours_start = int(start2 / 3600)
-
             end = framcount / fps
-            milliseconds_end = end % 1
-            seconds_end = int(end) % 60
-            minutes_end = int(end / 60) % 60
-            hours_end = int(end / 3600)
-            print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
-
-            with open(f"{destination}\\{filename}.srt", "a") as srt_file:
-                srt_file.write(
-                    f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                    f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
-
-            with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
-                srt_file.write(
-                    f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                    f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
-
-            # counter for the SRT file action
-            counter.append(counter[-1] + 1)
+            srt(start2, end)
         except:
-            pass
-
+            sentence.append('Neutral')
+            start2=0
+            end = framcount / fps
+            srt(start2, end)
         cap.release()
         cv2.destroyAllWindows()
+
 
 #this code allows for the landmarks to be drawn on the body
 def draw_styled_landmarks(image, results):
@@ -567,7 +568,7 @@ def mediapipe_detection(image, model):
 #this is used to get the action meaning from the dataset.csv
 def meaning_action(action):
     csv_file = csv.reader(open(
-        'D:\\Coding\\BodyLanguageDecoderV2\\DataSet.csv',
+        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet.csv',
         'r'
     ))
 
@@ -578,7 +579,7 @@ def meaning_action(action):
 # DataSet extract keypoints folder loop
 def loop():
     # assign directory
-    directory = 'Dataset Images\\'
+    directory = 'Dataset Videos\\'
     if not os.path.exists(directory):
         os.mkdir(directory)
     folders = Path(directory).glob('*')
@@ -593,7 +594,7 @@ def loop():
             j = str(file).split('\\')
             x.append(j[2])
             videos = np.array(x)
-            save_landmarks(f'D:\\Coding\\BodyLanguageDecoderV2\\Dataset Images\\{foldernames[0]}\\{videos[0]}'
+            save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\Dataset Videos\\{foldernames[0]}\\{videos[0]}'
                            , f'{foldernames[0]}',1 ,0 ,1)
             x.pop(0)
         y.pop(0)
