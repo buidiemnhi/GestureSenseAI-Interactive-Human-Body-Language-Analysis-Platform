@@ -196,7 +196,7 @@ def extract_keypoints(results):
 
 # training of the four classification models with the coordinates file
 def train_model():
-    df = pd.read_csv('pose_images.csv')
+    df = pd.read_csv('pose&hand.csv')
 
     X = df.drop('action', axis=1)  # features
     y = df['action']  # target value
@@ -301,7 +301,7 @@ def test_model_new():
     if not os.path.exists(destination):
         os.mkdir(destination)
 
-    with open('pose&hands_lr.pkl', 'rb') as f:
+    with open('pose_images_lr.pkl', 'rb') as f:
         model = pickle.load(f)
 
     mp_holistic = mp.solutions.holistic
@@ -468,7 +468,7 @@ def mediapipe_detection(image, model):
 # this is used to get the action meaning from the dataset.csv
 def meaning_action(action):
     csv_file = csv.reader(open(
-        'D:\\Education\\GraduationProject\\DataSet (2).csv',
+        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet_2.csv',
         'r'
     ))
 
@@ -482,7 +482,7 @@ def loop():
     def points(action, location):
 
         csv_file = csv.reader(open(
-            'D:\\Education\\GraduationProject\\DataSet (2).csv',
+            'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet_2.csv',
             'r'
         ))
 
@@ -498,7 +498,7 @@ def loop():
                     return 0
 
     # assign directory
-    directory = 'C:\\Users\\amr12\\OneDrive\\Desktop\\test'
+    directory = 'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\filtered\\'
     if not os.path.exists(directory):
         os.mkdir(directory)
     folders = Path(directory).glob('*')
@@ -506,14 +506,14 @@ def loop():
     y = []
     for folder in folders:
         i = str(folder).split('\\')
-        y.append(i[1])
+        y.append(i[-1])
         foldernames = np.array(y)
-        files = Path(f"{directory}{i[1]}").glob('*')
+        files = Path(f"{directory}{i[-1]}").glob('*')
         for file in files:
             j = str(file).split('\\')
-            x.append(j[2])
+            x.append(j[-1])
             videos = np.array(x)
-            save_landmarks(f'D:\\Education\\GraduationProject\\Turtle\\{foldernames[0]}\\{videos[0]}'
+            save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\filtered\\{foldernames[0]}\\{videos[0]}'
                            , f'{foldernames[0]}', points(foldernames[0], "Pose"), points(foldernames[0], "Face"),
                            points(foldernames[0], "Hands"))
             x.pop(0)
