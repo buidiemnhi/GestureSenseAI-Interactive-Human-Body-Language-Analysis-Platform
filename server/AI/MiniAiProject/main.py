@@ -19,19 +19,19 @@ import mediapipe as mp
 from pathlib import Path
 
 
-
 # creation of csv file for the landmarks cords
 def create_landmarks_cords():
     num_cords = 543
     landmarks = ['action']
     for val in range(1, num_cords + 1):
         landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
-        with open('pose.csv', mode='w', newline='') as f:
+        with open('pose&hand.csv', mode='w', newline='') as f:
             csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             csv_writer.writerow(landmarks)
 
+
 # put filename to be string and action name to be string too
-def save_landmarks(filename, action_name,pose,face,hands):
+def save_landmarks(filename, action_name, pose, face, hands):
     # putting the solutions into small variables to call them
     mp_drawing = mp.solutions.drawing_utils
     mp_holistic = mp.solutions.holistic
@@ -54,7 +54,7 @@ def save_landmarks(filename, action_name,pose,face,hands):
 
             # Make Detections
             results = holistic.process(image)
-            if not os.path.isfile('pose.csv'):
+            if not os.path.isfile('pose&hand.csv'):
                 create_landmarks_cords()
 
             # make image writeable again
@@ -88,9 +88,9 @@ def save_landmarks(filename, action_name,pose,face,hands):
                                       mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                                       )
             # Export to CSV
-            with open('pose.csv', mode='a', newline='') as f:
+            with open('pose&hand.csv', mode='a', newline='') as f:
                 csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                csv_writer.writerow(extract_landmarks(results, action_name,pose,face,hands))
+                csv_writer.writerow(extract_landmarks(results, action_name, pose, face, hands))
 
             cv2.imshow('video', image)
             if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -98,18 +98,21 @@ def save_landmarks(filename, action_name,pose,face,hands):
     cap.release()
     cv2.destroyAllWindows()
 
+
 # extract the landmarks and put zero if didn't detect the landmark
-def extract_landmarks(results, action_name,pose,face,hands):
+def extract_landmarks(results, action_name, pose, face, hands):
     if pose and not face and not hands:
         savedpose = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                         results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
+                              results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(
+            33 * 4)
         savedface = np.zeros(468 * 4)
         lh = np.zeros(21 * 4)
         rh = np.zeros(21 * 4)
     elif not pose and face and not hands:
         savedpose = np.zeros(33 * 4)
         savedface = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                         results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+                              results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(
+            468 * 4)
         lh = np.zeros(21 * 4)
         rh = np.zeros(21 * 4)
     elif not pose and not face and hands:
@@ -167,10 +170,11 @@ def extract_landmarks(results, action_name,pose,face,hands):
             21 * 4)
     else:
         print("No boolean values set to True")
-    row = list(np.concatenate([savedpose,savedface, lh, rh]))
+    row = list(np.concatenate([savedpose, savedface, lh, rh]))
     # Append action name
     row.insert(0, action_name)
     return row
+
 
 # extract the landmarks and put zero if didn't detect the landmark
 def extract_keypoints(results):
@@ -178,19 +182,21 @@ def extract_keypoints(results):
                      results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
 
     face = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                    results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
+                     results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 4)
 
     lh = np.array([[res.x, res.y, res.z, res.visibility] for res in
                    results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 4)
 
     rh = np.array([[res.x, res.y, res.z, res.visibility] for res in
-                   results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21 * 4)
+                   results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
+        21 * 4)
 
-    return np.concatenate([pose,face,lh, rh])
+    return np.concatenate([pose, face, lh, rh])
+
 
 # training of the four classification models with the coordinates file
 def train_model():
-    df = pd.read_csv('pose.csv')
+    df = pd.read_csv('pose_images.csv')
 
     X = df.drop('action', axis=1)  # features
     y = df['action']  # target value
@@ -199,12 +205,12 @@ def train_model():
 
     pipelines = {
         'lr': make_pipeline(StandardScaler(), LogisticRegression()),
-        #'nb': make_pipeline(StandardScaler(), GaussianNB()),
-        #'knn': make_pipeline(StandardScaler(), KNeighborsClassifier()),
-        #'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
-        #'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
-        #'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
-        #'dt': make_pipeline(StandardScaler(), DecisionTreeClassifier()),
+        # 'nb': make_pipeline(StandardScaler(), GaussianNB()),
+        # 'knn': make_pipeline(StandardScaler(), KNeighborsClassifier()),
+        # 'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
+        # 'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
+        # 'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
+        # 'dt': make_pipeline(StandardScaler(), DecisionTreeClassifier()),
 
     }
 
@@ -216,26 +222,27 @@ def train_model():
         yhat = model.predict(X_test)
         print(algo, accuracy_score(y_test, yhat))
 
-    with open('pose_lr.pkl', 'wb') as f:
+    with open('pose_images_lr.pkl', 'wb') as f:
         pickle.dump(fit_models['lr'], f)
 
-    # with open('pose_nb.pkl', 'wb') as f:
-    #     pickle.dump(fit_models['nb'], f)
-    #
-    # with open('pose_knn.pkl', 'wb') as f:
-    #     pickle.dump(fit_models['knn'], f)
-    #
-    # with open('pose_rc.pkl', 'wb') as f:
-    #     pickle.dump(fit_models['rc'], f)
-    #
-    # with open('pose_rf.pkl', 'wb') as f:
-    #     pickle.dump(fit_models['rf'], f)
-    #
-    # with open('pose_gb.pkl', 'wb') as f:
-    #     pickle.dump(fit_models['gb'], f)
-    #
-    # with open('pose_dt.pkl', 'wb') as f:
-    #     pickle.dump(fit_models['dt'], f)
+
+# with open('pose_nb.pkl', 'wb') as f:
+#    pickle.dump(fit_models['nb'], f)
+#
+# with open('pose_knn.pkl', 'wb') as f:
+#     pickle.dump(fit_models['knn'], f)
+#
+# with open('pose_rc.pkl', 'wb') as f:
+#     pickle.dump(fit_models['rc'], f)
+#
+# with open('pose_rf.pkl', 'wb') as f:
+#     pickle.dump(fit_models['rf'], f)
+#
+# with open('pose_gb.pkl', 'wb') as f:
+#     pickle.dump(fit_models['gb'], f)
+#
+# with open('pose_dt.pkl', 'wb') as f:
+#     pickle.dump(fit_models['dt'], f)
 
 
 # old model
@@ -351,7 +358,7 @@ def test_model():
 
 # new model code
 def test_model_new():
-    def srt(start2,end):
+    def srt(start2, end):
         def f(x, decimals=3):
             r = str(round(x, decimals))  # round and convert to string
             r = r.split('.')[-1]  # split at the dot and keep the decimals
@@ -390,6 +397,8 @@ def test_model_new():
                                                               ("video", ".AVI"),
                                                               ("video", ".mov"),
                                                               ("video", ".MOV"),
+                                                              ("video", ".MKV"),
+                                                              ("video", ".mkv"),
                                                           ])
 
     res = path_with_file_extension.split('/')
@@ -397,13 +406,13 @@ def test_model_new():
     x = x[::-1].split('.', 1)[1][::-1]
     filename = x
     destination = 'video landmark +SRT'
-    if os.path.exists(f"{destination}\\{filename}.srt") and os.path.exists(f"{destination}\\{filename}_meaning.srt") :
+    if os.path.exists(f"{destination}\\{filename}.srt") and os.path.exists(f"{destination}\\{filename}_meaning.srt"):
         os.remove(f"{destination}\\{filename}.srt")
         os.remove(f"{destination}\\{filename}_meaning.srt")
     if not os.path.exists(destination):
         os.mkdir(destination)
 
-    with open('pose_lr.pkl', 'rb') as f:
+    with open('pose&hands_lr.pkl', 'rb') as f:
         model = pickle.load(f)
 
     mp_holistic = mp.solutions.holistic
@@ -440,7 +449,7 @@ def test_model_new():
             if not frame_exists:
                 break
             # Make detections
-            image, results = mediapipe_detection(cv2.flip(curr_frame,1), holistic)
+            image, results = mediapipe_detection(cv2.flip(curr_frame, 1), holistic)
             # frame with timestamp in seconds
             print("for frame : " + str(frame_no) + "   timestamp is: ", str((cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)))
 
@@ -457,7 +466,7 @@ def test_model_new():
                 body_language_prob = model.predict_proba(sequence)[0]
                 print(res)
                 predictions.append(res)
-                unique_value, frequencies = np.unique(predictions[-25:],return_counts=True)
+                unique_value, frequencies = np.unique(predictions[-25:], return_counts=True)
 
                 # if the last 10 predictions are the same
                 if np.unique(predictions[-25:])[0] == res:
@@ -472,7 +481,7 @@ def test_model_new():
                                     # end time
                                     end = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
 
-                                    srt(start2,end)
+                                    srt(start2, end)
                                     print("start", start2)
                                     print("end", end)
 
@@ -524,14 +533,14 @@ def test_model_new():
             srt(start2, end)
         except:
             sentence.append('Neutral')
-            start2=0
+            start2 = 0
             end = framcount / fps
             srt(start2, end)
         cap.release()
         cv2.destroyAllWindows()
 
 
-#this code allows for the landmarks to be drawn on the body
+# this code allows for the landmarks to be drawn on the body
 def draw_styled_landmarks(image, results):
     mp_drawing = mp.solutions.drawing_utils
     mp_holistic = mp.solutions.holistic
@@ -556,7 +565,8 @@ def draw_styled_landmarks(image, results):
                               mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                               )
 
-#the detection of the landmarks on the body
+
+# the detection of the landmarks on the body
 def mediapipe_detection(image, model):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # COLOR CONVERSION BGR 2 RGB
     image.flags.writeable = False  # Image is no longer writeable
@@ -565,10 +575,11 @@ def mediapipe_detection(image, model):
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # COLOR COVERSION RGB 2 BGR
     return image, results
 
-#this is used to get the action meaning from the dataset.csv
+
+# this is used to get the action meaning from the dataset.csv
 def meaning_action(action):
     csv_file = csv.reader(open(
-        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet.csv',
+        'D:\\Education\\GraduationProject\\DataSet (2).csv',
         'r'
     ))
 
@@ -576,10 +587,29 @@ def meaning_action(action):
         if action == row[0]:
             return row[2]
 
+
 # DataSet extract keypoints folder loop
 def loop():
+    def points(action, location):
+
+        csv_file = csv.reader(open(
+            'D:\\Education\\GraduationProject\\DataSet (2).csv',
+            'r'
+        ))
+
+        for row in csv_file:
+            if action == row[0]:
+                if location == "Pose":
+                    return int(row[3])
+                elif location == "Face":
+                    return int(row[4])
+                elif location == "Hands":
+                    return int(row[5])
+                else:
+                    return 0
+
     # assign directory
-    directory = 'Dataset Videos\\'
+    directory = 'Turtle\\'
     if not os.path.exists(directory):
         os.mkdir(directory)
     folders = Path(directory).glob('*')
@@ -594,10 +624,12 @@ def loop():
             j = str(file).split('\\')
             x.append(j[2])
             videos = np.array(x)
-            save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\Dataset Videos\\{foldernames[0]}\\{videos[0]}'
-                           , f'{foldernames[0]}',1 ,0 ,1)
+            save_landmarks(f'D:\\Education\\GraduationProject\\Turtle\\{foldernames[0]}\\{videos[0]}'
+                           , f'{foldernames[0]}', points(foldernames[0], "Pose"), points(foldernames[0], "Face"),
+                           points(foldernames[0], "Hands"))
             x.pop(0)
         y.pop(0)
+
 
 window = Tk()
 
@@ -635,7 +667,7 @@ button_exit.pack()
 
 window.mainloop()
 
-#to be determined
+# to be determined
 '''
 #don't use the uploadanddownlad function
 def UploadAndDownloadVideoLandmarks(filename):
@@ -707,7 +739,6 @@ def UploadAndDownloadVideoLandmarks(filename):
 #UploadAndDownloadVideoLandmarks("arms 1.mp4")
 #print('land marks are ',UploadAndDownloadVideoLandmarks("arms 1.mp4"))
 '''
-
 
 '''
 #multi threading code for future improvement of the model
