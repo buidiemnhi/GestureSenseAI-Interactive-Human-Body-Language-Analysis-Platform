@@ -18,7 +18,7 @@ from tkinter import filedialog
 import mediapipe as mp
 from pathlib import Path
 
-
+'''
 # creation of csv file for the landmarks cords
 def create_landmarks_cords():
     num_cords = 543
@@ -174,7 +174,7 @@ def extract_landmarks(results, action_name, pose, face, hands):
     # Append action name
     row.insert(0, action_name)
     return row
-
+'''
 
 # extract the landmarks and put zero if didn't detect the landmark
 def extract_keypoints(results):
@@ -193,7 +193,7 @@ def extract_keypoints(results):
 
     return np.concatenate([pose, face, lh, rh])
 
-
+'''
 # training of the four classification models with the coordinates file
 def train_model():
     df = pd.read_csv('pose&hand.csv')
@@ -243,10 +243,10 @@ def train_model():
     #
     # with open('pose_dt.pkl', 'wb') as f:
     #     pickle.dump(fit_models['dt'], f)
-
+'''
 
 # new model code
-def test_model_new():
+def test_model_new(path):
     def srt(start2, end):
         def f(x, decimals=3):
             r = str(round(x, decimals))  # round and convert to string
@@ -276,19 +276,8 @@ def test_model_new():
 
         # counter for the SRT file action
         counter.append(counter[-1] + 1)
-
-    path_with_file_extension = filedialog.askopenfilename(initialdir="/",
-                                                          title="Select a File",
-                                                          filetypes=[
-                                                              ("video", ".mp4"),
-                                                              ("video", ".MP4"),
-                                                              ("video", ".avi"),
-                                                              ("video", ".AVI"),
-                                                              ("video", ".mov"),
-                                                              ("video", ".MOV"),
-                                                              ("video", ".MKV"),
-                                                              ("video", ".mkv"),
-                                                          ])
+    # code:9999
+    path_with_file_extension = path
 
     res = path_with_file_extension.split('/')
     x = res[-1]
@@ -409,12 +398,6 @@ def test_model_new():
             # increment the frame by 1
             frame_no += 1
 
-            # Show to screen
-            cv2.imshow('OpenCV Feed', image)
-
-            # Break by pressing Q
-            if cv2.waitKey(10) & 0xFF == ord('q'):
-                break
 
         # this allows for the last action/prediction to be saved even if there is only one action (492->524)
         try:
@@ -426,7 +409,6 @@ def test_model_new():
             end = framcount / fps
             srt(start2, end)
         cap.release()
-        cv2.destroyAllWindows()
 
 
 # this code allows for the landmarks to be drawn on the body
@@ -467,6 +449,7 @@ def mediapipe_detection(image, model):
 
 # this is used to get the action meaning from the dataset.csv
 def meaning_action(action):
+    # code:9999
     csv_file = csv.reader(open(
         'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet_2.csv',
         'r'
@@ -478,81 +461,48 @@ def meaning_action(action):
 
 
 # DataSet extract keypoints folder loop
-def loop():
-    def points(action, location):
+'''
+    def loop():
+        def points(action, location):
+    
+            csv_file = csv.reader(open(
+                'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet_2.csv',
+                'r'
+            ))
+    
+            for row in csv_file:
+                if action == row[0]:
+                    if location == "Pose":
+                        return int(row[3])
+                    elif location == "Face":
+                        return int(row[4])
+                    elif location == "Hands":
+                        return int(row[5])
+                    else:
+                        return 0
+    
+        # assign directory
+        directory = 'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\filtered\\'
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+        folders = Path(directory).glob('*')
+        x = []
+        y = []
+        for folder in folders:
+            i = str(folder).split('\\')
+            y.append(i[-1])
+            foldernames = np.array(y)
+            files = Path(f"{directory}{i[-1]}").glob('*')
+            for file in files:
+                j = str(file).split('\\')
+                x.append(j[-1])
+                videos = np.array(x)
+                save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\filtered\\{foldernames[0]}\\{videos[0]}'
+                               , f'{foldernames[0]}', points(foldernames[0], "Pose"), points(foldernames[0], "Face"),
+                               points(foldernames[0], "Hands"))
+                x.pop(0)
+            y.pop(0)
 
-        csv_file = csv.reader(open(
-            'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet_2.csv',
-            'r'
-        ))
+'''
 
-        for row in csv_file:
-            if action == row[0]:
-                if location == "Pose":
-                    return int(row[3])
-                elif location == "Face":
-                    return int(row[4])
-                elif location == "Hands":
-                    return int(row[5])
-                else:
-                    return 0
-
-    # assign directory
-    directory = 'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\filtered\\'
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-    folders = Path(directory).glob('*')
-    x = []
-    y = []
-    for folder in folders:
-        i = str(folder).split('\\')
-        y.append(i[-1])
-        foldernames = np.array(y)
-        files = Path(f"{directory}{i[-1]}").glob('*')
-        for file in files:
-            j = str(file).split('\\')
-            x.append(j[-1])
-            videos = np.array(x)
-            save_landmarks(f'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\filtered\\{foldernames[0]}\\{videos[0]}'
-                           , f'{foldernames[0]}', points(foldernames[0], "Pose"), points(foldernames[0], "Face"),
-                           points(foldernames[0], "Hands"))
-            x.pop(0)
-        y.pop(0)
-
-
-window = Tk()
-
-# Set window title
-window.title('File Explorer')
-
-# Set window background color
-window.config(background="white")
-
-# Create a File Explorer label
-label_file_explorer = Label(window,
-                            text="File Explorer using Tkinter",
-                            fg="blue")
-label_file_explorer.pack()
-
-button_explore = Button(window,
-                        text="Train Model",
-                        command=train_model)
-button_explore.pack()
-
-button_test = Button(window,
-                     text="Test Model",
-                     command=test_model_new)
-button_test.pack()
-
-button_loop = Button(window,
-                     text="file loop",
-                     command=loop)
-button_loop.pack()
-
-button_exit = Button(window,
-                     text="Exit",
-                     command=window.destroy)
-button_exit.pack()
-
-window.mainloop()
-
+test_model_new("E:/amr videos/amrtest.mp4")
