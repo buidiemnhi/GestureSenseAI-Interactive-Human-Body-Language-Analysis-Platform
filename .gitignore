@@ -2,3 +2,7 @@ ashraf viedo/
 video landmark +SRT/
 coords.csv
 filtered/
+server/backend/db.sqlite
+*.sqlite
+
+
