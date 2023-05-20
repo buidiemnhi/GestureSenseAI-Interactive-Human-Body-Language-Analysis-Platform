@@ -1,15 +1,17 @@
 # new model code
 import csv
 # import pandas as pd
+import os
 import pickle
 
 import cv2
 import mediapipe as mp
 import numpy as np
 
+# U MUST INSTALL FKN SCICKET LEARN
 
 # new model code
-def test_model_new(path_with_file_extension,destination):
+def test_model_new(path_with_file_extension, destination):
     def srt(start2, end):
         def f(x, decimals=3):
             r = str(round(x, decimals))  # round and convert to string
@@ -39,6 +41,7 @@ def test_model_new(path_with_file_extension,destination):
 
         # counter for the SRT file action
         counter.append(counter[-1] + 1)
+
     # code:9999
     path_with_file_extension = path_with_file_extension
 
@@ -161,7 +164,6 @@ def test_model_new(path_with_file_extension,destination):
             # increment the frame by 1
             frame_no += 1
 
-
         # this allows for the last action/prediction to be saved even if there is only one action (492->524)
         try:
             end = framcount / fps
@@ -214,13 +216,15 @@ def mediapipe_detection(image, model):
 def meaning_action(action):
     # code:9999
     csv_file = csv.reader(open(
-        'C:\\Users\\amr12\\OneDrive\\Documents\\GitHub\\graduationProject\\server\\AI\\MiniAiProject\\DataSet_2.csv',
+        'F:\\SWE PROGRAM\\Level 4\\First Semster\\Graduation project\\Backend\\APIs\\githubPublic\\graduationProject\\server'
+        '\\backend\\DataSet_2.csv',
         'r'
     ))
 
     for row in csv_file:
         if action == row[0]:
             return row[2]
+
 
 # extract the landmarks and put zero if didn't detect the landmark
 def extract_keypoints(results):
@@ -238,8 +242,3 @@ def extract_keypoints(results):
         21 * 4)
 
     return np.concatenate([pose, face, lh, rh])
-
-
-
-
-
