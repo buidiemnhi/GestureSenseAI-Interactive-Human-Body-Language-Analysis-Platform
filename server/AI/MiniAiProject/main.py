@@ -246,7 +246,7 @@ def train_model():
 '''
 
 # new model code
-def test_model_new(path):
+def test_model_new(path_with_file_extension,destination):
     def srt(start2, end):
         def f(x, decimals=3):
             r = str(round(x, decimals))  # round and convert to string
@@ -277,13 +277,13 @@ def test_model_new(path):
         # counter for the SRT file action
         counter.append(counter[-1] + 1)
     # code:9999
-    path_with_file_extension = path
+    path_with_file_extension = path_with_file_extension
 
-    res = path_with_file_extension.split('/')
+    res = path_with_file_extension.split('\\')
     x = res[-1]
     x = x[::-1].split('.', 1)[1][::-1]
     filename = x
-    destination = 'video landmark +SRT'
+    destination = destination
     if os.path.exists(f"{destination}\\{filename}.srt") and os.path.exists(f"{destination}\\{filename}_meaning.srt"):
         os.remove(f"{destination}\\{filename}.srt")
         os.remove(f"{destination}\\{filename}_meaning.srt")
