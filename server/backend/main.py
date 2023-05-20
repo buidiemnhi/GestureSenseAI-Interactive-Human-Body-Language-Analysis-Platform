@@ -212,6 +212,7 @@ def display_all_videos():
     token = get_jwt()
     user = get_userID(token)
     all_videos = Video.query.filter_by(user_id=user.user_id)
+    # hanafy hyb3t el check box of videos_srt + e7na hancheck 3la el destination issue_1
     path_to_be_removed = app.config['UPLOADED_VIDEOS_DEST'] + get_user_folder(user) + '\\'
     video_data = [{'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, path_to_be_removed)}',
                    'video_title': video.video_title, 'video_description': video.video_description}
@@ -428,6 +429,7 @@ def register():
     db.session.add(new_user)
     db.session.commit()
     return jsonify(SUCCESS_MESSAGE['Data'])
+
 
 
 ########################################################################################################################
