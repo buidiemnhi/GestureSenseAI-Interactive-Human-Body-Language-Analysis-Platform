@@ -28,6 +28,7 @@ app.config["SECRET_KEY"] = 'SECRET_KEY'
 app.config['UPLOAD_FOLDER'] = 'files\\videos\\'
 app.config['UPLOADED_VIDEOS_DEST'] = 'files\\videos\\'
 app.config['UPLOADED_PHOTOS_DEST'] = 'files\\photos\\'
+
 app.config['DEFAULT_PHOTO'] = 'files\\default_photos\\'
 app.config['DEFAULT_PHOTO_NAME'] = 'default.jpg'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
@@ -144,33 +145,6 @@ def remove_video(video_id):
     current_user.remove_video(video_id)
 
 
-# @app.route('/display-videos', methods=['GET'])
-# @jwt_required()
-# def display_all_videos():
-#     token = get_jwt()
-#     user = method_name(token)
-#     videos = Video.query.filter_by(user_id=user.user_id)
-#     allRows = []
-#     for video in videos:
-#         allRows.append({
-#             'videoTitle': video.video_title,
-#             'video_path': video.video_path,
-#             # 'videoDate': video.video_date,
-#             'video_description': video.video_description,
-#             'video_subtitle1': video.video_subtitle1_path,
-#             'video_subtitle2': video.video_subtitle2_path,
-#
-#         })
-#
-#     return jsonify({
-#         'response_data':
-#             {
-#                 'videos': allRows
-#             }
-#
-#     })
-
-
 @app.route('/upload-video', methods=['POST'])
 @jwt_required()
 def upload_video():
@@ -181,7 +155,7 @@ def upload_video():
         _video_title = request.form['video_title']
         _description = request.form['video_description']
         _landMarks = request.form['landMarks']
-        # hstlm el viarbale da ezay.
+
         current_date = datetime.now()
 
         folder_name = get_user_folder(user)
@@ -190,15 +164,17 @@ def upload_video():
 
         # Save the uploaded video to the user's folder
         video_filename = secure_filename(_video.filename)
-        video_path = get_app_path() + os.path.join(folder_path, video_filename)
-        _video.save(video_path)
+        uploaded_video_path = get_app_path() + os.path.join(folder_path, video_filename)
+        _video.save(uploaded_video_path)
 
-        dest_path = basedir + '\\' + app.config['VIDEO_WITH_LANDMARKS']
+        dest_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']  # // video_srt
 
-        video = Video(_video_title, video_path, current_date, user.user_id, _description)
+        video_srt_path = get_app_path() + dest_path + '\\' + video_filename
+
+        video = Video(_video_title, video_srt_path, current_date, user.user_id, _description)
 
         # amr hy3dl el function 3shan yst2blo.
-        test_model_new(video_path, dest_path)
+        test_model_new(uploaded_video_path, dest_path)
         user.add_video(video)
 
         return "File has been uploaded."
@@ -212,18 +188,26 @@ def display_all_videos():
     token = get_jwt()
     user = get_userID(token)
     all_videos = Video.query.filter_by(user_id=user.user_id)
-    # hanafy hyb3t el check box of videos_srt + e7na hancheck 3la el destination issue_1
-    path_to_be_removed = app.config['UPLOADED_VIDEOS_DEST'] + get_user_folder(user) + '\\'
-    video_data = [{'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, path_to_be_removed)}',
-                   'video_title': video.video_title, 'video_description': video.video_description}
-                  for video in all_videos]
+
+    path_to_be_removed = app.config['UPLOADED_VIDEOS_DEST'] + get_user_folder(user) + '\\' + app.config[
+        'VIDEO_WITH_LANDMARKS']
+    user_path = get_user_folder(user) + '/' + app.config['VIDEO_WITH_LANDMARKS']
+
+    video_data = [
+        {'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, path_to_be_removed)}',
+         'video_title': video.video_title, 'video_description': video.video_description}
+        for video in all_videos]
     return {'videos': video_data}
 
-
-@app.route('/videos/<path:filename>')
+@app.route(f'/videos/<path:filename>')
+@jwt_required()
 def get_video(filename):
-    directroy = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST']
-    return send_from_directory(directroy, filename)
+    token = get_jwt()
+    user = get_userID(token)
+    user_path = get_user_folder(user) + '\\' + app.config['VIDEO_WITH_LANDMARKS']
+    directroy = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + user_path + '\\'
+    x = send_from_directory(directroy, filename)
+    return x
 
 
 @app.route('/photos/<path:filename>')
@@ -282,11 +266,16 @@ def edit_profile():
             salt_length=8
         )
 
+        foldername = get_user_folder(user)
+
         User.query.filter_by(user_id=user.user_id) \
             .update(dict(first_name=_first_name, last_name=_last_name, user_email=_email, user_password=hashed_password,
                          user_image=user_image_path,
                          user_birthdate=_user_birthdate))
         db.session.commit()
+
+        update_user_folder(user, foldername)
+
         return jsonify(SUCCESS_MESSAGE['Data'])
 
 
@@ -301,6 +290,7 @@ with app.app_context():
 def profilePage():
     token = get_jwt()
     user = get_userID(token)
+    # issue_2
     photo_des = app.config['UPLOADED_PHOTOS_DEST']
     return jsonify({
         'Data': {
@@ -429,7 +419,6 @@ def register():
     db.session.add(new_user)
     db.session.commit()
     return jsonify(SUCCESS_MESSAGE['Data'])
-
 
 
 ########################################################################################################################
@@ -579,8 +568,9 @@ def get_userID(token):
 
 
 def remove_path(file_with_path, path_to_be_removed):
-    file_without_path = get_app_path() + path_to_be_removed
-    return file_with_path.replace(file_without_path, "")
+    file_without_path = get_app_path() + path_to_be_removed + '\\'
+    x = file_with_path.replace(file_without_path, "")
+    return x
 
 
 def get_app_path():
@@ -588,8 +578,20 @@ def get_app_path():
 
 
 def get_user_folder(user):
-    folder_name = user.first_name + "_" + user.last_name + "_" + str(user.user_id)
+    folder_name = f"{user.first_name}_{user.last_name}_{user.user_id}"
     return folder_name
+
+
+def update_user_folder(user, folder_name):
+    old_folder_path = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], folder_name)
+
+    new_folder_name = f"{user.first_name}_{user.last_name}_{user.user_id}"
+    new_folder_path = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], new_folder_name)
+
+    print(old_folder_path)
+    print(new_folder_path)
+    # if os.path.exists(old_folder_path):
+    os.rename(old_folder_path, new_folder_path)
 
 
 # Run server
