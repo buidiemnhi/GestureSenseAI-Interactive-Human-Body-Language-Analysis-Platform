@@ -206,7 +206,7 @@ def get_video(filename):
     user = get_userID(token)
     user_path = get_user_folder(user) + '\\' + app.config['VIDEO_WITH_LANDMARKS']
     directroy = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + user_path + '\\'
-    x = send_from_directory(directroy, filename)
+    x = send_from_directory(directroy, filename, as_attachment=False)
     return x
 
 

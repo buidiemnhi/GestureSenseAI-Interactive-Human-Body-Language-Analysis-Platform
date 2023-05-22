@@ -81,7 +81,7 @@ def test_model_new(path_with_file_extension, destination):
     # putting the video writer into variable
     writer = cv2.VideoWriter(
         '{path}\\{filename}'.format(path=destination, filename=res[-1])
-        , cv2.VideoWriter_fourcc(*'DIVX'), fps, (width, height)
+        , cv2.VideoWriter_fourcc(*'H264'), fps, (width, height)
     )
 
     # Set mediapipe model
