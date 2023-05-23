@@ -10,7 +10,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import shutil
 
-
 from AI import *
 
 # Initialize app
@@ -25,21 +24,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = 'SECRET_KEY'
 app.config['DATA'] = 'files\\media\\'
+app.config['IMAGE'] = 'images'
+app.config['UPLOADED_VIDEO'] = 'uploaded_videos'
 
 app.config['DEFAULT_PHOTO_PATH'] = 'files\\'
 app.config['DEFAULT_PHOTO_NAME'] = 'default.jpg'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
 app.config['CORS_HEADERS'] = 'Content-Type'
+
 # endregion
-login_manager = LoginManager()
-login_manager.init_app(app)
-
-
-# photos = UploadSet('photos', extensions=('jpg', 'jpeg', 'png'))
-#
-# # Configure the UploadSet
-# configure_uploads(app, photos)
+login_manager = LoginManager(app)
 
 
 @login_manager.user_loader
@@ -155,32 +150,26 @@ def upload_video():
         _landMarks = request.form['landMarks']
         current_date = datetime.now()
 
+        video_name = secure_filename(_video.filename)
+
         user_folder_name = get_user_folder(user)
 
-        # ./files/videos//<user-name>
         folder_path = os.path.join(app.config['DATA'], user_folder_name)
         os.makedirs(folder_path, exist_ok=True)
 
-        # name of video.
-        video_filename = secure_filename(_video.filename)
-
         # path for uploaded videos.
-        # ./media/omar/vdideo_srt/ahmed.mp4
-        uploaded_video_path = get_app_path() + os.path.join(folder_path, video_filename)
+        uploaded_video_path = os.path.join(get_app_path(), folder_path, app.config['UPLOADED_VIDEO'])
+        os.makedirs(uploaded_video_path, exist_ok=True)
 
-        # Save the uploaded video to the user's folder
-        _video.save(uploaded_video_path)
+        # Save the uploaded videos.
+        video_path = os.path.join(uploaded_video_path, video_name)
+        _video.save(video_path)
 
-        # ./files/videos/<user-name>/video_srt
-        dest_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
+        destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
+        # pass two paths to AI model
+        test_model_new(video_path, destination_path)
 
-        # this path created to be saved in db
-        # ./files/videos/<user-name>/video_srt/<vide-name)
-        # video_srt_path = get_app_path() + dest_path + '\\' + video_filename
-
-        video = Video(_video_title, video_filename, current_date, user.user_id, _description)
-
-        test_model_new(uploaded_video_path, dest_path)
+        video = Video(_video_title, video_name, current_date, user.user_id, _description)
         user.add_video(video)
 
         return "File has been uploaded."
@@ -193,12 +182,8 @@ def upload_video():
 def display_all_videos():
     token = get_jwt()
     user = get_userID(token)
+    # return all videos.
     all_videos = Video.query.filter_by(user_id=user.user_id)
-
-    # path_to_be_removed = app.config['DATA'] + get_user_folder(user) + '\\' + app.config[
-    #     'VIDEO_WITH_LANDMARKS']
-    # user_path = get_user_folder(user) + '/' + app.config['VIDEO_WITH_LANDMARKS']
-
     video_data = [
         {'URL': f'http://localhost:5000/videos/{video.video_path}',
          'video_title': video.video_title, 'video_description': video.video_description}
@@ -210,18 +195,21 @@ def display_all_videos():
 @jwt_required()
 def get_video(filename):
     token = get_jwt()
-    user = get_userID(token)
-    user_path = get_user_folder(user) + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-    video_path = basedir + '\\' + app.config['DATA'] + user_path + '\\'
+    user_id = get_userID(token)
+    # user = Video.query.filter_by(video_path=filename)
+    video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user_id),
+                              app.config['VIDEO_WITH_LANDMARKS'] + '\\')
     return send_from_directory(video_path, filename, as_attachment=False)
 
 
+@login_required
 @app.route('/photos/<path:filename>')
 @jwt_required()
 def get_photo(filename):
     token = get_jwt()
-    user = get_userID(token)
-    photo_path = user.user_image
+    user_id = get_userID(token)
+    # user = User.query.filter_by(user_image=filename)
+    photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user_id), app.config['IMAGE'])
     return send_from_directory(photo_path, filename)
 
 
@@ -274,7 +262,7 @@ def edit_profile():
             salt_length=8
         )
 
-        user_image_path = return_image(is_profile_image_empty, _user_image, user)
+        user_image_path = return_image_path(is_profile_image_empty, _user_image, user)
         _user_image.save(user_image_path)
 
         # user folder
@@ -374,7 +362,7 @@ def logout():
     return 'u are logged out'
 
 
-@app.route('//register', methods=['POST'])
+@app.route('/register', methods=['POST'])
 def register():
     _first_name = request.form['firstName']
     _last_name = request.form['lastName']
@@ -424,8 +412,9 @@ def register():
     db.session.add(new_user)
     db.session.commit()
 
-    photo_path = return_image(is_profile_image_empty, _user_image, new_user)
-    new_user.user_image = photo_path
+    image_path = return_image_path(is_profile_image_empty, _user_image, new_user)
+    # update the db with new value of
+    new_user.user_image = image_path
     db.session.commit()
 
     return jsonify(SUCCESS_MESSAGE['Data'])
@@ -508,20 +497,25 @@ def edit_email_error(is_email_invalid, is_exiting_email):
         return REGISTRATION_ERROR_MESSAGES['email_exists']
 
 
-def return_image(is_profile_image_empty_, _user_image, user):
+def return_image_path(is_profile_image_empty_, _user_image, user):
     user_folder_name = get_user_folder(user)
 
-    folder_path = os.path.join(app.config['DATA'], user_folder_name)
+    folder_path = os.path.join(app.config['DATA'], user_folder_name, app.config['IMAGE'])
     os.makedirs(folder_path, exist_ok=True)
 
     if not is_profile_image_empty_:
-        photo_filename = secure_filename(_user_image.filename)
-        photo_path = get_app_path() + os.path.join(folder_path, photo_filename)
-        _user_image.save(photo_path)
-        return photo_path
+
+        image_name = secure_filename(_user_image.filename)
+        image_path = os.path.join(get_app_path(), folder_path, image_name)
+        _user_image.save(image_path)
+        return image_name
 
     else:
-        return get_app_path() + app.config['DEFAULT_PHOTO_PATH'] + app.config['DEFAULT_PHOTO_NAME']
+        # copy default to user folder
+        source_path = os.path.join(get_app_path(), app.config['DEFAULT_PHOTO_NAME'])
+        destination_path = os.path.join(get_app_path(), folder_path, app.config['DEFAULT_PHOTO_NAME'])
+        shutil.copy(source_path, destination_path)
+        return app.config['DEFAULT_PHOTO_NAME']
 
 
 ######################################################################################
@@ -585,12 +579,6 @@ def get_userID(token):
     return User.query.filter_by(user_id=token['sub']).first()
 
 
-def remove_path(file_with_path, path_to_be_removed):
-    file_without_path = get_app_path() + path_to_be_removed + '\\'
-    x = file_with_path.replace(file_without_path, "")
-    return x
-
-
 def get_app_path():
     return basedir + '\\'
 
@@ -606,8 +594,8 @@ def update_user_folder(user, folder_name):
     new_folder_name = f"{user.first_name}_{user.last_name}_{user.user_id}"
     new_folder_path = os.path.join(app.config['DATA'], new_folder_name)
 
-    print(old_folder_path)
-    print(new_folder_path)
+    # print(old_folder_path)
+    # print(new_folder_path)
     # if os.path.exists(old_folder_path):
     os.rename(old_folder_path, new_folder_path)
 
