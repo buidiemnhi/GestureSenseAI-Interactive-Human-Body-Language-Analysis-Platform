@@ -1,19 +1,18 @@
 import os
 import re
 from datetime import date, datetime
-
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt, jwt_required)
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
-from flask_uploads import UploadSet, configure_uploads
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+import shutil
+
 
 from AI import *
 
-# region app
 # Initialize app
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY'
@@ -25,11 +24,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = 'SECRET_KEY'
-app.config['UPLOAD_FOLDER'] = 'files\\videos\\'
-app.config['UPLOADED_VIDEOS_DEST'] = 'files\\videos\\'
-app.config['UPLOADED_PHOTOS_DEST'] = 'files\\photos\\'
+app.config['DATA'] = 'files\\media\\'
 
-app.config['DEFAULT_PHOTO'] = 'files\\default_photos\\'
+app.config['DEFAULT_PHOTO_PATH'] = 'files\\'
 app.config['DEFAULT_PHOTO_NAME'] = 'default.jpg'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
@@ -38,10 +35,11 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-photos = UploadSet('photos', extensions=('jpg', 'jpeg', 'png'))
 
-# Configure the UploadSet
-configure_uploads(app, photos)
+# photos = UploadSet('photos', extensions=('jpg', 'jpeg', 'png'))
+#
+# # Configure the UploadSet
+# configure_uploads(app, photos)
 
 
 @login_manager.user_loader
@@ -155,31 +153,39 @@ def upload_video():
         _video_title = request.form['video_title']
         _description = request.form['video_description']
         _landMarks = request.form['landMarks']
-
         current_date = datetime.now()
 
-        folder_name = get_user_folder(user)
-        folder_path = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], folder_name)
+        user_folder_name = get_user_folder(user)
+
+        # ./files/videos//<user-name>
+        folder_path = os.path.join(app.config['DATA'], user_folder_name)
         os.makedirs(folder_path, exist_ok=True)
 
-        # Save the uploaded video to the user's folder
+        # name of video.
         video_filename = secure_filename(_video.filename)
+
+        # path for uploaded videos.
+        # ./media/omar/vdideo_srt/ahmed.mp4
         uploaded_video_path = get_app_path() + os.path.join(folder_path, video_filename)
+
+        # Save the uploaded video to the user's folder
         _video.save(uploaded_video_path)
 
-        dest_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']  # // video_srt
+        # ./files/videos/<user-name>/video_srt
+        dest_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
 
-        video_srt_path = get_app_path() + dest_path + '\\' + video_filename
+        # this path created to be saved in db
+        # ./files/videos/<user-name>/video_srt/<vide-name)
+        # video_srt_path = get_app_path() + dest_path + '\\' + video_filename
 
-        video = Video(_video_title, video_srt_path, current_date, user.user_id, _description)
+        video = Video(_video_title, video_filename, current_date, user.user_id, _description)
 
-        # amr hy3dl el function 3shan yst2blo.
         test_model_new(uploaded_video_path, dest_path)
         user.add_video(video)
 
         return "File has been uploaded."
     else:
-        return "You should log in first."
+        return "Please, select video to upload."
 
 
 @app.route('/display-videos', methods=['GET'])
@@ -189,15 +195,16 @@ def display_all_videos():
     user = get_userID(token)
     all_videos = Video.query.filter_by(user_id=user.user_id)
 
-    path_to_be_removed = app.config['UPLOADED_VIDEOS_DEST'] + get_user_folder(user) + '\\' + app.config[
-        'VIDEO_WITH_LANDMARKS']
-    user_path = get_user_folder(user) + '/' + app.config['VIDEO_WITH_LANDMARKS']
+    # path_to_be_removed = app.config['DATA'] + get_user_folder(user) + '\\' + app.config[
+    #     'VIDEO_WITH_LANDMARKS']
+    # user_path = get_user_folder(user) + '/' + app.config['VIDEO_WITH_LANDMARKS']
 
     video_data = [
-        {'URL': f'http://localhost:5000/videos/{remove_path(video.video_path, path_to_be_removed)}',
+        {'URL': f'http://localhost:5000/videos/{video.video_path}',
          'video_title': video.video_title, 'video_description': video.video_description}
         for video in all_videos]
     return {'videos': video_data}
+
 
 @app.route(f'/videos/<path:filename>')
 @jwt_required()
@@ -205,15 +212,17 @@ def get_video(filename):
     token = get_jwt()
     user = get_userID(token)
     user_path = get_user_folder(user) + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-    directroy = basedir + '\\' + app.config['UPLOADED_VIDEOS_DEST'] + user_path + '\\'
-    x = send_from_directory(directroy, filename, as_attachment=False)
-    return x
+    video_path = basedir + '\\' + app.config['DATA'] + user_path + '\\'
+    return send_from_directory(video_path, filename, as_attachment=False)
 
 
 @app.route('/photos/<path:filename>')
+@jwt_required()
 def get_photo(filename):
-    directroy = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST']
-    return send_from_directory(directroy, filename)
+    token = get_jwt()
+    user = get_userID(token)
+    photo_path = user.user_image
+    return send_from_directory(photo_path, filename)
 
 
 @app.route("/edit-profile", methods=['POST'])
@@ -231,8 +240,7 @@ def edit_profile():
 
     _user_birthdate = formm['userBD']
 
-    imageFile = photos.save(_user_image)
-    user_image_path = basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + imageFile
+    # hoda
 
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
@@ -240,8 +248,8 @@ def edit_profile():
     is_email_invalid: bool = not validate_email(_email)
     is_password_invalid = not validate_password(_password)
     is_exiting_email = existing_email is not None
-
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
+    is_profile_image_empty = check_profileImage_empty(_user_image)
 
     if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_exiting_email | is_password_invalid | \
             is_password_confirmation_not_match:
@@ -266,15 +274,15 @@ def edit_profile():
             salt_length=8
         )
 
-        foldername = get_user_folder(user)
+        user_image_path = return_image(is_profile_image_empty, _user_image, user)
+        _user_image.save(user_image_path)
 
-        User.query.filter_by(user_id=user.user_id) \
-            .update(dict(first_name=_first_name, last_name=_last_name, user_email=_email, user_password=hashed_password,
-                         user_image=user_image_path,
-                         user_birthdate=_user_birthdate))
-        db.session.commit()
+        # user folder
+        folder_name = get_user_folder(user)
 
-        update_user_folder(user, foldername)
+        update_changes(_email, _first_name, _last_name, _user_birthdate, hashed_password, user, user_image_path)
+
+        update_user_folder(user, folder_name)
 
         return jsonify(SUCCESS_MESSAGE['Data'])
 
@@ -291,7 +299,6 @@ def profilePage():
     token = get_jwt()
     user = get_userID(token)
     # issue_2
-    photo_des = app.config['UPLOADED_PHOTOS_DEST']
     return jsonify({
         'Data': {
             'response_data':
@@ -299,7 +306,7 @@ def profilePage():
                     'firstName': user.first_name,
                     'lastName': user.last_name,
                     'email': user.user_email,
-                    'userImage': f'http://localhost:5000/photos/{remove_path(user.user_image, photo_des)}',
+                    'userImage': f'http://localhost:5000/photos/{user.user_image}',
                     'userBirthDate': user.user_birthdate,
                     'isAdmin': user.is_admin,
                 }
@@ -375,6 +382,7 @@ def register():
     _password = request.form['password']
     _confirm_password = request.form['confirmPassword']
     _user_birthdate = request.form['userBD']
+    _user_image = request.files['profileImage']
 
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
@@ -385,7 +393,6 @@ def register():
     is_password_invalid = not validate_password(_password)
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
 
-    _user_image = request.files['profileImage']
     is_profile_image_empty = check_profileImage_empty(_user_image)
 
     # endregion
@@ -413,11 +420,14 @@ def register():
         salt_length=8
     )
 
-    photo_path = return_image(is_profile_image_empty, _user_image)
-
-    new_user = User(_first_name, _last_name, _email, hashed_password, photo_path, _user_birthdate)
+    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate)
     db.session.add(new_user)
     db.session.commit()
+
+    photo_path = return_image(is_profile_image_empty, _user_image, new_user)
+    new_user.user_image = photo_path
+    db.session.commit()
+
     return jsonify(SUCCESS_MESSAGE['Data'])
 
 
@@ -498,12 +508,20 @@ def edit_email_error(is_email_invalid, is_exiting_email):
         return REGISTRATION_ERROR_MESSAGES['email_exists']
 
 
-def return_image(is_profile_image_empty_, _user_image):
-    if is_profile_image_empty_:
-        return get_app_path() + app.config['DEFAULT_PHOTO'] + app.config['DEFAULT_PHOTO_NAME']
+def return_image(is_profile_image_empty_, _user_image, user):
+    user_folder_name = get_user_folder(user)
+
+    folder_path = os.path.join(app.config['DATA'], user_folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    if not is_profile_image_empty_:
+        photo_filename = secure_filename(_user_image.filename)
+        photo_path = get_app_path() + os.path.join(folder_path, photo_filename)
+        _user_image.save(photo_path)
+        return photo_path
+
     else:
-        photo = photos.save(_user_image)
-        return basedir + '\\' + app.config['UPLOADED_PHOTOS_DEST'] + photo
+        return get_app_path() + app.config['DEFAULT_PHOTO_PATH'] + app.config['DEFAULT_PHOTO_NAME']
 
 
 ######################################################################################
@@ -583,15 +601,23 @@ def get_user_folder(user):
 
 
 def update_user_folder(user, folder_name):
-    old_folder_path = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], folder_name)
+    old_folder_path = os.path.join(app.config['DATA'], folder_name)
 
     new_folder_name = f"{user.first_name}_{user.last_name}_{user.user_id}"
-    new_folder_path = os.path.join(app.config['UPLOADED_VIDEOS_DEST'], new_folder_name)
+    new_folder_path = os.path.join(app.config['DATA'], new_folder_name)
 
     print(old_folder_path)
     print(new_folder_path)
     # if os.path.exists(old_folder_path):
     os.rename(old_folder_path, new_folder_path)
+
+
+def update_changes(_email, _first_name, _last_name, _user_birthdate, hashed_password, user, user_image_path):
+    User.query.filter_by(user_id=user.user_id) \
+        .update(dict(first_name=_first_name, last_name=_last_name, user_email=_email, user_password=hashed_password,
+                     user_image=user_image_path,
+                     user_birthdate=_user_birthdate))
+    db.session.commit()
 
 
 # Run server
