@@ -1,6 +1,8 @@
 import os
 import re
 from datetime import date, datetime
+
+import requests
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt, jwt_required)
@@ -33,8 +35,8 @@ app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-# endregion
-login_manager = LoginManager(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 
 @login_manager.user_loader
@@ -51,7 +53,7 @@ def unauthorized():
 def custom_error_callback(error):
     return jsonify({
         'msg': 'Authorization header is missing or invalid.'
-    })
+    }), 401
 
 
 login_manager.login_view = "/login"
@@ -142,7 +144,7 @@ def remove_video(video_id):
 @jwt_required()
 def upload_video():
     token = get_jwt()
-    user = get_userID(token)
+    user = get_current_user(token)
     if request.method == "POST" and "video" in request.files:
         _video = request.files["video"]
         _video_title = request.form['video_title']
@@ -181,7 +183,7 @@ def upload_video():
 @jwt_required()
 def display_all_videos():
     token = get_jwt()
-    user = get_userID(token)
+    user = get_current_user(token)
     # return all videos.
     all_videos = Video.query.filter_by(user_id=user.user_id)
     video_data = [
@@ -195,20 +197,17 @@ def display_all_videos():
 @jwt_required()
 def get_video(filename):
     token = get_jwt()
-    user_id = get_userID(token)
-    # user = Video.query.filter_by(video_path=filename)
+    user_id = get_current_user(token)
     video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user_id),
                               app.config['VIDEO_WITH_LANDMARKS'] + '\\')
     return send_from_directory(video_path, filename, as_attachment=False)
 
 
-@login_required
 @app.route('/photos/<path:filename>')
 @jwt_required()
 def get_photo(filename):
     token = get_jwt()
-    user_id = get_userID(token)
-    # user = User.query.filter_by(user_image=filename)
+    user_id = get_current_user(token)
     photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user_id), app.config['IMAGE'])
     return send_from_directory(photo_path, filename)
 
@@ -217,7 +216,7 @@ def get_photo(filename):
 @jwt_required()
 def edit_profile():
     token = get_jwt()
-    user = get_userID(token)
+    user = get_current_user(token)
     formm = request.form
     _first_name = formm['firstName']
     _last_name = formm['lastName']
@@ -263,7 +262,6 @@ def edit_profile():
         )
 
         user_image_path = return_image_path(is_profile_image_empty, _user_image, user)
-        _user_image.save(user_image_path)
 
         # user folder
         folder_name = get_user_folder(user)
@@ -285,7 +283,13 @@ with app.app_context():
 @jwt_required()
 def profilePage():
     token = get_jwt()
-    user = get_userID(token)
+    user = get_current_user(token)
+
+    # photo_url = f'http://localhost:5000/photos/{user.user_image}'
+    # headers = {'Authorization': f'Bearer {token}'}
+    # response = requests.get(photo_url, headers=headers)
+    # print(token)
+
     # issue_2
     return jsonify({
         'Data': {
@@ -497,6 +501,24 @@ def edit_email_error(is_email_invalid, is_exiting_email):
         return REGISTRATION_ERROR_MESSAGES['email_exists']
 
 
+# def return_image_path_for_edit(is_profile_image_empty_, _user_image, user):
+#     user_folder_name = get_user_folder(user)
+#
+#     folder_path = os.path.join(app.config['DATA'], user_folder_name, app.config['IMAGE'])
+#     os.makedirs(folder_path, exist_ok=True)
+#
+#     if not is_profile_image_empty_:
+#
+#         image_name = secure_filename(_user_image.filename)
+#         image_path = os.path.join(get_app_path(), folder_path, image_name)
+#         _user_image.save(image_path)
+#         return image_name
+#
+#     else:
+#         x = secure_filename(_user_image.filename)
+#         return x
+
+
 def return_image_path(is_profile_image_empty_, _user_image, user):
     user_folder_name = get_user_folder(user)
 
@@ -575,7 +597,7 @@ def updateIsOnline():
     User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=False))
 
 
-def get_userID(token):
+def get_current_user(token):
     return User.query.filter_by(user_id=token['sub']).first()
 
 
@@ -594,9 +616,6 @@ def update_user_folder(user, folder_name):
     new_folder_name = f"{user.first_name}_{user.last_name}_{user.user_id}"
     new_folder_path = os.path.join(app.config['DATA'], new_folder_name)
 
-    # print(old_folder_path)
-    # print(new_folder_path)
-    # if os.path.exists(old_folder_path):
     os.rename(old_folder_path, new_folder_path)
 
 
