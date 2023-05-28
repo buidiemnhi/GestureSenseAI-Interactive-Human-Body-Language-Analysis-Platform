@@ -2,7 +2,6 @@ import os
 import re
 from datetime import date, datetime
 
-import requests
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt, jwt_required)
@@ -184,31 +183,29 @@ def upload_video():
 def display_all_videos():
     token = get_jwt()
     user = get_current_user(token)
+    id = token['sub']
     # return all videos.
     all_videos = Video.query.filter_by(user_id=user.user_id)
     video_data = [
-        {'URL': f'http://localhost:5000/videos/{video.video_path}',
+        {'URL': f'http://localhost:5000/videos/{video.video_path}/{id}',
          'video_title': video.video_title, 'video_description': video.video_description}
         for video in all_videos]
     return {'videos': video_data}
 
 
-@app.route(f'/videos/<path:filename>')
-@jwt_required()
-def get_video(filename):
-    token = get_jwt()
-    user_id = get_current_user(token)
-    video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user_id),
+@app.route(f'/videos/<path:filename>/<int:id>')
+def get_video(filename, id):
+    user = sater(id)
+    # print(user.first_name)
+    video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
                               app.config['VIDEO_WITH_LANDMARKS'] + '\\')
     return send_from_directory(video_path, filename, as_attachment=False)
 
 
-@app.route('/photos/<path:filename>')
-@jwt_required()
-def get_photo(filename):
-    token = get_jwt()
-    user_id = get_current_user(token)
-    photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user_id), app.config['IMAGE'])
+@app.route('/photos/<path:filename>/<int:id>')
+def get_photo(filename, id):
+    user = sater(id)
+    photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user), app.config['IMAGE'])
     return send_from_directory(photo_path, filename)
 
 
@@ -284,6 +281,7 @@ with app.app_context():
 def profilePage():
     token = get_jwt()
     user = get_current_user(token)
+    id = token['sub']
 
     # photo_url = f'http://localhost:5000/photos/{user.user_image}'
     # headers = {'Authorization': f'Bearer {token}'}
@@ -298,7 +296,7 @@ def profilePage():
                     'firstName': user.first_name,
                     'lastName': user.last_name,
                     'email': user.user_email,
-                    'userImage': f'http://localhost:5000/photos/{user.user_image}',
+                    'userImage': f'http://localhost:5000/photos/{user.user_image}/{id}',
                     'userBirthDate': user.user_birthdate,
                     'isAdmin': user.is_admin,
                 }
@@ -599,6 +597,10 @@ def updateIsOnline():
 
 def get_current_user(token):
     return User.query.filter_by(user_id=token['sub']).first()
+
+
+def sater(id):
+    return User.query.filter_by(user_id=id).first()
 
 
 def get_app_path():
