@@ -6,3 +6,9 @@ server/backend/db.sqlite
 *.sqlite
 
 
+server/.idea/misc.xml
+server/.idea/modules.xml
+server/.idea/server.iml
+server/backend/.idea/backend_GP.iml
+server/backend/.idea/misc.xml
+*.iml
