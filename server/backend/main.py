@@ -551,7 +551,13 @@ def validate_last_Name(_last_name):
 
 
 def validate_email(_email):
-    return re.match(r'[^@]+@[^@]+\.[^@]+', _email)
+    if re.match(r'[^@]+@[^@]+\.[^@]+', _email):
+        if re.match(r'^[a-zA-Z0-9@.]+$', _email):
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 def validate_birth_date(_user_birthdate):
