@@ -1,7 +1,5 @@
-import os
 import re
 from datetime import date, datetime
-
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt, jwt_required)
@@ -10,7 +8,6 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import shutil
-
 from AI import *
 
 # Initialize app
@@ -63,7 +60,6 @@ login_manager.session_protection = "strong"
 db = SQLAlchemy(app)
 
 
-# table user
 class User(UserMixin, db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
@@ -126,12 +122,21 @@ class Video(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
 
-    def __init__(self, video_title, video_path, video_date, user_id, video_description):
+    def __init__(self, video_title, video_path, video_subtitle1_path, video_subtitle2_path, video_date, user_id,
+                 video_description):
         self.video_title = video_title
         self.video_path = video_path
+        self.video_subtitle1_path = video_subtitle1_path
+        self.video_subtitle2_path = video_subtitle2_path
         self.video_date = video_date
         self.user_id = user_id
         self.video_description = video_description
+
+
+# Create Database
+with app.app_context():
+    db.create_all()
+    # db.drop_all()
 
 
 # @app.route('/remove-video', methods=['GET', "POST"])
@@ -139,74 +144,134 @@ def remove_video(video_id):
     current_user.remove_video(video_id)
 
 
-@app.route('/upload-video', methods=['POST'])
-@jwt_required()
-def upload_video():
-    token = get_jwt()
-    user = get_current_user(token)
-    if request.method == "POST" and "video" in request.files:
-        _video = request.files["video"]
-        _video_title = request.form['video_title']
-        _description = request.form['video_description']
-        _landMarks = request.form['landMarks']
-        current_date = datetime.now()
+@app.route('/register', methods=['POST'])
+def register():
+    _first_name = request.form['firstName']
+    _last_name = request.form['lastName']
+    _email = request.form['email']
+    _password = request.form['password']
+    _confirm_password = request.form['confirmPassword']
+    _user_birthdate = request.form['userBD']
+    _user_image = request.files['profileImage']
 
-        video_name = secure_filename(_video.filename)
+    existing_email = User.query.filter_by(user_email=_email).first()
+    is_first_name_invalid = not validate_first_name(_first_name)
+    is_last_name_invalid = not validate_last_Name(_last_name)
+    is_email_invalid: bool = not validate_email(_email)
+    is_exiting_email = existing_email is not None
+    is_birth_date_invalid = not validate_birth_date(_user_birthdate)
+    is_password_invalid = not validate_password(_password)
+    is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
 
-        user_folder_name = get_user_folder(user)
+    is_profile_image_empty = check_profileImage_empty(_user_image)
 
-        folder_path = os.path.join(app.config['DATA'], user_folder_name)
-        os.makedirs(folder_path, exist_ok=True)
+    # endregion
+    if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_exiting_email \
+            | is_birth_date_invalid | is_password_confirmation_not_match | is_password_invalid:
+        return jsonify({
+            'isError': True,
+            'Data': {
+                'firstName': {'isError': is_first_name_invalid,
+                              'msg': first_name_error(is_first_name_invalid)},
+                'lastName': {'isError': is_last_name_invalid,
+                             'msg': last_name_error(is_last_name_invalid)},
+                'email': {'isError': is_email_invalid | is_exiting_email,
+                          'msg': registration_email_error(is_email_invalid, is_exiting_email)},
+                'Birthdate': {'isError': is_birth_date_invalid,
+                              'msg': birth_date_error(is_birth_date_invalid)},
+                'password': {'isError': is_password_invalid | is_password_confirmation_not_match,
+                             'msg': registration_password_error(is_password_invalid,
+                                                                is_password_confirmation_not_match)}
 
-        # path for uploaded videos.
-        uploaded_video_path = os.path.join(get_app_path(), folder_path, app.config['UPLOADED_VIDEO'])
-        os.makedirs(uploaded_video_path, exist_ok=True)
+            }})
 
-        # Save the uploaded videos.
-        video_path = os.path.join(uploaded_video_path, video_name)
-        _video.save(video_path)
+    hashed_password = generate_password_hash(
+        _password, method='pbkdf2:sha256',
+        salt_length=8
+    )
 
-        destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-        # pass two paths to AI model
-        test_model_new(video_path, destination_path)
+    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate)
+    db.session.add(new_user)
+    db.session.commit()
 
-        video = Video(_video_title, video_name, current_date, user.user_id, _description)
-        user.add_video(video)
+    image_path = return_image_path(is_profile_image_empty, _user_image, new_user)
+    # update the db with new value of
+    new_user.user_image = image_path
+    db.session.commit()
 
-        return "File has been uploaded."
+    return jsonify(SUCCESS_MESSAGE['Data'])
+
+
+@app.route("/login", methods=['POST', 'GET'])
+def login():
+    _email = request.json['email']
+    _password = request.json['password']
+
+    user = User.query.filter_by(user_email=_email).first()
+    is_login_email_dose_not_exist = user is None
+
+    if current_user.is_authenticated:
+        return "User is already logged in."
     else:
-        return "Please, select video to upload."
+
+        if not is_login_email_dose_not_exist:
+            is_password_dose_not_match_email = not check_password_hash(user.user_password, _password)
+
+            if is_password_dose_not_match_email:
+                return jsonify({
+                    'isError': True,
+                    'Data': {
+                        'email': {'isError': is_login_email_dose_not_exist,
+                                  'msg': login_email_error(is_login_email_dose_not_exist)},
+                        'password': {'isError': is_password_dose_not_match_email,
+                                     'msg': login_password_error(is_password_dose_not_match_email)},
+                    }})
+
+            else:
+                login_user(user)
+                User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=True))
+                db.session.commit()
+                access_token = create_access_token(identity=user.user_id)
+                return jsonify({
+
+                    'response_data':
+                        {
+                            'isError': False,
+                        },
+                    'jwt': access_token
+
+                }
+                )
+
+        else:
+            return jsonify({
+                'isError': True,
+                'Data': {
+                    'email': {'isError': is_login_email_dose_not_exist,
+                              'msg': login_email_error(is_login_email_dose_not_exist)},
+                }})
 
 
-@app.route('/display-videos', methods=['GET'])
+@app.route('/profile-page', methods=['GET'])
 @jwt_required()
-def display_all_videos():
+def profilePage():
     token = get_jwt()
     user = get_current_user(token)
     id = token['sub']
-    # return all videos.
-    all_videos = Video.query.filter_by(user_id=user.user_id)
-    video_data = [
-        {'URL': f'http://localhost:5000/videos/{video.video_path}/{id}',
-         'video_title': video.video_title, 'video_description': video.video_description}
-        for video in all_videos]
-    return {'videos': video_data}
 
-
-@app.route(f'/videos/<path:filename>/<int:id>')
-def get_video(filename, id):
-    user = sater(id)
-    # print(user.first_name)
-    video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
-                              app.config['VIDEO_WITH_LANDMARKS'] + '\\')
-    return send_from_directory(video_path, filename, as_attachment=False)
-
-
-@app.route('/photos/<path:filename>/<int:id>')
-def get_photo(filename, id):
-    user = sater(id)
-    photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user), app.config['IMAGE'])
-    return send_from_directory(photo_path, filename)
+    return jsonify({
+        'Data': {
+            'response_data':
+                {
+                    'firstName': user.first_name,
+                    'lastName': user.last_name,
+                    'email': user.user_email,
+                    'userImage': f'http://localhost:5000/photos/{user.user_image}/{id}',
+                    'userBirthDate': user.user_birthdate,
+                    'isAdmin': user.is_admin,
+                }
+        }
+    })
 
 
 @app.route("/edit-profile", methods=['POST'])
@@ -270,88 +335,97 @@ def edit_profile():
         return jsonify(SUCCESS_MESSAGE['Data'])
 
 
-# Create Database
-with app.app_context():
-    db.create_all()
-    # db.drop_all()
-
-
-@app.route('/profile-page', methods=['GET'])
+@app.route('/upload-video', methods=['POST'])
 @jwt_required()
-def profilePage():
+def upload_video():
+    token = get_jwt()
+    user = get_current_user(token)
+    if request.method == "POST" and "video" in request.files:
+        _video = request.files["video"]
+        _video_title = request.form['video_title']
+        _description = request.form['video_description']
+        # _landMarks = request.form['landMarks']
+        current_date = datetime.now()
+
+        video_name = secure_filename(_video.filename)
+
+        # subtitle 1, 2
+        sub_1 = get_subtitle_1(video_name)
+        sub_2 = get_subtitle_2(video_name)
+
+        user_folder_name = get_user_folder(user)
+
+        # create folder by username
+        folder_path = os.path.join(app.config['DATA'], user_folder_name)
+        os.makedirs(folder_path, exist_ok=True)
+
+        # path for uploaded videos.
+        uploaded_video_path = os.path.join(get_app_path(), folder_path, app.config['UPLOADED_VIDEO'])
+        os.makedirs(uploaded_video_path, exist_ok=True)
+
+        # Save the uploaded videos.
+        video_path = os.path.join(uploaded_video_path, video_name)
+        _video.save(video_path)
+
+        # pass two paths to AI model
+        destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
+        test_model_new(video_path, destination_path)
+
+        video = Video(_video_title, video_name, sub_1, sub_2, current_date, user.user_id, _description)
+        user.add_video(video)
+
+        return "File has been uploaded."
+    else:
+        return "Please, select video to upload."
+
+
+@app.route('/display-videos', methods=['GET'])
+@jwt_required()
+def display_all_videos():
     token = get_jwt()
     user = get_current_user(token)
     id = token['sub']
-
-    # photo_url = f'http://localhost:5000/photos/{user.user_image}'
-    # headers = {'Authorization': f'Bearer {token}'}
-    # response = requests.get(photo_url, headers=headers)
-    # print(token)
-
-    # issue_2
-    return jsonify({
-        'Data': {
-            'response_data':
+    # return all videos.
+    all_videos = Video.query.filter_by(user_id=user.user_id)
+    video_data = [
+        {
+            'URL': f'http://localhost:5000/videos/{video.video_path}/{id}',
+            'video_title': video.video_title,
+            'video_description': video.video_description,
+            'subtitles': [
                 {
-                    'firstName': user.first_name,
-                    'lastName': user.last_name,
-                    'email': user.user_email,
-                    'userImage': f'http://localhost:5000/photos/{user.user_image}/{id}',
-                    'userBirthDate': user.user_birthdate,
-                    'isAdmin': user.is_admin,
+                    'subtitle_1': f'http://localhost:5000/videos/{video.video_subtitle1_path}/{id}',
+                },
+                {
+                    'subtitle_2': f'http://localhost:5000/videos/{video.video_subtitle2_path}/{id}'
                 }
+            ]
         }
-    })
+        for video in all_videos]
+    return {'videos': video_data}
 
 
-@app.route("/login", methods=['POST', 'GET'])
-def login():
-    _email = request.json['email']
-    _password = request.json['password']
+@app.route(f'/videos/<path:filename>/<int:id>')
+def get_sub_1(filename, id):
+    user = get_current_user_by_id(id)
+    sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
+                              app.config['VIDEO_WITH_LANDMARKS'] + '\\')
+    return send_from_directory(sub_path_2, filename, as_attachment=False)
 
-    user = User.query.filter_by(user_email=_email).first()
-    is_login_email_dose_not_exist = user is None
 
-    if current_user.is_authenticated:
-        return "User is already logged in."
-    else:
+@app.route(f'/videos/<path:filename>/<int:id>')
+def get_sub_2(filename, id):
+    user = get_current_user_by_id(id)
+    sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
+                              app.config['VIDEO_WITH_LANDMARKS'] + '\\')
+    return send_from_directory(sub_path_2, filename, as_attachment=False)
 
-        if not is_login_email_dose_not_exist:
-            is_password_dose_not_match_email = not check_password_hash(user.user_password, _password)
 
-            if is_password_dose_not_match_email:
-                return jsonify({
-                    'isError': True,
-                    'Data': {
-                        'email': {'isError': is_login_email_dose_not_exist,
-                                  'msg': login_email_error(is_login_email_dose_not_exist)},
-                        'password': {'isError': is_password_dose_not_match_email,
-                                     'msg': login_password_error(is_password_dose_not_match_email)},
-                    }})
-
-            else:
-                login_user(user)
-                User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=True))
-                db.session.commit()
-                access_token = create_access_token(identity=user.user_id)
-                return jsonify({
-
-                    'response_data':
-                        {
-                            'isError': False,
-                        },
-                    'jwt': access_token
-
-                }
-                )
-
-        else:
-            return jsonify({
-                'isError': True,
-                'Data': {
-                    'email': {'isError': is_login_email_dose_not_exist,
-                              'msg': login_email_error(is_login_email_dose_not_exist)},
-                }})
+@app.route('/photos/<path:filename>/<int:id>')
+def get_image(filename, id):
+    user = get_current_user_by_id(id)
+    photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user), app.config['IMAGE'])
+    return send_from_directory(photo_path, filename)
 
 
 @app.route("/logout")
@@ -362,64 +436,6 @@ def logout():
     db.session.commit()
     logout_user()
     return 'u are logged out'
-
-
-@app.route('/register', methods=['POST'])
-def register():
-    _first_name = request.form['firstName']
-    _last_name = request.form['lastName']
-    _email = request.form['email']
-    _password = request.form['password']
-    _confirm_password = request.form['confirmPassword']
-    _user_birthdate = request.form['userBD']
-    _user_image = request.files['profileImage']
-
-    existing_email = User.query.filter_by(user_email=_email).first()
-    is_first_name_invalid = not validate_first_name(_first_name)
-    is_last_name_invalid = not validate_last_Name(_last_name)
-    is_email_invalid: bool = not validate_email(_email)
-    is_exiting_email = existing_email is not None
-    is_birth_date_invalid = not validate_birth_date(_user_birthdate)
-    is_password_invalid = not validate_password(_password)
-    is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
-
-    is_profile_image_empty = check_profileImage_empty(_user_image)
-
-    # endregion
-    if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_exiting_email \
-            | is_birth_date_invalid | is_password_confirmation_not_match | is_password_invalid:
-        return jsonify({
-            'isError': True,
-            'Data': {
-                'firstName': {'isError': is_first_name_invalid,
-                              'msg': first_name_error(is_first_name_invalid)},
-                'lastName': {'isError': is_last_name_invalid,
-                             'msg': last_name_error(is_last_name_invalid)},
-                'email': {'isError': is_email_invalid | is_exiting_email,
-                          'msg': registration_email_error(is_email_invalid, is_exiting_email)},
-                'Birthdate': {'isError': is_birth_date_invalid,
-                              'msg': birth_date_error(is_birth_date_invalid)},
-                'password': {'isError': is_password_invalid | is_password_confirmation_not_match,
-                             'msg': registration_password_error(is_password_invalid,
-                                                                is_password_confirmation_not_match)}
-
-            }})
-
-    hashed_password = generate_password_hash(
-        _password, method='pbkdf2:sha256',
-        salt_length=8
-    )
-
-    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate)
-    db.session.add(new_user)
-    db.session.commit()
-
-    image_path = return_image_path(is_profile_image_empty, _user_image, new_user)
-    # update the db with new value of
-    new_user.user_image = image_path
-    db.session.commit()
-
-    return jsonify(SUCCESS_MESSAGE['Data'])
 
 
 ########################################################################################################################
@@ -464,8 +480,6 @@ def last_name_error(is_last_name_invalid):
 def birth_date_error(is_birth_date_invalid):
     if is_birth_date_invalid:
         return REGISTRATION_ERROR_MESSAGES['invalid_birthDate']
-    else:
-        return "ok"
 
 
 def registration_email_error(is_email_invalid, is_exiting_email):
@@ -499,24 +513,6 @@ def edit_email_error(is_email_invalid, is_exiting_email):
         return REGISTRATION_ERROR_MESSAGES['email_exists']
 
 
-# def return_image_path_for_edit(is_profile_image_empty_, _user_image, user):
-#     user_folder_name = get_user_folder(user)
-#
-#     folder_path = os.path.join(app.config['DATA'], user_folder_name, app.config['IMAGE'])
-#     os.makedirs(folder_path, exist_ok=True)
-#
-#     if not is_profile_image_empty_:
-#
-#         image_name = secure_filename(_user_image.filename)
-#         image_path = os.path.join(get_app_path(), folder_path, image_name)
-#         _user_image.save(image_path)
-#         return image_name
-#
-#     else:
-#         x = secure_filename(_user_image.filename)
-#         return x
-
-
 def return_image_path(is_profile_image_empty_, _user_image, user):
     user_folder_name = get_user_folder(user)
 
@@ -541,14 +537,14 @@ def return_image_path(is_profile_image_empty_, _user_image, user):
 ######################################################################################
 
 def validate_first_name(_first_name):
-    if len(_first_name) < 3:
+    if len(_first_name) < 3 or re.search(r'[^a-zA-Z\s]', _first_name):
         return False
     else:
         return True
 
 
 def validate_last_Name(_last_name):
-    if len(_last_name) < 3:
+    if len(_last_name) < 3 or re.search(r'[^a-zA-Z\s]', _last_name):
         return False
     else:
         return True
@@ -599,8 +595,18 @@ def get_current_user(token):
     return User.query.filter_by(user_id=token['sub']).first()
 
 
-def sater(id):
+def get_current_user_by_id(id):
     return User.query.filter_by(user_id=id).first()
+
+
+def get_subtitle_2(video_name):
+    sub_2 = video_name.split(".")[0] + '_meaning.srt'
+    return sub_2
+
+
+def get_subtitle_1(video_name):
+    sub_1 = video_name.split(".")[0] + '.srt'
+    return sub_1
 
 
 def get_app_path():
