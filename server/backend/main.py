@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import shutil
+from moviepy.editor import VideoFileClip
 from AI import *
 
 # Initialize app
@@ -25,7 +26,7 @@ app.config['DATA'] = 'files\\media\\'
 app.config['IMAGE'] = 'images'
 app.config['UPLOADED_VIDEO'] = 'uploaded_videos'
 
-app.config['DEFAULT_PHOTO_PATH'] = 'files\\'
+# app.config['DEFAULT_PHOTO_PATH'] = 'files\\'
 app.config['DEFAULT_PHOTO_NAME'] = 'default.jpg'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
@@ -114,23 +115,25 @@ class User(UserMixin, db.Model):
 class Video(db.Model):
     video_id = db.Column(db.Integer, primary_key=True)
     video_title = db.Column(db.String(100), nullable=False)
-    video_path = db.Column(db.String(255), nullable=False)
-    video_subtitle1_path = db.Column(db.String(255), nullable=True)
-    video_subtitle2_path = db.Column(db.String(255), nullable=True)
+    video_name = db.Column(db.String(255), nullable=False)
+    video_subtitle1_path = db.Column(db.String(255), nullable=False)
+    video_subtitle2_path = db.Column(db.String(255), nullable=False)
     video_date = db.Column(db.String(250), nullable=False)
     video_description = db.Column(db.String(255), nullable=True)
+    video_duration = db.Column(db.Float, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
 
-    def __init__(self, video_title, video_path, video_subtitle1_path, video_subtitle2_path, video_date, user_id,
-                 video_description):
+    def __init__(self, video_title, video_name, video_subtitle1_path, video_subtitle2_path, video_date, user_id,
+                 video_description, video_duration):
         self.video_title = video_title
-        self.video_path = video_path
+        self.video_name = video_name
         self.video_subtitle1_path = video_subtitle1_path
         self.video_subtitle2_path = video_subtitle2_path
         self.video_date = video_date
         self.user_id = user_id
         self.video_description = video_description
+        self.video_duration = video_duration
 
 
 # Create Database
@@ -344,7 +347,6 @@ def upload_video():
         _video = request.files["video"]
         _video_title = request.form['video_title']
         _description = request.form['video_description']
-        # _landMarks = request.form['landMarks']
         current_date = datetime.now()
 
         video_name = secure_filename(_video.filename)
@@ -371,13 +373,50 @@ def upload_video():
         destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
         test_model_new(video_path, destination_path)
 
-        video = Video(_video_title, video_name, sub_1, sub_2, current_date, user.user_id, _description)
+        video_duration = get_video_duration(destination_path, video_name)
+
+        video = Video(_video_title, video_name, sub_1, sub_2, current_date, user.user_id, _description, video_duration)
         user.add_video(video)
 
         return "File has been uploaded."
     else:
         return "Please, select video to upload."
 
+
+# ========================================================================
+@app.route('/total-durations', methods=['GET'])
+@jwt_required()
+def get_total_durations():
+    token = get_jwt()
+    user = get_current_user(token)
+    all_videos = Video.query.filter_by(user_id=user.user_id).with_entities(Video.video_duration).all()
+    total_sec = 0
+    for video in all_videos:
+        total_sec = total_sec + video.video_duration
+    return jsonify({
+        "Data": {
+            'total_duration': total_sec
+        }
+    })
+
+
+@app.route('/total-videos', methods=['GET'])
+@jwt_required()
+def get_total_videos_number():
+    token = get_jwt()
+    user = get_current_user(token)
+    all_videos = Video.query.filter_by(user_id=user.user_id).all()
+    total_videos_number = 0
+    for video in all_videos:
+        total_videos_number += 1
+    return jsonify({
+        "Data": {
+            'total_videos_number': total_videos_number
+        }
+    })
+
+
+# ========================================================================
 
 @app.route('/display-videos', methods=['GET'])
 @jwt_required()
@@ -389,7 +428,7 @@ def display_all_videos():
     all_videos = Video.query.filter_by(user_id=user.user_id)
     video_data = [
         {
-            'URL': f'http://localhost:5000/videos/{video.video_path}/{id}',
+            'URL': f'http://localhost:5000/videos/{video.video_name}/{id}',
             'video_title': video.video_title,
             'video_description': video.video_description,
             'subtitles': [
@@ -403,6 +442,14 @@ def display_all_videos():
         }
         for video in all_videos]
     return {'videos': video_data}
+
+
+@app.route(f'/videos/<path:filename>/<int:id>')
+def get_video(filename, id):
+    user = get_current_user_by_id(id)
+    video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
+                              app.config['VIDEO_WITH_LANDMARKS'] + '\\')
+    return send_from_directory(video_path, filename, as_attachment=False)
 
 
 @app.route(f'/videos/<path:filename>/<int:id>')
@@ -532,6 +579,13 @@ def return_image_path(is_profile_image_empty_, _user_image, user):
         destination_path = os.path.join(get_app_path(), folder_path, app.config['DEFAULT_PHOTO_NAME'])
         shutil.copy(source_path, destination_path)
         return app.config['DEFAULT_PHOTO_NAME']
+
+
+def get_video_duration(destination_path, video_name):
+    video_path = os.path.join(destination_path, video_name)
+    video = VideoFileClip(video_path)
+    video_duration = video.duration
+    return video_duration
 
 
 ######################################################################################
