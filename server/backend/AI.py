@@ -9,6 +9,7 @@ import numpy as np
 
 
 # U MUST INSTALL FKN SCICKET LEARN
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 # new model code
 def test_model_new(path_with_file_extension, destination):
@@ -216,8 +217,7 @@ def mediapipe_detection(image, model):
 def meaning_action(action):
     # code:9999
     csv_file = csv.reader(open(
-        'C:\\Users\\me029\\PycharmProjects\\graduationProject\\server'
-        '\\backend\\DataSet_2.csv',
+        os.path.join(basedir, 'DataSet_2.csv'),
         'r'
     ))
 
