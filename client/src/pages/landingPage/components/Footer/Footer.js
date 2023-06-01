@@ -5,7 +5,7 @@ import React from 'react';
 function Footer() {
   return (
     <div className='container-fluid p-0'>
-        <div className="footer-basic blackbg">
+        <div className="footer-basic blackbackground">
         <footer>
             <div className="social"><a href="#"><i class="icon ion-social-instagram"></i></a><a href="#"><i className="icon ion-social-snapchat"></i></a><a href="#"><i className="icon ion-social-twitter"></i></a><a href="#"><i className="icon ion-social-facebook"></i></a></div>
             <ul className="list-inline">

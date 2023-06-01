@@ -4,10 +4,10 @@ import React from 'react';
 
 function LiveDemo() {
   return (
-    <div className='container mb-5'>
+    <div className='container mb-5' id='liveDemo'>
 
         <div className='mt-5 mb-5'>
-            <h1 className='pl-3'><span className='bold'>Live</span> demo</h1>
+            <h1 className=''><span className='bolder'>Live</span> <span className='bold'>DEMO</span></h1>
         </div>
 
         <div className='row w-100 m-0 justify-content-center'>
