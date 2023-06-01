@@ -350,6 +350,7 @@ def upload_video():
         _video = request.files["video"]
         _video_title = request.form['video_title']
         _description = request.form['video_description']
+        _landmarks = request.form['landMarks']
         current_date = datetime.now()
 
         video_name = secure_filename(_video.filename)
@@ -374,7 +375,7 @@ def upload_video():
 
         # pass two paths to AI model
         destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-        test_model_new(video_path, destination_path)
+        test_model_new(video_path, destination_path,_landmarks)
 
         video_duration = get_video_duration(destination_path, video_name)
 
@@ -384,6 +385,9 @@ def upload_video():
         return "File has been uploaded."
     else:
         return "Please, select video to upload."
+
+
+
 
 
 # ========================================================================
@@ -520,7 +524,7 @@ def get_all_users():
         }
         user_list.append(user_data)
 
-    return jsonify(user_list)
+    return jsonify({'Data': user_list})
 
 
 # Function to delete a user
@@ -548,7 +552,7 @@ def get_all_videos():
         }
         video_list.append(video_data)
 
-    return jsonify(video_list)
+    return jsonify({'Data': video_list})
 
 
 # Function to delete a video
