@@ -37,7 +37,9 @@ export default function UploadVideos() {
           };
 
           try {
+            //show loader
             const response = await fetch("http://127.0.0.1:5000//upload-video", requestOptions);
+            //hide loader
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -48,10 +50,6 @@ export default function UploadVideos() {
           }
 
         
-        
-        
-
-
         // console.log(JSON.stringify(fullInputData))
         setFullInputData({
             video: null,

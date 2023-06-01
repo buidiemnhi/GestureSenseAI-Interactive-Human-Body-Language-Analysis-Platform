@@ -3,7 +3,7 @@ import './profilePage.css';
 import {
   React,
   useEffect,
-  useState
+  useState,
 } from 'react';
 
 import Dashboard from './components/Dashboard/Dashboard';
