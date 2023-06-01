@@ -6,7 +6,7 @@ function WhatWeOffer() {
   return (
     <div className='container p-0'>
 
-        <div className='row w-100 m-0 justify-content-center'>
+        <div className='row w-100 m-0 justify-content-center mt-5'>
 
             <div className='col-sm-5 my-5 mx-4 '>
                 <img src={process.env.PUBLIC_URL + '/imgs/ai.jpg'} className="img-fluid hieght550 "/>
@@ -14,15 +14,30 @@ function WhatWeOffer() {
 
             <div className='col-sm-5 my-5 mx-4 d-flex align-items-center'>
                 <div className='conatiner p-0'>
-                    <h1 className=''><span className='bolder'>What we</span> <span className='bold'>offer</span></h1>
+                    <h1 className=''><span className='bolder'>What we</span> <span className='bold'>OFFER</span></h1>
+                    <div>
                     <p className='font20'>
-                        is a non verbal action detection and analysis based on the context of the situation provided in a video tape
-                        and providing back the nonverbal actions detected and what are the meaning behind them as non verbal action can change point of view on a situation and even save lives ,
-                        provided by the AI technologies machine learning models which extract the landmarks of your body as shoulder joints, face gesture, hand positioning,etc..
-                        .then it's our machine learning model GTKY which takes the landmarks extracted and analyze them to detect the non verbal actions and what they mean based on the context.
-                        <span className='bold'>so what are you waiting for?? join us and get to know the language of your body and your non verbal actions meaning.</span>
-                    </p>
-                    <a className='btn blackbg white px-5 py-3'>Get started now</a>
+                        <span className='bold'>Precision and Accuracy: </span>
+                        Our AI system is designed to detect human bodies with high precision and accuracy, reducing false positives and negatives. 
+                        It can identify and track multiple individuals in crowded scenes, distinguishing between different body postures and movements.
+                        </p>
+                    </div>
+
+                    <div>
+                    <p className='font20'>
+                        <span className='bold'>Scalability: </span>
+                        Our AI system is scalable and can be deployed across various platforms and devices. It can handle large volumes of data and perform consistently under different conditions.                        </p>
+                    </div>
+
+                    <div>
+                    <p className='font20'>
+                        <span className='bold'>Precision and Accuracy: </span>
+                        Our AI system is designed to detect human bodies with high precision and accuracy, reducing false positives and negatives. 
+                        It can identify and track multiple individuals in crowded scenes, distinguishing between different body postures and movements.
+                        </p>
+                    </div>
+
+                    <a className='btn blackbg white px-5 py-2' href='http://localhost:3000/signin'>Get started now</a>
                 </div>
 
             </div>

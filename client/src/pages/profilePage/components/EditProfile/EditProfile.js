@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
 
 export default function EditProfile(props) {
+
     const navigate = useNavigate();
     const [formData, setformData] = useState({
         firstName:props.profileData.firstName,
@@ -35,7 +35,7 @@ export default function EditProfile(props) {
         })
     
     }
-    console.log(ErrorData)
+
     async function handleSubmit(event) {
         event.preventDefault()
 
@@ -189,21 +189,8 @@ export default function EditProfile(props) {
                     </div>
                 </div>
                 
-
             </form>
             </div>
-        <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-        />
         </div>
     </div>    
     )

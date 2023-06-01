@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import {
   Link,
-  useNavigate
+  useNavigate,
 } from 'react-router-dom';
 
 export default function RegistrationForm() {
@@ -199,7 +199,7 @@ export default function RegistrationForm() {
                 <button onClick={handleSubmit} className="btn blackbg white btn-lg btn-block offset-md-2 form-row col-4 col-md-8">Sign up</button>
               </div>
               <div className="row justify-content-center mb-3">
-                <h6 className="display-6"> Already have an account? <Link to="/login" className='fontw'>Sign in</Link> </h6>
+                <h6 className="display-6"> Already have an account? <Link to="/signin" className='fontw'>Sign in</Link> </h6>
               </div>
 
             </form>
