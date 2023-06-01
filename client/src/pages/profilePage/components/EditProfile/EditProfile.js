@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function EditProfile(props) {
-
     const navigate = useNavigate();
     const [formData, setformData] = useState({
         firstName:props.profileData.firstName,
@@ -59,6 +58,7 @@ export default function EditProfile(props) {
         headers: myHeaders,
         body: formData2,
       };
+
         fetch('http://localhost:5000/edit-profile', requestOptions)
           .then(response =>  response.json())
           .then(res =>{if(res.isError){
@@ -189,6 +189,7 @@ export default function EditProfile(props) {
                     </div>
                 </div>
                 
+
             </form>
             </div>
         </div>
