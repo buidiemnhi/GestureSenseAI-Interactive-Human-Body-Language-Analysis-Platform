@@ -1,4 +1,8 @@
-import {React, useEffect, useState} from 'react';
+import {
+  React,
+  useEffect,
+  useState,
+} from 'react';
 
 import sampleVTT from '../Dashboard/components/VideoStatistics/Sample.vtt';
 
@@ -58,9 +62,9 @@ export default  function VideoGallery() {
       </div>
       <hr />
 
-      <div className=" row">
+      <div className="row">
         {videos.length ===0 ? 
-        <div>No videos to show</div> : vids
+        <div className='w-100 margin-top d-flex align-items-center justify-content-center font-weight-bold'>No videos to show</div> : vids
 
 
         }

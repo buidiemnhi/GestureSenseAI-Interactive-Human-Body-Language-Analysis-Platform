@@ -2,10 +2,9 @@ import './App.css';
 
 import React from 'react';
 
-import { RequireAuth } from 'react-auth-kit';
 import {
   Route,
-  Routes
+  Routes,
 } from 'react-router-dom';
 
 import LandingPage from './pages/landingPage/LandingPage';
@@ -20,10 +19,12 @@ function App() {
           <Route path='/signin' element={<LoginForm/>} />
           <Route path='/Signup' element={<RegistrationForm/>} />
           <Route path='/' element={<LandingPage/>} />
-          <Route path='/Profilepage' element={<RequireAuth loginPath={'/signin'}> <ProfilePage/> </RequireAuth>}/>
+          <Route path='/Profilepage' element={<ProfilePage/>}/>
         </Routes>
     </div>
   );
 }
 
 export default App;
+
+{/* <RequireAuth loginPath={'/signin'}> <ProfilePage/> </RequireAuth> */}

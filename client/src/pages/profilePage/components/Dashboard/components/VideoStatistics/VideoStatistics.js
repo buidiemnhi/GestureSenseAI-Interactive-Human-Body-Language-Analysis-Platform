@@ -2,16 +2,16 @@ import '../../../../../../../node_modules/video-react/dist/video-react.css';
 import './ThirdSection.css';
 
 import {
-    React,
-    useState
+  React,
+  useState,
 } from 'react';
 
 import Chart from 'react-apexcharts';
 import {
-    BigPlayButton,
-    ClosedCaptionButton,
-    ControlBar,
-    Player
+  BigPlayButton,
+  ClosedCaptionButton,
+  ControlBar,
+  Player,
 } from 'video-react';
 
 import sampleVTT from './Sample.vtt';
@@ -108,8 +108,9 @@ export default function VideoStatistics() {
     return (
         <div className='m-3 mt-5 ThirdSection'>
             <h3 className="display-5">Video Statistics</h3>
-            <div className='m-auto row'  >
+            <div className='m-auto d-flex flew-row'  >
                 <Player
+                    className=""
                     autoPlay
                     muted
                     fluid={false}
@@ -130,7 +131,8 @@ export default function VideoStatistics() {
                     </ControlBar>
                     <BigPlayButton position="center" />
                 </Player>
-                <div className='mx-auto col-4 '>
+                <div className='mx-auto col-4  d-flex flex-column'>
+                    <div className='my-auto'>
                     <h4>Choose the video</h4>
                     <p>from the list</p>
                     <div className="dropdown-container">
@@ -142,6 +144,7 @@ export default function VideoStatistics() {
                             ))}
                         </select>
                     </div>
+                    </div>
                 </div>
             </div>
             <hr className='my-5' />
@@ -150,7 +153,7 @@ export default function VideoStatistics() {
                     <Chart options={tempData.options} series={tempData.series} type="radar" height={250} width={270} />
                 </div>
                 <div className='col-7'>
-                    <Chart options={tempData2.options} series={tempData2.series} type="bar" height={250} width={400} />
+                    <Chart options={tempData2.options} series={tempData2.series} type="bar" height={250} width={"100%"} />
                 </div>
             </div>
         </div>
