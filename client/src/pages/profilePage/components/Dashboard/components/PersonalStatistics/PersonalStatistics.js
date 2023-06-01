@@ -1,17 +1,46 @@
 import './PersonalStatistics.css';
 
-import React from 'react';
+import React, {useState,useEffect} from 'react';
 
 import Chart from 'react-apexcharts';
 import { VscGraphLine } from 'react-icons/vsc';
 
 import DataInsightBox from '../DataInsight/DataInsightBox';
 
+import Cookies from 'js-cookie';
+
+
 export default function PersonalStatistics() {
     let CurrentTime = new Date()
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-    let Percentage = 225
+    const [performancePercentage, setPerformancePercentage] = useState(null);
+
+    useEffect(() => {
+      const fetchPerformancePercentage = async () => {
+          try {
+            let jwtToken = localStorage.getItem('jwt_token');
+            const cookieValue = Cookies.get('_auth');
+            var myHeaders = new Headers();
+            myHeaders.append("Authorization", `Bearer ${cookieValue}`);
+            myHeaders.append("Cookie", `session=.${cookieValue}`);
+            var requestOptions = {
+              method: 'GET',
+              headers: myHeaders,
+            };
+              const response = await fetch('http://127.0.0.1:5000//total-durations', requestOptions );
+              const data = await response.json();
+              console.log(data)
+              setPerformancePercentage(data.Data.total_duration);
+          } catch (error) {
+              console.error('Error:', error);
+          }
+      };
+
+      fetchPerformancePercentage();
+  }, []);
+
+
     let TopAction = "Happy feet"
 
     let tempData = {
@@ -64,8 +93,7 @@ export default function PersonalStatistics() {
             </div>
             <div className='mb-5'></div>
             <div className='preformanceInsight shadow-sm p-1 d-flex justify-content-center align-items-center '>
-                <VscGraphLine className='mr-2 w-10' />
-                <h5 className='fs-4'>{Percentage + '%' + " Prefomance increase"}</h5>
+                <h5 className='fs-4'>{performancePercentage + " Total seconds of videos"}</h5>
             </div>
             <div className='col'>
                 <div className='row'>

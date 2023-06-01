@@ -1,4 +1,5 @@
-# new model code
+# Imports
+# U MUST INSTALL FKN SCICKET LEARN
 import csv
 import os
 import pickle
@@ -8,11 +9,11 @@ import mediapipe as mp
 import numpy as np
 
 
-# U MUST INSTALL FKN SCICKET LEARN
+#Dynamic base directory
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # new model code
-def test_model_new(path_with_file_extension, destination):
+def test_model_new(path_with_file_extension, destination,landmarks):
     def srt(start2, end):
         def f(x, decimals=3):
             r = str(round(x, decimals))  # round and convert to string
@@ -148,20 +149,23 @@ def test_model_new(path_with_file_extension, destination):
                     sentence = sentence[-5:]
 
                 # write the video frame to the device
-                writer.write(image)
+                if(landmarks):
+                    writer.write(image)
+                else:
+                    writer.write(curr_frame)
 
                 # Get status box
-                cv2.rectangle(image, (0, 0), (1000, 60), (245, 117, 16), -1)
-                cv2.putText(image, 'PROB'
-                            , (15, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-                cv2.putText(image, str(round(body_language_prob[np.argmax(body_language_prob)], 2))
-                            , (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
-                # Display Class
-                cv2.putText(image, 'CLASS'
-                            , (95, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-                cv2.putText(image, res.split(' ')[0]
-                            , (90, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                # cv2.rectangle(image, (0, 0), (1000, 60), (245, 117, 16), -1)
+                # cv2.putText(image, 'PROB'
+                #             , (15, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+                # cv2.putText(image, str(round(body_language_prob[np.argmax(body_language_prob)], 2))
+                #             , (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                #
+                # # Display Class
+                # cv2.putText(image, 'CLASS'
+                #             , (95, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+                # cv2.putText(image, res.split(' ')[0]
+                #             , (90, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             # increment the frame by 1
             frame_no += 1
 
