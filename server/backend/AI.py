@@ -1,12 +1,12 @@
 # new model code
 import csv
-# import pandas as pd
 import os
 import pickle
 
 import cv2
 import mediapipe as mp
 import numpy as np
+
 
 # U MUST INSTALL FKN SCICKET LEARN
 
@@ -216,7 +216,7 @@ def mediapipe_detection(image, model):
 def meaning_action(action):
     # code:9999
     csv_file = csv.reader(open(
-        'F:\\SWE PROGRAM\\Level 4\\First Semster\\Graduation project\\Backend\\APIs\\githubPublic\\graduationProject\\server'
+        'C:\\Users\\me029\\PycharmProjects\\graduationProject\\server'
         '\\backend\\DataSet_2.csv',
         'r'
     ))

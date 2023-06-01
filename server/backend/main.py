@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import date, datetime
 from flask import Flask, jsonify, request, send_from_directory
@@ -9,6 +10,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import shutil
 from moviepy.editor import VideoFileClip
+from collections import Counter
+
 from AI import *
 
 # Initialize app
@@ -485,6 +488,22 @@ def logout():
     return 'u are logged out'
 
 
+def get_video_statistics():
+    _video_id = request.form['video_id']
+    _user_id = request.form['user_id']
+    #
+    user = User.query.get(_user_id)
+    user_folder_name = get_user_folder(user)
+    #
+    video = Video.query.get(_video_id)
+    video_title = video.video_title
+
+    srt_path = os.path.join(get_app_path(), app.config['DATA'], user_folder_name, 'video_srt', video_title)
+    print(srt_path)
+    result = most_repeated_words(srt_path)
+    return result
+
+
 ########################################################################################################################
 
 SUCCESS_MESSAGE = ({
@@ -693,6 +712,34 @@ def update_changes(_email, _first_name, _last_name, _user_birthdate, hashed_pass
                      user_image=user_image_path,
                      user_birthdate=_user_birthdate))
     db.session.commit()
+
+
+def clean_word(word):
+    word = re.sub(r'^\W+|\W+$', '', word).lower()
+    return word
+
+
+def most_repeated_words(filename):
+    with open(filename, 'r') as file:
+        text = file.read()
+
+        # Remove timestamps and other non-word characters
+        text = re.sub(r'<.*?>', '', text)  # Remove HTML tags if present
+        text = re.sub(r'\d+:\d+:\d+,\d+ --> \d+:\d+:\d+,\d+\n', '', text)  # Remove timestamps
+        text = re.sub(r'\n', ' ', text)  # Replace line breaks with spaces
+        text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+
+        words = text.split()
+
+        word_counts = Counter(clean_word(word) for word in words if not re.search(r'\d', word))
+
+    most_common = word_counts.most_common()
+    max_count = most_common[0][1]
+
+    most_repeated = [{"word": word, "count": count} for word, count in most_common if count == max_count]
+
+    result_json = json.dumps(most_repeated)
+    return result_json
 
 
 # Run server
