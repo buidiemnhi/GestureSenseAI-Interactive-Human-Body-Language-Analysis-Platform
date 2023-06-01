@@ -76,7 +76,7 @@ class User(UserMixin, db.Model):
     lastLogin = db.Column(db.String(50), nullable=True, default=False)
     user_state = db.Column(db.String(50), nullable=False, default="Active")  # active, deactivate, blocked
     isOnline = db.Column(db.Boolean, nullable=False, default=False)
-    user_video = db.relationship("Video", backref='user')
+    user_video = db.relationship("Video", backref='user', cascade="all, delete")
 
     def is_authenticated(self):
         return True
@@ -502,6 +502,65 @@ def get_video_statistics():
     print(srt_path)
     result = most_repeated_words(srt_path)
     return result
+
+
+def get_all_users():
+    users = User.query.all()
+    user_list = []
+    for user in users:
+        user_data = {
+            "user_id": user.user_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "user_email": user.user_email,
+            "user_image": user.user_image,
+            "user_birthdate": user.user_birthdate,
+            "lastLogin": user.lastLogin,
+            "isOnline": user.isOnline
+        }
+        user_list.append(user_data)
+
+    return jsonify(user_list)
+
+
+# Function to delete a user
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "User deleted successfully"})
+    else:
+        return jsonify({"message": "User not found"})
+
+
+def get_all_videos():
+    videos = Video.query.all()
+    video_list = []
+    for video in videos:
+        video_data = {
+            "video_id": video.video_id,
+            "video_title": video.video_title,
+            "video_date": video.video_date,
+            "video_description": video.video_description,
+            "video_duration": video.video_duration,
+            "user_id": video.user_id
+        }
+        video_list.append(video_data)
+
+    return jsonify(video_list)
+
+
+# Function to delete a video
+def delete_video(video_id):
+    video = Video.query.get(video_id)
+    if video:
+        db.session.delete(video)
+        db.session.commit()
+        return jsonify({"message": "Video deleted successfully"})
+    else:
+        return jsonify({"message": "Video not found"})
+
 
 
 ########################################################################################################################

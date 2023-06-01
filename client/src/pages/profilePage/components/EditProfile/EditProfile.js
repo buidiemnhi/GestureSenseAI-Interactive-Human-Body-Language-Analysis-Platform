@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+
 export default function EditProfile(props) {
     const navigate = useNavigate();
     const [formData, setformData] = useState({
@@ -84,15 +87,17 @@ export default function EditProfile(props) {
           SetErrorData(temp)
         }// end of the if 
         else{
-            navigate('/Profilepage')
+            
         }// end of the else
       })
     }
 
-    return (<div className='container p-0 my-5 card w-100'>
+    return (
+    <div className='w-100 h-100 d-flex'>
+        <div className='container p-0 my-auto card w-100 py-3'>
 
-            <div className='row w-100 m-0 justify-content-center my-3'>
-                <div className='col-12 d-flex justify-content-start fontw'><h2>Edit personal data</h2></div>
+            <div className='row w-full m-0 justify-content-center my-3'>
+                <div className='col-12 d-flex justify-content-start fontw my-2'><h2 className='mx-4'>Edit personal data</h2></div>
 
                 <div className='col-12 d-flex justify-content-center'>
                     <img class="profileImg " src={props.profileData.userImage} />
@@ -183,11 +188,23 @@ export default function EditProfile(props) {
                         <button className='btn blackbg white py-1 form-control' onClick={handleSubmit}>submit</button>
                     </div>
                 </div>
-
+                
 
             </form>
             </div>
-
+        <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+        />
         </div>
+    </div>    
     )
 }

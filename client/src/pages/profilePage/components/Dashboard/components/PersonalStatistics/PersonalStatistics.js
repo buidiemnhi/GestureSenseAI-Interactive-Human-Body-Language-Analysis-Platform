@@ -56,29 +56,28 @@ export default function PersonalStatistics() {
     return (
         <div className='m-5'>
             <div>
-                <div className='d-flex Container-fluid'>
-                    <h2 className="display-5">Personal statistics</h2>
+                <div className='d-flex Container-fluid text-center'>
+                    <h2 className="display-5 mx-auto">Personal statistics</h2>
                     {/*<p className='ml-auto d-flex align-items-center'>icon</p>*/}
                 </div>
-                <p className="text-muted">{CurrentTime.toLocaleDateString("en-US", options)}</p>
+                <p className="text-muted text-center">{CurrentTime.toLocaleDateString("en-US", options)}</p>
             </div>
             <div className='mb-5'></div>
             <div className='preformanceInsight shadow-sm p-1 d-flex justify-content-center align-items-center '>
-                <VscGraphLine className='mr-2' />
-                {Percentage + '%' + " Prefomance increase"}
+                <VscGraphLine className='mr-2 w-10' />
+                <h5 className='fs-4'>{Percentage + '%' + " Prefomance increase"}</h5>
             </div>
-            <div className='mb-5'></div>
             <div className='col'>
                 <div className='row'>
-                    <div className='col-6 mb-4 '>
+                    <div className='col-6 mb-4 text-center'>
                         <DataInsightBox MainText={"Videos Info"} SecondaryText={"Top Action"} InfoText={TopAction} />
                     </div>
-                    <div className='col-6'>
+                    <div className='col-6 text-center'>
                     <DataInsightBox MainText={"User Actions"} SecondaryText={"Top Action"} InfoText={TopAction} />
                     </div>
                 </div>
             </div>
-            <Chart options={tempData.options} series={tempData.series} type="line" height={280} />
+            <Chart options={tempData.options} series={tempData.series} type="line" height={280} w={"50%"}/>
         </div>
     )
 }
