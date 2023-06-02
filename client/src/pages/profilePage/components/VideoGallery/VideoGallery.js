@@ -5,11 +5,17 @@ import {
 } from 'react';
 
 import sampleVTT from '../Dashboard/components/VideoStatistics/Sample.vtt';
+import {
+  BigPlayButton,
+  ClosedCaptionButton,
+  ControlBar,
+  Player,
+} from 'video-react';
 
 //import sampleVTT from '../../../Sample.vtt'
 
-export default  function VideoGallery() {
- const [videos, setvideos] = useState([]);
+export default function VideoGallery() {
+  const [videos, setvideos] = useState([]);
   console.log(videos)
   useEffect(() => {
     async function fetchData() {
@@ -37,15 +43,36 @@ export default  function VideoGallery() {
 
   const vids = videos.map((video, index) => (
     <div key={index} className="col-4">
-      <video width="350" height="270" controls >
-        <source src={video.URL}  />
-        <track src={sampleVTT} label="Body language" kind="captions" srclang="en-us" default />
-        <track src={sampleVTT} label="Body 2" kind="captions" srclang="en-us" default />
-      </video>
+      <Player
+        autoPlay
+        muted
+        fluid={false}
+        width={440}
+        height={280}
+        playsInline
+        src={video.URL}
+      >
+        {video.subtitles.map((subtitle, subtitleIndex) =>
+          Object.values(subtitle).map((subtitleUrl, urlIndex) => (
+            <track
+              key={`subtitle${subtitleIndex}-${urlIndex}`}
+              src={subtitleUrl}
+              kind="captions"
+              srcLang='en'
+              label={`Subtitle ${subtitleIndex + 1}`}
+            />
+          ))
+        )}
+        <ControlBar autoHide={false}>
+          <ClosedCaptionButton order={7} />
+        </ControlBar>
+        <BigPlayButton position="center" />
+      </Player>
+
 
       <h2 className="video-title">{video.video_title}</h2>
       <p className=''>
-      Description:{video.video_description}
+        Description:{video.video_description}
       </p>
 
     </div>
@@ -63,8 +90,8 @@ export default  function VideoGallery() {
       <hr />
 
       <div className="row">
-        {videos.length ===0 ? 
-        <div className='w-100 margin-top d-flex align-items-center justify-content-center font-weight-bold'>No videos to show</div> : vids
+        {videos.length === 0 ?
+          <div className='w-100 margin-top d-flex align-items-center justify-content-center font-weight-bold'>No videos to show</div> : vids
 
 
         }

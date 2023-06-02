@@ -15,6 +15,9 @@ export default function PersonalStatistics() {
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
     const [performancePercentage, setPerformancePercentage] = useState(null);
+    const [topAction, setTopAction] = useState(null);
+    const [totalVideosNumber, setTotalVideosNumber] = useState(0);
+    const [videosUploadedArr, setvideosUploadedArr] = useState([]);
 
     useEffect(() => {
       const fetchPerformancePercentage = async () => {
@@ -27,10 +30,12 @@ export default function PersonalStatistics() {
               method: 'GET',
               headers: myHeaders,
             };
-              const response = await fetch('http://127.0.0.1:5000//total-durations', requestOptions );
+              const response = await fetch('http://127.0.0.1:5000//statistics-one', requestOptions );
               const data = await response.json();
-              console.log(data)
+              console.log(data.Data)
               setPerformancePercentage(data.Data.total_duration);
+              setTotalVideosNumber(data.Data.total_videos_number)
+              setvideosUploadedArr(data.Data.total_videos_number_per_month)
           } catch (error) {
               console.error('Error:', error);
           }
@@ -45,8 +50,8 @@ export default function PersonalStatistics() {
     let tempData = {
        
         series: [{
-            name: "Desktops",
-            data: [10, 41, 35, 51, 49, 62, 69, 91, 148]
+            name: "Videos uploaded Monthly",
+            data: videosUploadedArr
         }],
         options: {
           chart: {
@@ -74,7 +79,7 @@ export default function PersonalStatistics() {
             },
           },
           xaxis: {
-            categories: [11,5,4,8,9,7,4,5,6,1,2,3,5],
+            categories: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
           }
         },
       
@@ -97,10 +102,10 @@ export default function PersonalStatistics() {
             <div className='col'>
                 <div className='row'>
                     <div className='col-6 mb-4 text-center'>
-                        <DataInsightBox MainText={"Videos Info"} SecondaryText={"Top Action"} InfoText={TopAction} />
+                        <DataInsightBox MainText={""} SecondaryText={"Total Number Of Videos"} InfoText={totalVideosNumber} />
                     </div>
                     <div className='col-6 text-center'>
-                    <DataInsightBox MainText={"User Actions"} SecondaryText={"Top Action"} InfoText={TopAction} />
+                    <DataInsightBox MainText={""} SecondaryText={"Top Action"} InfoText={TopAction} />
                     </div>
                 </div>
             </div>
