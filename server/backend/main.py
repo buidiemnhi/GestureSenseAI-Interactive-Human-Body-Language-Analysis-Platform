@@ -239,7 +239,7 @@ def login():
                 login_user(user)
                 User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=True))
                 db.session.commit()
-                access_token = create_access_token(identity=user.user_id)
+                access_token = create_access_token(identity=user.user_id, expires_delta=False)
                 return jsonify({
 
                     'response_data':
@@ -433,7 +433,7 @@ def get_sub_1(filename, id):
     user = get_current_user_by_id(id)
     sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
                               app.config['VIDEO_WITH_LANDMARKS'] + '\\')
-    return send_from_directory(sub_path_2, filename, as_attachment=False)
+    return send_from_directory(sub_path_2, filename, as_attachment=False, mimetype='text/vtt')
 
 
 @app.route(f'/videos/<path:filename>/<int:id>')
@@ -441,7 +441,7 @@ def get_sub_2(filename, id):
     user = get_current_user_by_id(id)
     sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
                               app.config['VIDEO_WITH_LANDMARKS'] + '\\')
-    return send_from_directory(sub_path_2, filename, as_attachment=False)
+    return send_from_directory(sub_path_2, filename, as_attachment=False, mimetype='text/vtt')
 
 
 @app.route('/photos/<path:filename>/<int:id>')
@@ -474,8 +474,10 @@ def get_statistics_one():
         total_sec = total_sec + video.video_duration
     return jsonify({
         "Data": {
-            'total_duration': total_sec,
-            'total_videos_number': get_number_of_videos(all_videos)
+            'total_duration': round(total_sec, 3),
+            'total_videos_number_per_month': get_number_of_videos_per_month(all_videos),
+            'total_videos_number': get_total_videos_number(all_videos),
+            'last_uploaded_date': get_last_uploaded_date(all_videos)
         }
     })
 
@@ -507,7 +509,6 @@ def get_all_users():
             "first_name": user.first_name,
             "last_name": user.last_name,
             "user_email": user.user_email,
-            "user_image": user.user_image,
             "user_birthdate": user.user_birthdate,
             "lastLogin": user.lastLogin,
             "isOnline": user.isOnline
@@ -759,8 +760,9 @@ def update_user_folder(user, folder_name):
     os.rename(old_folder_path, new_folder_path)
 
 
-def get_number_of_videos(all_videos):
-    video_stats = [0]*12
+# ================Statistics_1======================
+def get_number_of_videos_per_month(all_videos):
+    video_stats = [0] * 12
 
     # Define multiple possible datetime formats
     datetime_formats = ["%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"]
@@ -783,12 +785,33 @@ def get_number_of_videos(all_videos):
     return video_stats
 
 
+def get_total_videos_number(all_videos):
+    total_videos_number = 0
+    for video in all_videos:
+        total_videos_number += 1
+    return total_videos_number
+
+
+def get_last_uploaded_date(all_videos):
+    last_date = None
+    for i in range(len(all_videos)):
+        video = all_videos[i]
+        if last_date is None or video.video_date > last_date:
+            last_date = video.video_date
+    if last_date is not None:
+        last_date_str = str(last_date)
+        last_date = last_date_str.split(".")[0]
+    return last_date
+
+
 def get_video_duration(destination_path, video_name):
     video_path = os.path.join(destination_path, video_name)
     video = VideoFileClip(video_path)
     video_duration = video.duration
     return video_duration
 
+
+# ================Statistics_2======================
 
 def clean_word(word):
     word = re.sub(r'^\W+|\W+$', '', word).lower()
