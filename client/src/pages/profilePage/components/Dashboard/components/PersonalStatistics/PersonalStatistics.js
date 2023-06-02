@@ -19,7 +19,6 @@ export default function PersonalStatistics() {
     useEffect(() => {
       const fetchPerformancePercentage = async () => {
           try {
-            let jwtToken = localStorage.getItem('jwt_token');
             const cookieValue = Cookies.get('_auth');
             var myHeaders = new Headers();
             myHeaders.append("Authorization", `Bearer ${cookieValue}`);
@@ -75,7 +74,7 @@ export default function PersonalStatistics() {
             },
           },
           xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+            categories: [11,5,4,8,9,7,4,5,6,1,2,3,5],
           }
         },
       

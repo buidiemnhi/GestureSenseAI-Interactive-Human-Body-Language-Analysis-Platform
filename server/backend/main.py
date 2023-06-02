@@ -11,6 +11,8 @@ from werkzeug.utils import secure_filename
 import shutil
 from moviepy.editor import VideoFileClip
 from collections import Counter
+from collections import defaultdict
+from datetime import datetime
 
 from AI import *
 
@@ -375,7 +377,7 @@ def upload_video():
 
         # pass two paths to AI model
         destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-        test_model_new(video_path, destination_path,_landmarks)
+        test_model_new(video_path, destination_path, _landmarks)
 
         video_duration = get_video_duration(destination_path, video_name)
 
@@ -387,43 +389,10 @@ def upload_video():
         return "Please, select video to upload."
 
 
-
-
-
 # ========================================================================
-@app.route('/total-durations', methods=['GET'])
-@jwt_required()
-def get_total_durations():
-    token = get_jwt()
-    user = get_current_user(token)
-    all_videos = Video.query.filter_by(user_id=user.user_id).with_entities(Video.video_duration).all()
-    total_sec = 0
-    for video in all_videos:
-        total_sec = total_sec + video.video_duration
-    return jsonify({
-        "Data": {
-            'total_duration': total_sec
-        }
-    })
 
 
-@app.route('/total-videos', methods=['GET'])
-@jwt_required()
-def get_total_videos_number():
-    token = get_jwt()
-    user = get_current_user(token)
-    all_videos = Video.query.filter_by(user_id=user.user_id).all()
-    total_videos_number = 0
-    for video in all_videos:
-        total_videos_number += 1
-    return jsonify({
-        "Data": {
-            'total_videos_number': total_videos_number
-        }
-    })
-
-
-# ========================================================================
+# =======================================================================
 
 @app.route('/display-videos', methods=['GET'])
 @jwt_required()
@@ -492,6 +461,25 @@ def logout():
     return 'u are logged out'
 
 
+@app.route('/statistics-one', methods=['GET'])
+@jwt_required()
+def get_statistics_one():
+    token = get_jwt()
+    user = get_current_user(token)
+    all_videos = Video.query.filter_by(user_id=user.user_id).all()
+    total_sec = 0
+    total_videos_number = 0
+    for video in all_videos:
+        total_videos_number += 1
+        total_sec = total_sec + video.video_duration
+    return jsonify({
+        "Data": {
+            'total_duration': total_sec,
+            'total_videos_number': get_number_of_videos(all_videos)
+        }
+    })
+
+
 def get_video_statistics():
     _video_id = request.form['video_id']
     _user_id = request.form['user_id']
@@ -507,6 +495,8 @@ def get_video_statistics():
     result = most_repeated_words(srt_path)
     return result
 
+
+# =====admin=============================================================
 
 def get_all_users():
     users = User.query.all()
@@ -564,7 +554,6 @@ def delete_video(video_id):
         return jsonify({"message": "Video deleted successfully"})
     else:
         return jsonify({"message": "Video not found"})
-
 
 
 ########################################################################################################################
@@ -642,34 +631,6 @@ def edit_email_error(is_email_invalid, is_exiting_email):
         return REGISTRATION_ERROR_MESSAGES['email_exists']
 
 
-def return_image_path(is_profile_image_empty_, _user_image, user):
-    user_folder_name = get_user_folder(user)
-
-    folder_path = os.path.join(app.config['DATA'], user_folder_name, app.config['IMAGE'])
-    os.makedirs(folder_path, exist_ok=True)
-
-    if not is_profile_image_empty_:
-
-        image_name = secure_filename(_user_image.filename)
-        image_path = os.path.join(get_app_path(), folder_path, image_name)
-        _user_image.save(image_path)
-        return image_name
-
-    else:
-        # copy default to user folder
-        source_path = os.path.join(get_app_path(), app.config['DEFAULT_PHOTO_NAME'])
-        destination_path = os.path.join(get_app_path(), folder_path, app.config['DEFAULT_PHOTO_NAME'])
-        shutil.copy(source_path, destination_path)
-        return app.config['DEFAULT_PHOTO_NAME']
-
-
-def get_video_duration(destination_path, video_name):
-    video_path = os.path.join(destination_path, video_name)
-    video = VideoFileClip(video_path)
-    video_duration = video.duration
-    return video_duration
-
-
 ######################################################################################
 
 def validate_first_name(_first_name):
@@ -733,6 +694,18 @@ def updateIsOnline():
     User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=False))
 
 
+def update_changes(_email, _first_name, _last_name, _user_birthdate, hashed_password, user, user_image_path):
+    User.query.filter_by(user_id=user.user_id) \
+        .update(dict(first_name=_first_name, last_name=_last_name, user_email=_email, user_password=hashed_password,
+                     user_image=user_image_path,
+                     user_birthdate=_user_birthdate))
+    db.session.commit()
+
+
+def get_app_path():
+    return basedir + '\\'
+
+
 def get_current_user(token):
     return User.query.filter_by(user_id=token['sub']).first()
 
@@ -751,13 +724,30 @@ def get_subtitle_1(video_name):
     return sub_1
 
 
-def get_app_path():
-    return basedir + '\\'
-
-
 def get_user_folder(user):
     folder_name = f"{user.first_name}_{user.last_name}_{user.user_id}"
     return folder_name
+
+
+def return_image_path(is_profile_image_empty_, _user_image, user):
+    user_folder_name = get_user_folder(user)
+
+    folder_path = os.path.join(app.config['DATA'], user_folder_name, app.config['IMAGE'])
+    os.makedirs(folder_path, exist_ok=True)
+
+    if not is_profile_image_empty_:
+
+        image_name = secure_filename(_user_image.filename)
+        image_path = os.path.join(get_app_path(), folder_path, image_name)
+        _user_image.save(image_path)
+        return image_name
+
+    else:
+        # copy default to user folder
+        source_path = os.path.join(get_app_path(), app.config['DEFAULT_PHOTO_NAME'])
+        destination_path = os.path.join(get_app_path(), folder_path, app.config['DEFAULT_PHOTO_NAME'])
+        shutil.copy(source_path, destination_path)
+        return app.config['DEFAULT_PHOTO_NAME']
 
 
 def update_user_folder(user, folder_name):
@@ -769,12 +759,35 @@ def update_user_folder(user, folder_name):
     os.rename(old_folder_path, new_folder_path)
 
 
-def update_changes(_email, _first_name, _last_name, _user_birthdate, hashed_password, user, user_image_path):
-    User.query.filter_by(user_id=user.user_id) \
-        .update(dict(first_name=_first_name, last_name=_last_name, user_email=_email, user_password=hashed_password,
-                     user_image=user_image_path,
-                     user_birthdate=_user_birthdate))
-    db.session.commit()
+def get_number_of_videos(all_videos):
+    video_stats = [0]*12
+
+    # Define multiple possible datetime formats
+    datetime_formats = ["%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"]
+
+    for video in all_videos:
+        # Try parsing the video date with each format until successful
+        for fmt in datetime_formats:
+            try:
+                video_date = datetime.strptime(video.video_date, fmt)
+                break
+            except ValueError:
+                continue
+
+        # Extract the month from the datetime object and subtract one for zero-indexing
+        month_index = video_date.month - 1
+
+        # Increment the count for the corresponding month
+        video_stats[month_index] += 1
+
+    return video_stats
+
+
+def get_video_duration(destination_path, video_name):
+    video_path = os.path.join(destination_path, video_name)
+    video = VideoFileClip(video_path)
+    video_duration = video.duration
+    return video_duration
 
 
 def clean_word(word):
