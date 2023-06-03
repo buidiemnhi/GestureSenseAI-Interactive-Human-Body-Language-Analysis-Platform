@@ -14,10 +14,11 @@ export default function UploadVideos() {
         landMarks: false
     })
     const [videoUrl, setVideoUrl] = useState(null);
+    const [isUploading, setIsUploading] = useState(false)
     const [currentView, setCurrentView] = useState(1)
 
     const SubmitVideoData = async () => {
-        setCurrentView(3)
+        setIsUploading(true)
         //Send the data
         let jwtToken = localStorage.getItem('jwt_token');
         var myHeaders = new Headers();
@@ -37,33 +38,36 @@ export default function UploadVideos() {
           };
 
           try {
-            //show loader
             const response = await fetch("http://127.0.0.1:5000//upload-video", requestOptions);
+            setIsUploading(false)
+            setCurrentView(3)
             //hide loader
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
+            setFullInputData({
+                video: null,
+                videoTitle: null,
+                videoDescription: null,
+                IsShowLandmarksSelected: false
+            })
+    
             return data;
           } catch (error) {
             console.error(error);
+            setFullInputData({
+                video: null,
+                videoTitle: null,
+                videoDescription: null,
+                IsShowLandmarksSelected: false
+            })
+            return "error";
           }
-
-        
-        // console.log(JSON.stringify(fullInputData))
-        setFullInputData({
-            video: null,
-            videoTitle: null,
-            videoDescription: null,
-            IsShowLandmarksSelected: false
-        })
     }
 
     const MoveToSecoundPhase = () => {
         fullInputData.video ? setCurrentView(2) : alert('Please Choose Valid Video')
-    }
-    const MoveToThirdPhase = () => {
-        fullInputData.video ? setCurrentView(3) : alert('Please Choose Valid Video')
     }
 
     return (
@@ -82,13 +86,15 @@ export default function UploadVideos() {
                     setFullInputData={setFullInputData}
                     videoUrl={videoUrl}
                     SubmitVideoData={SubmitVideoData}
+                    isUploading={isUploading}
                 />
             }
-            {currentView === 3 &&
+            {currentView === 3 && !isUploading ? 
                 <ThirdPhase
                 setCurrentView={setCurrentView}
-                />
+                /> : ''
             }
+
         </div>
     )
 }

@@ -1,3 +1,14 @@
 .EditProfile{
-    direction: ltr;
+    
 }
+
+
+  
+  .EditProfile .profileImg{
+    width: 120px; 
+    height: 120px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    margin: 0 auto;
+}
+

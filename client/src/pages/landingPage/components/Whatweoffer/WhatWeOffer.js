@@ -4,7 +4,7 @@ import React from 'react';
 
 function WhatWeOffer() {
   return (
-    <div className='container p-0'>
+    <div className='container p-0' id='WhatWeOffer'>
 
         <div className='row w-100 m-0 justify-content-center mt-5'>
 

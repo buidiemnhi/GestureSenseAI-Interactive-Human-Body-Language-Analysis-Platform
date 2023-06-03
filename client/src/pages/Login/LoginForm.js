@@ -111,12 +111,11 @@ export default function LoginForm() {
   <div className="py-5 d-flex align-items-center containerh" >
   <div className="container">
     <div className="row shadow">
-    <div class="col-md-7 d-flex align-items-center">
-          <img src={process.env.PUBLIC_URL + '/imgs/ai.jpg'} class="img-fluid imgh w-100" alt="..."/>
+    <div class="col-md-7 d-flex align-items-center image-div  ">
         </div>
-      <div className="col-md-5">
-        <div className="row mb-5 mt-5 justify-content-center">
-          <h3 className="display-3"> Logo </h3>
+      <div className="col-md-5 py-5">
+        <div className="row mb-3 mt-5 justify-content-center">
+          <h3 className="display-"> -GestureSense- </h3>
         </div>
         <form id="c_form-h" className="">
           <div className="row my-1"> <label htmlFor="inputmailh" className="col-3 col-form-label offset-1">E-mail</label>
@@ -143,8 +142,8 @@ export default function LoginForm() {
               </div>
             }
           </div>
-          <div className="justify-content-center row mb-3">
-            <button onClick={handleSubmit} className="btn blackbg white btn-lg btn-block offset-md-2 form-row col-4 col-md-8">Sign in</button>
+          <div className="justify-content-center row my-3  ">
+            <button onClick={handleSubmit} className="btn blackbg white px-5 ">Sign in</button>
           </div>
           <div className="row justify-content-center mb-3">
             <h6 className="display-6"> Don't have an account? <Link to="/signup" className='fontw' >Sign up</Link> </h6>
