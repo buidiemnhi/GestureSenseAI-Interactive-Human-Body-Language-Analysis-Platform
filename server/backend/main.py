@@ -542,17 +542,19 @@ def delete_user_directory(directory_path):
         return {"message": f"An error occurred: {str(e)}"}
 
 
-def get_all_videos():
-    videos = Video.query.all()
+@app.route('/user-video/<int:id>')
+def get_all_videos(id):
+    videos = Video.query.filter_by(user_id=id).all()
+
     video_list = []
     for video in videos:
         video_data = {
+            'URL': f'http://localhost:5000/videos/{video.video_name}/{id}',
             "video_id": video.video_id,
             "video_title": video.video_title,
             "video_date": video.video_date,
             "video_description": video.video_description,
             "video_duration": video.video_duration,
-            "user_id": video.user_id
         }
         video_list.append(video_data)
 
@@ -672,8 +674,6 @@ def validate_email(_email):
 
 
 def validate_email_for_edit(_email):
-
-
     if re.match(r'[^@]+@[^@]+\.[^@]+', _email):
         if re.match(r'^[a-zA-Z0-9@.]+$', _email):
             return True
