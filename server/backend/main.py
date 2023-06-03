@@ -238,6 +238,7 @@ def login():
             else:
                 login_user(user)
                 User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=True))
+                updateLastLogin()
                 db.session.commit()
                 access_token = create_access_token(identity=user.user_id, expires_delta=False)
                 return jsonify({
@@ -246,8 +247,8 @@ def login():
                         {
                             'isError': False,
                         },
-                    'jwt': access_token
-
+                    'jwt': access_token,
+                    'isAdmin': user.is_admin
                 }
                 )
 
@@ -282,7 +283,7 @@ def profilePage():
     })
 
 
-@app.route("/edit-profile", methods=['POST'])
+@app.route("/edit-profile", methods=['PUT'])
 @jwt_required()
 def edit_profile():
     token = get_jwt()
@@ -294,15 +295,12 @@ def edit_profile():
     _password = formm['password']
     _confirm_password = formm['confirmPassword']
     _user_image = request.files['profileImage']
-
     _user_birthdate = formm['userBD']
-
-    # hoda
 
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
     is_last_name_invalid = not validate_last_Name(_last_name)
-    is_email_invalid: bool = not validate_email(_email)
+    is_email_invalid: bool = not validate_email_for_edit(_email)
     is_password_invalid = not validate_password(_password)
     is_exiting_email = existing_email is not None
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
@@ -331,10 +329,12 @@ def edit_profile():
             salt_length=8
         )
 
-        user_image_path = return_image_path(is_profile_image_empty, _user_image, user)
+        if not _email:
+            _email = user.user_email
 
+        user_image_path = return_image_path(is_profile_image_empty, _user_image, user)
         # user folder
-        folder_name = get_user_folder(user)
+        folder_name = get_user_folder_name(user)
 
         update_changes(_email, _first_name, _last_name, _user_birthdate, hashed_password, user, user_image_path)
 
@@ -361,7 +361,7 @@ def upload_video():
         sub_1 = get_subtitle_1(video_name)
         sub_2 = get_subtitle_2(video_name)
 
-        user_folder_name = get_user_folder(user)
+        user_folder_name = get_user_folder_name(user)
 
         # create folder by username
         folder_path = os.path.join(app.config['DATA'], user_folder_name)
@@ -423,7 +423,7 @@ def display_all_videos():
 @app.route(f'/videos/<path:filename>/<int:id>')
 def get_video(filename, id):
     user = get_current_user_by_id(id)
-    video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
+    video_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder_name(user),
                               app.config['VIDEO_WITH_LANDMARKS'] + '\\')
     return send_from_directory(video_path, filename, as_attachment=False)
 
@@ -431,7 +431,7 @@ def get_video(filename, id):
 @app.route(f'/videos/<path:filename>/<int:id>')
 def get_sub_1(filename, id):
     user = get_current_user_by_id(id)
-    sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
+    sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder_name(user),
                               app.config['VIDEO_WITH_LANDMARKS'] + '\\')
     return send_from_directory(sub_path_2, filename, as_attachment=False, mimetype='text/vtt')
 
@@ -439,7 +439,7 @@ def get_sub_1(filename, id):
 @app.route(f'/videos/<path:filename>/<int:id>')
 def get_sub_2(filename, id):
     user = get_current_user_by_id(id)
-    sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user),
+    sub_path_2 = os.path.join(get_app_path(), app.config['DATA'], get_user_folder_name(user),
                               app.config['VIDEO_WITH_LANDMARKS'] + '\\')
     return send_from_directory(sub_path_2, filename, as_attachment=False, mimetype='text/vtt')
 
@@ -447,14 +447,13 @@ def get_sub_2(filename, id):
 @app.route('/photos/<path:filename>/<int:id>')
 def get_image(filename, id):
     user = get_current_user_by_id(id)
-    photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder(user), app.config['IMAGE'])
+    photo_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder_name(user), app.config['IMAGE'])
     return send_from_directory(photo_path, filename)
 
 
 @app.route("/logout")
 @login_required
 def logout():
-    updateLastLogin()
     updateIsOnline()
     db.session.commit()
     logout_user()
@@ -487,7 +486,7 @@ def get_video_statistics():
     _user_id = request.form['user_id']
     #
     user = User.query.get(_user_id)
-    user_folder_name = get_user_folder(user)
+    user_folder_name = get_user_folder_name(user)
     #
     video = Video.query.get(_video_id)
     video_title = video.video_title
@@ -499,7 +498,7 @@ def get_video_statistics():
 
 
 # =====admin=============================================================
-
+@app.route('/users', methods=['GET'])
 def get_all_users():
     users = User.query.all()
     user_list = []
@@ -519,14 +518,28 @@ def get_all_users():
 
 
 # Function to delete a user
-def delete_user(user_id):
-    user = User.query.get(user_id)
+@app.route('/delete/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    user = User.query.get(id)
+    user_dir_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder_name(user))
+    print(user_dir_path)
     if user:
         db.session.delete(user)
         db.session.commit()
+        delete_user_directory(user_dir_path)
         return jsonify({"message": "User deleted successfully"})
     else:
         return jsonify({"message": "User not found"})
+
+
+def delete_user_directory(directory_path):
+    try:
+        shutil.rmtree(directory_path)
+        return {"message": f"Directory '{directory_path}' deleted successfully"}
+    except FileNotFoundError:
+        return {"message": f"Directory '{directory_path}' not found"}
+    except Exception as e:
+        return {"message": f"An error occurred: {str(e)}"}
 
 
 def get_all_videos():
@@ -658,6 +671,18 @@ def validate_email(_email):
         return False
 
 
+def validate_email_for_edit(_email):
+
+
+    if re.match(r'[^@]+@[^@]+\.[^@]+', _email):
+        if re.match(r'^[a-zA-Z0-9@.]+$', _email):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
 def validate_birth_date(_user_birthdate):
     if _user_birthdate == "":
         return False
@@ -725,13 +750,13 @@ def get_subtitle_1(video_name):
     return sub_1
 
 
-def get_user_folder(user):
+def get_user_folder_name(user):
     folder_name = f"{user.first_name}_{user.last_name}_{user.user_id}"
     return folder_name
 
 
 def return_image_path(is_profile_image_empty_, _user_image, user):
-    user_folder_name = get_user_folder(user)
+    user_folder_name = get_user_folder_name(user)
 
     folder_path = os.path.join(app.config['DATA'], user_folder_name, app.config['IMAGE'])
     os.makedirs(folder_path, exist_ok=True)
