@@ -389,11 +389,6 @@ def upload_video():
         return "Please, select video to upload."
 
 
-# ========================================================================
-
-
-# =======================================================================
-
 @app.route('/display-videos', methods=['GET'])
 @jwt_required()
 def display_all_videos():
@@ -497,7 +492,7 @@ def get_video_statistics():
     return result
 
 
-# =====admin=============================================================
+# ==========================admin========================================
 @app.route('/users', methods=['GET'])
 def get_all_users():
     users = User.query.all()
@@ -518,7 +513,7 @@ def get_all_users():
 
 
 # Function to delete a user
-@app.route('/delete/<int:id>', methods=['DELETE'])
+@app.route('/del-usr/<int:id>', methods=['DELETE'])
 def delete_user(id):
     user = User.query.get(id)
     user_dir_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder_name(user))
@@ -532,36 +527,31 @@ def delete_user(id):
         return jsonify({"message": "User not found"})
 
 
-def delete_user_directory(directory_path):
-    try:
-        shutil.rmtree(directory_path)
-        return {"message": f"Directory '{directory_path}' deleted successfully"}
-    except FileNotFoundError:
-        return {"message": f"Directory '{directory_path}' not found"}
-    except Exception as e:
-        return {"message": f"An error occurred: {str(e)}"}
-
-
-@app.route('/user-video/<int:id>')
-def get_all_videos(id):
+@app.route('/videos/<int:id>', methods=['GET'])
+def get_user_videos(id):
     videos = Video.query.filter_by(user_id=id).all()
-
     video_list = []
     for video in videos:
         video_data = {
             'URL': f'http://localhost:5000/videos/{video.video_name}/{id}',
             "video_id": video.video_id,
             "video_title": video.video_title,
-            "video_date": video.video_date,
             "video_description": video.video_description,
-            "video_duration": video.video_duration,
+            'subtitles': [
+                {
+                    'subtitle_1': f'http://localhost:5000/videos/{video.video_subtitle1_path}/{id}',
+                },
+                {
+                    'subtitle_2': f'http://localhost:5000/videos/{video.video_subtitle2_path}/{id}'
+                }
+            ]
         }
         video_list.append(video_data)
-
     return jsonify({'Data': video_list})
 
 
 # Function to delete a video
+@app.route('/del-vid/<int:id>', methods=['DELETE'])
 def delete_video(video_id):
     video = Video.query.get(video_id)
     if video:
@@ -741,12 +731,12 @@ def get_current_user_by_id(id):
 
 
 def get_subtitle_2(video_name):
-    sub_2 = video_name.split(".")[0] + '_meaning.srt'
+    sub_2 = video_name.split(".")[0] + '_meaning.vtt'
     return sub_2
 
 
 def get_subtitle_1(video_name):
-    sub_1 = video_name.split(".")[0] + '.srt'
+    sub_1 = video_name.split(".")[0] + '.vtt'
     return sub_1
 
 
@@ -783,6 +773,16 @@ def update_user_folder(user, folder_name):
     new_folder_path = os.path.join(app.config['DATA'], new_folder_name)
 
     os.rename(old_folder_path, new_folder_path)
+
+
+def delete_user_directory(directory_path):
+    try:
+        shutil.rmtree(directory_path)
+        return {"message": f"Directory '{directory_path}' deleted successfully"}
+    except FileNotFoundError:
+        return {"message": f"Directory '{directory_path}' not found"}
+    except Exception as e:
+        return {"message": f"An error occurred: {str(e)}"}
 
 
 # ================Statistics_1======================
