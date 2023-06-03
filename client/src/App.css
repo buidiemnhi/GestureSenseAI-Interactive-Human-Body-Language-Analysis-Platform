@@ -1,5 +1,5 @@
 .App{
-  background-color: #fafbff;
+  /* background-color: #fafbff; */
   width: 100%;
   height: auto;
   font-family: 'Maven Pro', sans-serif;
@@ -23,3 +23,10 @@
   border-color: inherit;
 }
 
+.text-arrow {
+  cursor: pointer;
+}
+
+.Brounded{
+  border-radius: 15px;
+}

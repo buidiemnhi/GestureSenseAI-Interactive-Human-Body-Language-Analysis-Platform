@@ -12,6 +12,7 @@ import LandingPage from './pages/landingPage/LandingPage';
 import LoginForm from './pages/Login/LoginForm';
 import ProfilePage from './pages/profilePage/ProfilePage';
 import RegistrationForm from './pages/Registeration/RegistrationForm';
+import VideoPreview from './pages/VideoPreview/VideoPreview';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path='/' element={<LandingPage/>} />
           <Route path='/Profilepage' element={<ProfilePage/>}/>
           <Route path='/adminpanel' element={<AdminPanel/>}/>
+          <Route path='/user/:id/videos' element={<VideoPreview/>}/>
         </Routes>
     </div>
   );

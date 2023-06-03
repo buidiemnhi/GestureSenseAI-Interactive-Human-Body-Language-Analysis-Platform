@@ -18,8 +18,7 @@ export default function SideBarAdmin(props) {
         <p className='text-muted UserEmail'>{props.sideBarData.email}</p>
       </div>
       <ul className="SideNavBar py-5 ">
-        <li><a href="#" onClick={() => props.changeViewFuntion(1)}>users review</a></li>
-        <li><a href="#" onClick={() => props.changeViewFuntion(2)}>Video review</a></li>
+        <li className='mb-3' ><span className='text-arrow'>users review</span></li>
       </ul>
       <button
         type="button"
