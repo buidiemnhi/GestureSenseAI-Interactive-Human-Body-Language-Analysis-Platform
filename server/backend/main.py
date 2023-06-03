@@ -540,14 +540,8 @@ def get_user_videos(id):
             "video_id": video.video_id,
             "video_title": video.video_title,
             "video_description": video.video_description,
-            'subtitles': [
-                {
-                    'subtitle_1': f'http://localhost:5000/videos/{video.video_subtitle1_path}/{id}',
-                },
-                {
-                    'subtitle_2': f'http://localhost:5000/videos/{video.video_subtitle2_path}/{id}'
-                }
-            ]
+            'video_duration': str(video.video_duration) + " Sec",
+            'uploaded_date': video.video_date.split(".")[0]
         }
         video_list.append(video_data)
     return jsonify({'Data': video_list})
@@ -555,8 +549,8 @@ def get_user_videos(id):
 
 # Function to delete a video
 @app.route('/del-vid/<int:id>', methods=['DELETE'])
-def delete_video(video_id):
-    video = Video.query.get(video_id)
+def delete_video(id):
+    video = Video.query.get(id)
     if video:
         db.session.delete(video)
         db.session.commit()
