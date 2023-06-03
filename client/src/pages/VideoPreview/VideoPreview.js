@@ -10,17 +10,45 @@ function VideoPreview() {
     const [vids,setVids] = useState()
     const { id } = useParams();
 
-    function handleDelete(id){
-        console.log(id)
-        fetch("")
-        .then()
-        .then()
+    function handleDelete(vid_id){
+        fetch(`http://127.0.0.1:5000//del-vid/${vid_id}`, {
+            method: 'DELETE',
+            // headers: {
+            // 'Content-Type': 'application/json',
+            // },
+        })
+        .then(response => response.json())
+        .then(res=>console.log(res))
     }
     
+
     useEffect(() => {
-        fetch("")
+        fetch(`http://127.0.0.1:5000//videos/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            const videos = data.Data
+            console.log(videos)
+            const videossArr = videos.map((video)=>{
+                return(
+                <div className="col-md-4 d-flex mb-3 " key={video.video_id}>
+                    <div className="card w-75 mx-auto Brounded shadow-lg" >
+                        <video src={video.URL} className="object-fit-contain w-100 p-4" autoPlay controls />
+                        <div className="card-body">
+                            <h5 className="card-title fw-bold">{video.video_title}</h5>
+                            <p className="card-text fw-semibold">{video.video_description}</p>
+                            <p className="card-text fw-semibold">Video duration : {video.video_duration}</p>
+                            <p className="card-text fw-semibold">Upload date : {video.uploaded_date}</p>
+                            <button className='btn btn-danger d-flex flex-row align-items-center align-middle p-2' onClick={()=>handleDelete(video.video_id)}>
+                                <FaTrash /> <h6 className='my-auto ml-1'>Delete</h6>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                )
+            })
+            setVids(videossArr)
+        })
     }, [])
-    
 
   return (
     <div className=' py-4'>
@@ -32,7 +60,7 @@ function VideoPreview() {
       <hr />
 
       <div className="row w-100">
-        <div className="col-md-4 d-flex mb-3">
+        {/* <div className="col-md-4 d-flex mb-3">
         <div className="card w-75 mx-auto Brounded shadow-lg" >
             <video src={process.env.PUBLIC_URL + '/videos/bg.mp4'} className="object-fit-contain w-100 p-4 " autoPlay loop controls />
             <div className="card-body">
@@ -101,7 +129,8 @@ function VideoPreview() {
                 </button>
             </div>
         </div>
-        </div>
+        </div> */}
+        {vids}
       </div>
     </div>
   )

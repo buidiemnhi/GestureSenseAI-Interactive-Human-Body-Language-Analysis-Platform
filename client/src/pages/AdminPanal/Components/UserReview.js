@@ -11,31 +11,31 @@ function UserReview() {
     const [users,setUsers] = useState([])
     function handleDelete(id){
         console.log(id)
-        fetch('https://api.example.com/data/123', {
+        fetch(`http://127.0.0.1:5000//del-usr/${id}`, {
             method: 'DELETE',
-            headers: {
-            'Content-Type': 'application/json',
-            // Add any additional headers if required
-            },
+            // headers: {
+            // 'Content-Type': 'application/json',
+            // },
         })
         .then(response => response.json())
         .then(res=>console.log(res))
     }
 
     useEffect(() => {
-        fetch('https://api.example.com/data')
+        fetch('http://127.0.0.1:5000//users')
         .then(response => response.json())
         .then(data => {
             const users = data.Data
+            console.log(users)
             const usersArr = users.map((user)=>{
                 return(
                     <tr key={user.user_id}>
-                        <th scope="row align-middle" className='align-middle'>user.user_id</th>
-                        <td class="align-middle">user.first_name</td>
-                        <td class="align-middle">user.last_name</td>
-                        <td class="align-middle">user.user_email</td>
-                        <td class="align-middle">user.user_birthdate</td>
-                        <td class="align-middle">user.lastLogin</td>
+                        <th scope="row align-middle" className='align-middle'>{user.user_id}</th>
+                        <td class="align-middle">{user.first_name}</td>
+                        <td class="align-middle">{user.last_name}</td>
+                        <td class="align-middle">{user.user_email}</td>
+                        <td class="align-middle">{user.user_birthdate}</td>
+                        <td class="align-middle">{user.lastLogin}</td>
                         <td className='align-middle'>
                             {user.isOnline ? <span className='btn btn-success'>Online</span> : <span className='btn btn-secondary'>Offline</span>}
                         </td>
@@ -218,7 +218,7 @@ function UserReview() {
                         </button>
                     </td>
                 </tr> */}
-                {users ? (<h1>there is no user to show</h1>) : users}
+                    {users}
             </tbody>
         </table>
     </>
