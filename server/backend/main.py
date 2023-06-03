@@ -14,6 +14,7 @@ from collections import Counter
 from collections import defaultdict
 from datetime import datetime
 
+
 from AI import *
 
 # Initialize app
@@ -461,17 +462,19 @@ def get_statistics_one():
     token = get_jwt()
     user = get_current_user(token)
     all_videos = Video.query.filter_by(user_id=user.user_id).all()
+    #
+    last_7_videos = sorted(all_videos, key=lambda x: x.video_date, reverse=True)[:7]
     total_sec = 0
     total_videos_number = 0
-    for video in all_videos:
+    for video in last_7_videos:
         total_videos_number += 1
         total_sec = total_sec + video.video_duration
     return jsonify({
         "Data": {
             'total_duration': round(total_sec, 3),
-            'total_videos_number_per_month': get_number_of_videos_per_month(all_videos),
-            'total_videos_number': get_total_videos_number(all_videos),
-            'last_uploaded_date': get_last_uploaded_date(all_videos)
+            'total_videos_number_per_month': get_number_of_videos_per_month(last_7_videos),
+            'total_videos_number': get_total_videos_number(last_7_videos),
+            'last_uploaded_date': get_last_uploaded_date(last_7_videos)
         }
     })
 
