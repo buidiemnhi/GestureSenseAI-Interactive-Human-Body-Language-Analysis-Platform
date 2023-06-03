@@ -15,6 +15,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 # new model code
 def test_model_new(path_with_file_extension, destination,landmarks):
     def srt(start2, end):
+        with open(f"{destination}\\{filename}.vtt", "a") as srt_file:
+            srt_file.write("WEBVTT\n\n")
+
+        with open(f"{destination}\\{filename}_meaning.vtt", "a") as srt_file:
+            srt_file.write("WEBVTT\n\n")        
         def f(x, decimals=3):
             r = str(round(x, decimals))  # round and convert to string
             r = r.split('.')[-1]  # split at the dot and keep the decimals
@@ -31,12 +36,12 @@ def test_model_new(path_with_file_extension, destination,landmarks):
         hours_end = int(end / 3600)
         print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
 
-        with open(f"{destination}\\{filename}.srt", "a") as srt_file:
+        with open(f"{destination}\\{filename}.vtt", "a") as srt_file:
             srt_file.write(
                 f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
                 f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
 
-        with open(f"{destination}\\{filename}_meaning.srt", "a") as srt_file:
+        with open(f"{destination}\\{filename}_meaning.vtt", "a") as srt_file:
             srt_file.write(
                 f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
                 f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
@@ -52,9 +57,9 @@ def test_model_new(path_with_file_extension, destination,landmarks):
     x = x[::-1].split('.', 1)[1][::-1]
     filename = x
     destination = destination
-    if os.path.exists(f"{destination}\\{filename}.srt") and os.path.exists(f"{destination}\\{filename}_meaning.srt"):
-        os.remove(f"{destination}\\{filename}.srt")
-        os.remove(f"{destination}\\{filename}_meaning.srt")
+    if os.path.exists(f"{destination}\\{filename}.vtt") and os.path.exists(f"{destination}\\{filename}_meaning.vtt"):
+        os.remove(f"{destination}\\{filename}.vtt")
+        os.remove(f"{destination}\\{filename}_meaning.vtt")
     if not os.path.exists(destination):
         os.mkdir(destination)
 
