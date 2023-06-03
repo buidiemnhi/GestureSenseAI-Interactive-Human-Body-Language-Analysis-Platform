@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
 import { FaTrash } from 'react-icons/fa';
 import { IoEye } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 function UserReview() {
-    const id = 1
-
+    const [users,setUsers] = useState([])
     function handleDelete(id){
         console.log(id)
         fetch('https://api.example.com/data/123', {
@@ -28,7 +30,7 @@ function UserReview() {
             const usersArr = users.map((user)=>{
                 return(
                     <tr key={user.user_id}>
-                        <th scope="row align-middle" className='align-middle'>1</th>
+                        <th scope="row align-middle" className='align-middle'>user.user_id</th>
                         <td class="align-middle">user.first_name</td>
                         <td class="align-middle">user.last_name</td>
                         <td class="align-middle">user.user_email</td>
@@ -48,6 +50,7 @@ function UserReview() {
                     </tr>
                 )
             })
+            setUsers(usersArr)
         })
     }, [])
     
@@ -68,7 +71,7 @@ function UserReview() {
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                {/* <tr>
                     <th scope="row align-middle" className='align-middle'>1</th>
                     <td class="align-middle">Mark</td>
                     <td class="align-middle">Otto</td>
@@ -214,7 +217,8 @@ function UserReview() {
                             <FaTrash /> Delete
                         </button>
                     </td>
-                </tr>
+                </tr> */}
+                {users ? (<h1>there is no user to show</h1>) : users}
             </tbody>
         </table>
     </>
