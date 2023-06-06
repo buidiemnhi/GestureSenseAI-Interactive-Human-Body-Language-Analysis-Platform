@@ -58,7 +58,7 @@ export default function EditProfile(props) {
     myHeaders.append("Cookie", `session=.${jwtToken}`);
 
     var requestOptions = {
-      method: "POST",
+      method: "PUT",
       headers: myHeaders,
       body: formData2,
     };
