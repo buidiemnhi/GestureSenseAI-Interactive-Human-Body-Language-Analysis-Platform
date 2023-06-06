@@ -405,6 +405,7 @@ def display_all_videos():
             'URL': f'http://localhost:5000/videos/{video.video_name}/{id}',
             'video_title': video.video_title,
             'video_description': video.video_description,
+            'video_id': video.video_id,
             'subtitles': [
                 {
                     'subtitle_1': f'http://localhost:5000/videos/{video.video_subtitle1_path}/{id}',
