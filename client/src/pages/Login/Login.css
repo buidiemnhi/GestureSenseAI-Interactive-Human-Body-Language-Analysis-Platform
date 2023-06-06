@@ -1,11 +1,22 @@
-.App .containerh{
+.App .containerh {
     height: 100vh;
-}
-
-.imgh{
+  }
+  
+  .imgh {
     height: 500px;
-}
-
-.fontw{
+    width: 100%;
+    object-fit: contain;
+  }
+  
+  .fontw {
     font-weight: 800;
-}
+  }
+
+  .image-div {
+    background-image: url('../../../public/imgs/login.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  
+  

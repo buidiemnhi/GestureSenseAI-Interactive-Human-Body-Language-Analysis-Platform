@@ -9,7 +9,7 @@ function Navbar() {
     <nav className="navbar navbar-expand-md w-100">
 
     <a className="navbar-brand font30 fontcolor ml-5 nohover" href="#">
-      GTKY
+    -GestureSense-
     </a>
 
     <div className="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
@@ -20,10 +20,10 @@ function Navbar() {
                 <Link className='nav-link font24 fontcolor px-3' to="/"> Home</Link>
             </li>
             <li className="nav-item m-3">
-                <a className="nav-link font24 fontcolor px-3" href="">About</a>
+                <a className="nav-link font24 fontcolor px-3" href="#WhatWeOffer">About</a>
             </li>
             <li className="nav-item m-3">
-                <a className="nav-link font24 fontcolor px-3" href="">Features</a>
+                <a className="nav-link font24 fontcolor px-3" href="#liveDemo">Features</a>
             </li>
             <li className="nav-item m-3">
                 <Link className="nav-link font24 fontcolor px-3"  to="/signin">Sign in</Link>

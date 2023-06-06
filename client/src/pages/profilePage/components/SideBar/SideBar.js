@@ -15,7 +15,7 @@ export default function SideBar(props) {
   return (
     <div className='py-5 ml-3'>
       <div className=''>
-        <img class="profileImg" src={props.sideBarData.userImage} />
+        <img className="profileImg" src={props.sideBarData.userImage} />
         <p className='mt-2 UserName'>{`${props.sideBarData.firstName} ${props.sideBarData.lastName}`}</p>
         <p className='text-muted UserEmail'>{props.sideBarData.email}</p>
       </div>

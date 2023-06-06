@@ -69,10 +69,10 @@ export default function ProfilePage() {
               <SideBar changeViewFuntion={ChangeViewFuntion} sideBarData={profileData} />
             </div>
             <div className="col-sm-10">
-              {currentView == 1 ? <Dashboard /> : ""}
-              {currentView == 2 ? <VideoGallery /> : ""}
-              {currentView == 3 ? <UploadVideos /> : ""}
-              {currentView == 4 ? <EditProfile profileData={profileData} /> : ""}
+              {currentView === 1 ? <Dashboard /> : ""}
+              {currentView === 2 ? <VideoGallery /> : ""}
+              {currentView === 3 ? <UploadVideos /> : ""}
+              {currentView === 4 ? <EditProfile profileData={profileData} /> : ""}
             </div>
             {/*<div className="col-sm-10 StatisticsPage" >
               <StatisticsPage />

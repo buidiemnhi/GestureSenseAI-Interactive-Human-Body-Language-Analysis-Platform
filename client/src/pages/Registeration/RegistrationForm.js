@@ -15,7 +15,7 @@ export default function RegistrationForm() {
     email: "",
     password: "",
     confirmPassword: "",
-    profileImage: new File([], "", { type: "application/octet-stream" }),
+    profileImage: new File([], "", { type: "application/octet-stream" }), 
     userBD: ""
   })
 
@@ -111,7 +111,7 @@ export default function RegistrationForm() {
         <div className="row shadow bg-light py-3 col-md-10 mx-auto">
           <div className="col-md-10 mx-auto">
             <div className="row mb-4 mt-5 justify-content-center">
-              <h3 className="display-3"> Logo </h3>
+              <h1 className="display"> -GestureSense- </h1>
             </div>
             <form id="c_form-h" className="" noValidate>
               <div className="row my-1">

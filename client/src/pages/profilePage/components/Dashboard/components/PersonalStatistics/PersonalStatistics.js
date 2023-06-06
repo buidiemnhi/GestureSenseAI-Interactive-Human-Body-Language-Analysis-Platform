@@ -1,12 +1,7 @@
 import './PersonalStatistics.css';
-
 import React, {useState,useEffect} from 'react';
-
 import Chart from 'react-apexcharts';
-import { VscGraphLine } from 'react-icons/vsc';
-
 import DataInsightBox from '../DataInsight/DataInsightBox';
-
 import Cookies from 'js-cookie';
 
 
@@ -14,8 +9,8 @@ export default function PersonalStatistics() {
     let CurrentTime = new Date()
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-    const [performancePercentage, setPerformancePercentage] = useState(null);
-    const [topAction, setTopAction] = useState(null);
+    const [lastUploadedVideoDate, setLastUploadedVideoDate] = useState(null);
+    const [totalDuration, setTotalDuration] = useState(0);
     const [totalVideosNumber, setTotalVideosNumber] = useState(0);
     const [videosUploadedArr, setvideosUploadedArr] = useState([]);
 
@@ -33,8 +28,9 @@ export default function PersonalStatistics() {
               const response = await fetch('http://127.0.0.1:5000//statistics-one', requestOptions );
               const data = await response.json();
               console.log(data.Data)
-              setPerformancePercentage(data.Data.total_duration);
+              setLastUploadedVideoDate(data.Data.last_uploaded_date);
               setTotalVideosNumber(data.Data.total_videos_number)
+              setTotalDuration(data.Data.total_duration)
               setvideosUploadedArr(data.Data.total_videos_number_per_month)
           } catch (error) {
               console.error('Error:', error);
@@ -43,9 +39,6 @@ export default function PersonalStatistics() {
 
       fetchPerformancePercentage();
   }, []);
-
-
-    let TopAction = "Happy feet"
 
     let tempData = {
        
@@ -97,15 +90,15 @@ export default function PersonalStatistics() {
             </div>
             <div className='mb-5'></div>
             <div className='preformanceInsight shadow-sm p-1 d-flex justify-content-center align-items-center '>
-                <h5 className='fs-4'>{performancePercentage + " Total seconds of videos"}</h5>
+                <h5 className='fs-4'>{totalDuration + "  Time of videos"}</h5>
             </div>
             <div className='col'>
                 <div className='row'>
                     <div className='col-6 mb-4 text-center'>
-                        <DataInsightBox MainText={""} SecondaryText={"Total Number Of Videos"} InfoText={totalVideosNumber} />
+                        <DataInsightBox MainText={""} SecondaryText={"Number Of Videos"} InfoText={totalVideosNumber + " Videos"} />
                     </div>
                     <div className='col-6 text-center'>
-                    <DataInsightBox MainText={""} SecondaryText={"Top Action"} InfoText={TopAction} />
+                    <DataInsightBox MainText={""} SecondaryText={"Last Updated Video"} InfoText={lastUploadedVideoDate } />
                     </div>
                 </div>
             </div>
