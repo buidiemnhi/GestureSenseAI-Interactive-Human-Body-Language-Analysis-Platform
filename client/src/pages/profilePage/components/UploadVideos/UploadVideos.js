@@ -29,7 +29,7 @@ export default function UploadVideos() {
         fullInputData2.append("video", fullInputData.video);
         fullInputData2.append('video_title', fullInputData.videoTitle);
         fullInputData2.append('video_description', fullInputData.videoDescription);
-        fullInputData2.append('landMarks', fullInputData.IsShowLandmarksSelected);
+        fullInputData2.append('landMarks', fullInputData.landMarks);
 
         var requestOptions = {
             method: 'POST',
@@ -38,6 +38,7 @@ export default function UploadVideos() {
           };
 
           try {
+            console.log(fullInputData.IsShowLandmarksSelected)
             const response = await fetch("http://127.0.0.1:5000//upload-video", requestOptions);
             setIsUploading(false)
             setCurrentView(3)

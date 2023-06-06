@@ -391,6 +391,7 @@ def upload_video():
         return "Please, select video to upload."
 
 
+
 @app.route('/display-videos', methods=['GET'])
 @jwt_required()
 def display_all_videos():

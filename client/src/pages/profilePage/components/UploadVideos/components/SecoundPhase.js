@@ -53,7 +53,7 @@ export default function SecoundPhase(props) {
                   className="form-check-input "
                   type="checkbox"
                   style={{ width: "1em", height: "1em" }}
-                  checked={props.fullInputData.IsShowLandmarksSelected}
+                  checked={props.fullInputData.landMarks}
                   onChange={handleChange}
                 />
                 <label className="form-check-label ">

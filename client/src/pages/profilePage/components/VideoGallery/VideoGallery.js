@@ -60,8 +60,8 @@ export default function VideoGallery() {
               <track
                 key={`subtitle${subtitleIndex}-${urlIndex}`}
                 src={subtitleUrl}
-                kind="captions"
-                srcLang="en"
+                kind="subtitles"
+                srcLang="en" 
                 label={` ${subtitleIndex === 1  ? "Body Language Decoded" : "Movements Decoded"}`}
               />
             ))
