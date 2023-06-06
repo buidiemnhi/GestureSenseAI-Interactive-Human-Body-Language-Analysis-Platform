@@ -19,6 +19,10 @@ function VideoPreview() {
         })
         .then(response => response.json())
         .then(res=>console.log(res))
+        .then(res=>{
+            setVids(vids.filter(vids => vids.video_id !== id));
+        })
+
     }
     
 

@@ -19,6 +19,11 @@ function UserReview() {
         })
         .then(response => response.json())
         .then(res=>console.log(res))
+        .then(res=>{
+            setUsers(users.filter(users => users.user_id !== id));
+        })
+        
+
     }
 
     useEffect(() => {

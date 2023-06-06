@@ -49,7 +49,7 @@ export default function SecoundPhase(props) {
               </div>
               <div className="form-check mt-2">
                 <input
-                  name="IsShowLandmarksSelected"
+                  name="landMarks"
                   className="form-check-input "
                   type="checkbox"
                   style={{ width: "1em", height: "1em" }}

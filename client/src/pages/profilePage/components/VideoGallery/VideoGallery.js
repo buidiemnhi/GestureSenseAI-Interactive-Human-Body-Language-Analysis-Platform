@@ -37,9 +37,23 @@ export default function VideoGallery() {
   }, []);
   
   // deleteVideo function
-  const deleteVideo = (videoName) => {
-    console.log(videoName);
-    return videoName;
+  const deleteVideo = (id) => {
+    console.log(id)
+    fetch(`http://127.0.0.1:5000//del-vid/${id}`, {
+        method: 'DELETE',
+        // headers: {
+        // 'Content-Type': 'application/json',
+        // },
+    })
+    .then(response => response.json())
+    .then(res=>console.log(res))
+    .then(res=>{
+      console.log(res);
+       // assume the server returns {success: true} when deletion is successful
+      setvideos(videos.filter(video => video.video_id !== id));
+      
+  })
+
   };
 
   const vids = videos.map((video, index) => (
@@ -72,7 +86,7 @@ export default function VideoGallery() {
           Description:{" "}
           <span className="text-muted"> {video.video_description} </span>
         </p>
-        <button className="btn btn-danger px-3" onClick={() => deleteVideo(video.video_title)}>X</button>
+        <button className="btn btn-danger px-3" onClick={() => deleteVideo(video.video_id)}>X</button>
       </div>
     </div>
   ));
