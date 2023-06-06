@@ -38,13 +38,13 @@ def test_model_new(path_with_file_extension, destination,landmarks):
 
         with open(f"{destination}\\{filename}.vtt", "a") as srt_file:
             srt_file.write(
-                f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
+                f"{hours_start:02}:{minutes_start:02}:{seconds_start:02}.{int(f(milliseconds_start)):03}"
+                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02}.{int(f(milliseconds_end)):03}\n{sentence[-1]}\n\n")
 
         with open(f"{destination}\\{filename}_meaning.vtt", "a") as srt_file:
             srt_file.write(
-                f"{counter[-1]}\n{hours_start:02}:{minutes_start:02}:{seconds_start:02},{int(f(milliseconds_start)):03}"
-                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
+                f"{hours_start:02}:{minutes_start:02}:{seconds_start:02}.{int(f(milliseconds_start)):03}"
+                f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02}.{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
 
         # counter for the SRT file action
         counter.append(counter[-1] + 1)
