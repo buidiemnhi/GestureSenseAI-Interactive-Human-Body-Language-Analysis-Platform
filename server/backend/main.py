@@ -378,6 +378,7 @@ def upload_video():
 
         # pass two paths to AI model
         destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
+        print(_landmarks)
         test_model_new(video_path, destination_path, _landmarks)
 
         video_duration = get_video_duration(destination_path, video_name)
@@ -661,6 +662,8 @@ def validate_email(_email):
 
 
 def validate_email_for_edit(_email):
+    if not _email:
+        return True
     if re.match(r'[^@]+@[^@]+\.[^@]+', _email):
         if re.match(r'^[a-zA-Z0-9@.]+$', _email):
             return True
