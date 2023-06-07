@@ -8,30 +8,31 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-
-#Dynamic base directory
+# Dynamic base directory
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+
 # new model code
-def test_model_new(path_with_file_extension, destination,landmarks):
+def test_model_new(path_with_file_extension, destination, landmarks):
     def srt(start2, end):
         with open(f"{destination}\\{filename}.vtt", "a") as srt_file:
             srt_file.write("WEBVTT\n\n")
 
         with open(f"{destination}\\{filename}_meaning.vtt", "a") as srt_file:
-            srt_file.write("WEBVTT\n\n")        
+            srt_file.write("WEBVTT\n\n")
+
         def f(x, decimals=3):
             r = str(round(x, decimals))  # round and convert to string
             r = r.split('.')[-1]  # split at the dot and keep the decimals
             return r
 
         milliseconds_start = start2 % 1
-        seconds_start = int(start2) % 60
+        seconds_start = (int(start2) % 60) - 1
         minutes_start = int(start2 / 60) % 60
         hours_start = int(start2 / 3600)
 
         milliseconds_end = end % 1
-        seconds_end = int(end) % 60
+        seconds_end = (int(end) % 60) - 1
         minutes_end = int(end / 60) % 60
         hours_end = int(end / 3600)
         print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
@@ -46,7 +47,7 @@ def test_model_new(path_with_file_extension, destination,landmarks):
                 f"{hours_start:02}:{minutes_start:02}:{seconds_start:02}.{int(f(milliseconds_start)):03}"
                 f" --> {hours_end:02}:{minutes_end:02}:{seconds_end:02}.{int(f(milliseconds_end)):03}\n{meaning_action(sentence[-1])}\n\n")
 
-        # counter for the SRT file action
+        # counter for the VTT file action
         counter.append(counter[-1] + 1)
 
     # code:9999
@@ -146,7 +147,7 @@ def test_model_new(path_with_file_extension, destination,landmarks):
                             else:
                                 # start time
                                 start2 = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-                                # counter for the SRT file actions
+                                # counter for the VTT file actions
                                 counter.append(counter[-1] + 1)
                                 sentence.append(res)
 
@@ -154,7 +155,7 @@ def test_model_new(path_with_file_extension, destination,landmarks):
                     sentence = sentence[-5:]
 
                 # write the video frame to the device
-                if(landmarks):
+                if (landmarks):
                     writer.write(image)
                 else:
                     writer.write(curr_frame)
