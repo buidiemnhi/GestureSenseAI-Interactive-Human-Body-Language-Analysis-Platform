@@ -2,7 +2,9 @@ import os
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory, ConversationBufferMemory
+
 basedir = os.path.abspath(os.path.dirname(__file__))
+# you need to add the key to your OS environment variable under name "key"
 os.environ["OPENAI_API_KEY"] = os.environ.get("key")
 
 file_path = basedir + '\\' + 'template.txt'
