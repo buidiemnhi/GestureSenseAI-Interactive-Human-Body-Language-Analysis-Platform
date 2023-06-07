@@ -128,11 +128,11 @@ class Video(db.Model):
     video_date = db.Column(db.String(250), nullable=False)
     video_description = db.Column(db.String(255), nullable=True)
     video_duration = db.Column(db.Float, nullable=False)
-
+    openai_meaning = db.Column(db.String(500), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
 
     def __init__(self, video_title, video_name, video_subtitle1_path, video_subtitle2_path, video_date, user_id,
-                 video_description, video_duration):
+                 video_description, video_duration, openai_meaning):
         self.video_title = video_title
         self.video_name = video_name
         self.video_subtitle1_path = video_subtitle1_path
@@ -141,6 +141,7 @@ class Video(db.Model):
         self.user_id = user_id
         self.video_description = video_description
         self.video_duration = video_duration
+        self.openai_meaning = openai_meaning
 
 
 # Create Database
@@ -384,7 +385,11 @@ def upload_video():
 
         video_duration = get_video_duration(destination_path, video_name)
 
-        video = Video(_video_title, video_name, sub_1, sub_2, current_date, user.user_id, _description, video_duration)
+        video = Video(_video_title, video_name, sub_1, sub_2, current_date, user.user_id, _description, video_duration,
+                      "")
+        openai_meaning = get_openai_meaning(destination_path, sub_2)
+        video.openai_meaning = openai_meaning
+
         user.add_video(video)
 
         return "File has been uploaded."
@@ -406,6 +411,7 @@ def display_all_videos():
             'video_title': video.video_title,
             'video_description': video.video_description,
             'video_id': video.video_id,
+            'openai_meaning': video.openai_meaning,
             'subtitles': [
                 {
                     'subtitle_1': f'http://localhost:5000/videos/{video.video_subtitle1_path}/{id}',
@@ -562,7 +568,7 @@ def delete_video(id):
         return jsonify({"message": "Video not found"})
 
 
-# ============================================================================
+# ==============================Chatbot==============================================
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     question = request.json['question']
@@ -571,9 +577,8 @@ def chatbot():
     return result
 
 
-@app.route('/summarize', methods=['GET'])
-def get_openai_meaning():
-    file_path = get_app_path() + '\\' + 'videoplayback_meaning.vtt'
+def get_openai_meaning(video_path, sub2):
+    file_path = os.path.join(video_path, sub2)
     print(file_path)
     with open(file_path, "r") as file:
         content = file.read()
@@ -804,6 +809,15 @@ def delete_user_directory(directory_path):
         return {"message": f"Directory '{directory_path}' not found"}
     except Exception as e:
         return {"message": f"An error occurred: {str(e)}"}
+
+
+def get_openai_meaning(video_path, sub2):
+    file_path = os.path.join(video_path, sub2)
+    print(file_path)
+    with open(file_path, "r") as file:
+        content = file.read()
+    result = query(content)
+    return result
 
 
 # ================Statistics_1======================
