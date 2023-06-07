@@ -16,7 +16,7 @@ from datetime import datetime
 
 
 from AI import *
-
+from chatbot import *
 # Initialize app
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY'
@@ -561,6 +561,14 @@ def delete_video(id):
     else:
         return jsonify({"message": "Video not found"})
 
+
+# ============================================================================
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    question = request.json['question']
+    print(question)
+    result = query(question)
+    return result
 
 ########################################################################################################################
 
