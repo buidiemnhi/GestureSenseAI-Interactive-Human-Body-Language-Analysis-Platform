@@ -332,10 +332,16 @@ def edit_profile():
             salt_length=8
         )
 
+        # assign user email if he isn't specify new one
         if not _email:
             _email = user.user_email
 
-        user_image_path = return_image_path(is_profile_image_empty, _user_image, user)
+        # assign profile_image if he isn't specify new one
+        if _user_image:
+            user_image_path = return_image_path(is_profile_image_empty, _user_image, user)
+        else:
+            user_image_path = user.user_image
+
         # user folder
         folder_name = get_user_folder_name(user)
 
@@ -773,12 +779,10 @@ def get_user_folder_name(user):
 
 def return_image_path(is_profile_image_empty_, _user_image, user):
     user_folder_name = get_user_folder_name(user)
-
     folder_path = os.path.join(app.config['DATA'], user_folder_name, app.config['IMAGE'])
     os.makedirs(folder_path, exist_ok=True)
 
     if not is_profile_image_empty_:
-
         image_name = secure_filename(_user_image.filename)
         image_path = os.path.join(get_app_path(), folder_path, image_name)
         _user_image.save(image_path)
