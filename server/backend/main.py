@@ -14,9 +14,10 @@ from collections import Counter
 from collections import defaultdict
 from datetime import datetime
 
-
 from AI import *
 from chatbot import *
+from meaning import *
+
 # Initialize app
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY'
@@ -391,7 +392,6 @@ def upload_video():
         return "Please, select video to upload."
 
 
-
 @app.route('/display-videos', methods=['GET'])
 @jwt_required()
 def display_all_videos():
@@ -569,6 +569,17 @@ def chatbot():
     print(question)
     result = query(question)
     return result
+
+
+@app.route('/summarize', methods=['GET'])
+def get_openai_meaning():
+    file_path = get_app_path() + '\\' + 'videoplayback_meaning.vtt'
+    print(file_path)
+    with open(file_path, "r") as file:
+        content = file.read()
+    result = query(content)
+    return result
+
 
 ########################################################################################################################
 
