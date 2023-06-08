@@ -6,7 +6,8 @@ from langchain.chat_models import ChatOpenAI
 
 os.environ["OPENAI_API_KEY"] = os.environ.get("key")
 
-template = """you act like a psychologist i will give you meaning of action that person did, tell me the overall impression(most common impression) about the meaning of actions that the person did in one small line
+template = """you act like a psychologist i will give you meaning of action that person did, 
+tell me the overall impression(most common impression) about the meaning of actions that the person did in one small line
 
 
 
@@ -24,6 +25,6 @@ chain = LLMChain(
 )
 
 
-def query(q):
-    response = chain.predict(human_input=q)
+def query(VTTcontent):
+    response = chain.predict(human_input=VTTcontent)
     return response
