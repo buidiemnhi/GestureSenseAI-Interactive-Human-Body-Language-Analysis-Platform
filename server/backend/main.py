@@ -362,7 +362,7 @@ def upload_video():
         _video_title = request.form['video_title']
         _description = request.form['video_description']
         _landmarks = request.form['landMarks']
-        current_date = datetime.now()
+        current_date = datetime.today().strftime("%Y-%m-%d")
 
         video_name = secure_filename(_video.filename)
 
@@ -386,7 +386,6 @@ def upload_video():
 
         # pass two paths to AI model
         destination_path = folder_path + '\\' + app.config['VIDEO_WITH_LANDMARKS']
-        print(_landmarks)
         test_model_new(video_path, destination_path, _landmarks)
 
         video_duration = get_video_duration(destination_path, video_name)
@@ -574,20 +573,26 @@ def delete_video(id):
         return jsonify({"message": "Video not found"})
 
 
+# @app.route('/admin-statistics', methods=['GET'])
+# def admin_statistics():
+#     total_users = User.query.count()
+#     total_videos = Video.query.count()
+#
+#     current_date = datetime.today().strftime("%Y-%m-%d")
+#     total_videos_uploaded_today = Video.query.filter(Video.video_date == current_date).count()
+#
+#     return jsonify({
+#         'total_users': total_users,
+#         'total_videos': total_videos,
+#         'total_videos_uploaded_today': total_videos_uploaded_today
+#     })
+
+
 # ==============================Chatbot==============================================
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     question = request.json['question']
     result = query(question)
-    return result
-
-
-def get_openai_meaning(video_path, sub2):
-    file_path = os.path.join(video_path, sub2)
-    print(file_path)
-    with open(file_path, "r") as file:
-        content = file.read()
-    result = query(content)
     return result
 
 
@@ -816,7 +821,6 @@ def delete_user_directory(directory_path):
 
 def get_openai_meaning(video_path, sub2):
     file_path = os.path.join(video_path, sub2)
-    print(file_path)
     with open(file_path, "r") as file:
         content = file.read()
     result = query(content)
@@ -828,7 +832,7 @@ def get_number_of_videos_per_month(all_videos):
     video_stats = [0] * 12
 
     # Define multiple possible datetime formats
-    datetime_formats = ["%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"]
+    datetime_formats = ["%Y-%m-%d", "%Y-%m-%d"]
 
     for video in all_videos:
         # Try parsing the video date with each format until successful
