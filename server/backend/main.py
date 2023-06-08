@@ -25,7 +25,6 @@ app.secret_key = 'SECRET_KEY'
 cors = CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 app.config['JWT_SECRET_KEY'] = 'super-secret'
 jwt = JWTManager(app)
-# take the path of the project
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -34,7 +33,6 @@ app.config['DATA'] = 'files\\media\\'
 app.config['IMAGE'] = 'images'
 app.config['UPLOADED_VIDEO'] = 'uploaded_videos'
 
-# app.config['DEFAULT_PHOTO_PATH'] = 'files\\'
 app.config['DEFAULT_PHOTO_NAME'] = 'default.jpg'
 app.config['VIDEO_WITH_LANDMARKS'] = 'video_srt'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
