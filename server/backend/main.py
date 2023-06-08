@@ -581,8 +581,10 @@ def delete_user(id):
 @app.route('/videos/<int:id>', methods=['GET'])
 def get_user_videos(id):
     videos = Video.query.filter_by(user_id=id).all()
+    total_videos = 0
     video_list = []
     for video in videos:
+        total_videos += 1
         video_data = {
             'URL': f'http://localhost:5000/videos/{video.video_name}/{id}',
             "video_id": video.video_id,
@@ -592,7 +594,7 @@ def get_user_videos(id):
             'uploaded_date': video.video_date.split(".")[0]
         }
         video_list.append(video_data)
-    return jsonify({'Data': video_list})
+    return jsonify({'Data': video_list, 'TotalVideos': total_videos})
 
 
 # Function to delete a video
