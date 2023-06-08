@@ -1,8 +1,8 @@
+import Navbar from '../../../utils/Navbar/Navbar';
 import './hero.css';
 
 import React from 'react';
 
-import Navbar from '../Navbar/Navbar';
 
 function HeroSection() {
   return (

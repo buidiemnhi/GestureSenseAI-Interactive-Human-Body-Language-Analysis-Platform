@@ -7,6 +7,7 @@ import {
   Link,
   useNavigate
 } from 'react-router-dom';
+import Footer from '../landingPage/components/Footer/Footer';
 
 export default function LoginForm() {
   // state for the form data
@@ -107,7 +108,7 @@ export default function LoginForm() {
   } // end of the async function
 
  return (
-
+<div>
   <div className="py-5 d-flex align-items-center containerh" >
   <div className="container">
     <div className="row shadow">
@@ -152,6 +153,9 @@ export default function LoginForm() {
       </div>
     </div>
   </div>
+</div>
+<Footer/>
+
 </div>
   )
 }

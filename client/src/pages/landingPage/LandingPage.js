@@ -5,6 +5,7 @@ import Footer from './components/Footer/Footer';
 import HeroSection from './components/Hero/HeroSection';
 import LiveDemo from './components/Livedemo/LiveDemo';
 import WhatWeOffer from './components/Whatweoffer/WhatWeOffer';
+import Chatbot from './components/Chatbot/Chatbot';
 
 function LandingPage() {
   return (
@@ -14,6 +15,7 @@ function LandingPage() {
         <WhatWeOffer/>
         <LiveDemo/>
         <Footer/>
+        <Chatbot/>
     </div>
   )
 }

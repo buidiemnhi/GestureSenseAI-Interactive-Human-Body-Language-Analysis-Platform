@@ -1,0 +1,36 @@
+.chatbot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .chat-icon {
+    color: whitesmoke;
+    background-color: #d36600;
+    padding: 5px;
+    border-radius: 50px;
+    font-size: 40px;
+    cursor: pointer;
+  }
+  
+  .chat-box {
+    width: 500px;
+    height: 500px;
+    background-color: white;
+    color: #181818;
+    border: 1px solid #181818;
+    border-radius: 20px;
+  }
+  .chat-text-input {
+    width: 500px;
+    height: 500px;
+    background-color: #181818;
+    color: white;
+    border-radius: 20px;
+  }
+  
+  .chat-content {
+    overflow-y: auto;
+    height: 80%;
+  }
+  
