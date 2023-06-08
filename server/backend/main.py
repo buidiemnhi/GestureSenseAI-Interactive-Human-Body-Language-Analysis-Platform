@@ -619,7 +619,7 @@ def admin_statistics():
     return jsonify({
         'total_users': total_users,
         'total_videos': total_videos,
-        'total_videos_uploaded_today': get_total_videos_uploaded_today(),
+        'total_videos_uploaded_this_month': get_total_videos_uploaded_this_month(),
         'username_over_total_duration': get_total_duration_over_username(),
         'username_over_total_videos': get_total_videos_over_username()
     })
@@ -864,7 +864,7 @@ def get_openai_meaning(video_path, sub2):
     return result
 
 
-def get_total_videos_uploaded_today():
+def get_total_videos_uploaded_this_month():
     current_date = datetime.today().strftime("%Y-%m-%d")
     total_videos_uploaded_today = Video.query.filter(Video.video_date == current_date).count()
     return total_videos_uploaded_today
