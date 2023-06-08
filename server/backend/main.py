@@ -578,7 +578,6 @@ def delete_video(id):
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     question = request.json['question']
-    print(question)
     result = query(question)
     return result
 
