@@ -6,6 +6,7 @@ from flask_cors import CORS
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt, jwt_required)
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import shutil
@@ -300,16 +301,15 @@ def edit_profile():
     _user_image = request.files['profileImage']
     _user_birthdate = formm['userBD']
 
-    existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
     is_last_name_invalid = not validate_last_Name(_last_name)
     is_email_invalid: bool = not validate_email_for_edit(_email)
     is_password_invalid = not validate_password(_password)
-    is_exiting_email = existing_email is not None
+    is_email_exist = check_email_exist_for_edit(_email, user)
     is_password_confirmation_not_match = not check_password_match(_password, _confirm_password)
     is_profile_image_empty = check_profileImage_empty(_user_image)
 
-    if is_first_name_invalid | is_last_name_invalid | is_email_invalid | is_exiting_email | is_password_invalid | \
+    if is_first_name_invalid or is_last_name_invalid or is_email_invalid or is_email_exist or is_password_invalid or \
             is_password_confirmation_not_match:
         return jsonify({
             'isError': True,
@@ -318,8 +318,8 @@ def edit_profile():
                               'msg': first_name_error(is_first_name_invalid)},
                 'lastName': {'isError': is_last_name_invalid,
                              'msg': last_name_error(is_last_name_invalid)},
-                'email': {'isError': is_email_invalid | is_exiting_email,
-                          'msg': edit_email_error(is_email_invalid, is_exiting_email)},
+                'email': {'isError': is_email_invalid | is_email_exist,
+                          'msg': edit_email_error(is_email_invalid, is_email_exist)},
                 'password': {'isError': is_password_invalid | is_password_confirmation_not_match,
                              'msg': registration_password_error(is_password_invalid,
                                                                 is_password_confirmation_not_match)},
@@ -350,6 +350,14 @@ def edit_profile():
         update_user_folder(user, folder_name)
 
         return jsonify(SUCCESS_MESSAGE['Data'])
+
+
+def check_email_exist_for_edit(_email, user):
+    existing_email = User.query.filter_by(user_email=_email).first()
+    if _email == user.user_email:
+        return False
+    elif existing_email is not None:
+        return True
 
 
 @app.route('/upload-video', methods=['POST'])
@@ -493,15 +501,43 @@ def get_statistics_one():
     })
 
 
-def get_video_statistics():
-    _video_id = request.form['video_id']
-    _user_id = request.form['user_id']
+@app.route('/statistics-two', methods=['GET'])
+@jwt_required()
+def get_statistics_two():
+    token = get_jwt()
+    user = get_current_user(token)
+    all_videos = Video.query.filter_by(user_id=user.user_id).all()
+
+    video_list = []
+    for video in all_videos:
+        video_data = {
+            "video_id": video.video_id,
+            "title": video.video_title,
+            'URL': f'http://localhost:5000/videos/{video.video_name}/{user.user_id}'
+        }
+        video_list.append(video_data)
+
+    return jsonify({
+        "Data": {
+            "videos": video_list
+        }
+    })
+
+
+@app.route('/video-statistics/<int:id>/', methods=['GET'])
+@jwt_required()
+def get_video_statistics(id):
+    token = get_jwt()
+    user = get_current_user(token)
+    _user_id = user.user_id
+
+    _video_id = id
     #
     user = User.query.get(_user_id)
     user_folder_name = get_user_folder_name(user)
     #
     video = Video.query.get(_video_id)
-    video_title = video.video_title
+    video_title = video.video_subtitle1_path
 
     srt_path = os.path.join(get_app_path(), app.config['DATA'], user_folder_name, 'video_srt', video_title)
     print(srt_path)
@@ -573,19 +609,20 @@ def delete_video(id):
         return jsonify({"message": "Video not found"})
 
 
-# @app.route('/admin-statistics', methods=['GET'])
-# def admin_statistics():
-#     total_users = User.query.count()
-#     total_videos = Video.query.count()
-#
-#     current_date = datetime.today().strftime("%Y-%m-%d")
-#     total_videos_uploaded_today = Video.query.filter(Video.video_date == current_date).count()
-#
-#     return jsonify({
-#         'total_users': total_users,
-#         'total_videos': total_videos,
-#         'total_videos_uploaded_today': total_videos_uploaded_today
-#     })
+@app.route('/admin-statistics', methods=['GET'])
+def admin_statistics():
+    total_users = User.query.count()
+    total_videos = Video.query.count()
+
+    get_total_videos_over_username()
+
+    return jsonify({
+        'total_users': total_users,
+        'total_videos': total_videos,
+        'total_videos_uploaded_today': get_total_videos_uploaded_today(),
+        'username_over_total_duration': get_total_duration_over_username(),
+        'username_over_total_videos': get_total_videos_over_username()
+    })
 
 
 # ==============================Chatbot==============================================
@@ -611,7 +648,7 @@ REGISTRATION_ERROR_MESSAGES = {
     'firstName_error': 'First name must be at least 3 characters and contain no special symbols.',
     'lastName_error': 'Last name must be at least 3 characters and contain no special symbols.',
     'invalid_email': 'Email is invalid.',
-    'email_exists': 'Email already exists.',
+    'email_exists': 'Email already exists in our system.',
     'invalid_birthDate': 'Birth date is required',
     'invalid_password': 'Password is invalid.',
     'dose_not_match': 'Password and Confirm Password dose not match.',
@@ -827,6 +864,44 @@ def get_openai_meaning(video_path, sub2):
     return result
 
 
+def get_total_videos_uploaded_today():
+    current_date = datetime.today().strftime("%Y-%m-%d")
+    total_videos_uploaded_today = Video.query.filter(Video.video_date == current_date).count()
+    return total_videos_uploaded_today
+
+
+def get_total_duration_over_username():
+    query = db.session.query(User.first_name, User.last_name, func.sum(Video.video_duration))
+    # Join the User and Video tables based on the user_id relationship
+    query = query.join(Video, User.user_id == Video.user_id)
+    # Group the results by user
+    query = query.group_by(User.user_id)
+    # Retrieve the results
+    results = query.all()
+    user_video_data = []
+    for result in results:
+        # it is like result[0] = first_name, result[1] = last_name ...
+        first_name, last_name, video_duration = result
+        user_video_data.append({'username': f"{result.first_name} {result.last_name}",
+                                'video_duration': video_duration})
+    return user_video_data
+
+
+def get_total_videos_over_username():
+    query = db.session.query(User.first_name, User.last_name, func.count(Video.video_id))
+    # Join the User and Video tables based on the user_id relationship
+    query = query.join(Video, User.user_id == Video.user_id)
+    # Group the results by user
+    query = query.group_by(User.first_name, User.last_name)
+    # Retrieve the results
+    results = query.all()
+    user_video_data = []
+    for result in results:
+        first_name, last_name, video_count = result
+        user_video_data.append({'name': f"{first_name} {last_name}", 'video_count': video_count})
+    return user_video_data
+
+
 # ================Statistics_1======================
 def get_number_of_videos_per_month(all_videos):
     video_stats = [0] * 12
@@ -894,6 +969,7 @@ def most_repeated_words(filename):
         text = re.sub(r'\d+:\d+:\d+,\d+ --> \d+:\d+:\d+,\d+\n', '', text)  # Remove timestamps
         text = re.sub(r'\n', ' ', text)  # Replace line breaks with spaces
         text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+        text = re.sub(r'WEBVTT', '', text)  # Remove WEB VTT
 
         words = text.split()
 
@@ -904,7 +980,7 @@ def most_repeated_words(filename):
 
     most_repeated = [{"word": word, "count": count} for word, count in most_common if count == max_count]
 
-    result_json = json.dumps(most_repeated)
+    result_json = jsonify({'Data': most_repeated})
     return result_json
 
 
