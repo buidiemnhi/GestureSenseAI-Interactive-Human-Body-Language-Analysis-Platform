@@ -1,7 +1,10 @@
 import React from 'react';
 
 import { useSignOut } from 'react-auth-kit';
-import { useNavigate } from 'react-router-dom';
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
 
 export default function SideBarAdmin(props) {
   const signOut = useSignOut()
@@ -15,6 +18,11 @@ export default function SideBarAdmin(props) {
 
   return (
     <div className='py-2 ml-3'>
+
+      <div className='my-3 grow'>
+      <Link to={'/'} className='sidebarLogo'>-GestureSense-</Link>
+      </div>
+
       <div className=''>
         <img class="profileImg" src={props.sideBarData.userImage} />
         <p className='mt-2 UserName'>{`${props.sideBarData.firstName} ${props.sideBarData.lastName}`}</p>

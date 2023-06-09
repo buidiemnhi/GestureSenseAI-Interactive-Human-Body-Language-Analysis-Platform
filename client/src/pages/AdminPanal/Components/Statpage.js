@@ -44,6 +44,7 @@ function Statpage() {
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/admin-statistics')
+    .then(res=>res.json())
     .then(res=>console.log(res))
   }, [])
   
@@ -85,24 +86,6 @@ function Statpage() {
 
                 </div>
 
-                <div className='d-flex w-100 my-2'>
-                    <div className='text-center shadow p-2 smallstatcolorcard round25 text-white grow mx-auto'>
-                        <h5>
-                            Online users count 
-                        </h5>
-                        <h6 className='grow'>
-                            6
-                        </h6>
-                    </div>
-                    <div className='text-center shadow p-2 smallstatcolorcard round25 text-white grow mx-auto'>
-                        <h5>
-                            Offline videos count 
-                        </h5>
-                        <h6>
-                            6
-                        </h6>
-                    </div>
-                </div>
                 <div className=' w-75 text-center grow shadow smallstatcolorcard text-white round25 p-2 my-2 mx-auto'>
                     <h5>
                         Total videos uploaded today 
