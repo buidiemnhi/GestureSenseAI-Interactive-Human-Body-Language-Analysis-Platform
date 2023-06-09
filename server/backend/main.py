@@ -94,13 +94,14 @@ class User(UserMixin, db.Model):
         return self.user_id
 
     # constructor to initialize the data
-    def __init__(self, user_first_name, user_last_name, user_email, user_password, user_image, user_birthdate):
+    def __init__(self, user_first_name, user_last_name, user_email, user_password, user_image, user_birthdate,is_admin):
         self.first_name = user_first_name
         self.last_name = user_last_name
         self.user_email = user_email
         self.user_password = user_password
         self.user_image = user_image
         self.user_birthdate = user_birthdate
+        self.is_admin=is_admin
 
     def get_videos(self):
         return db.session.query(Video).filter_by(user_id=self.user_id).all()
@@ -163,6 +164,7 @@ def register():
     _confirm_password = request.form['confirmPassword']
     _user_birthdate = request.form['userBD']
     _user_image = request.files['profileImage']
+    _is_admin = request.form['isAdmin']
 
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
@@ -200,7 +202,7 @@ def register():
         salt_length=8
     )
 
-    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate)
+    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate,_is_admin)
     db.session.add(new_user)
     db.session.commit()
 
