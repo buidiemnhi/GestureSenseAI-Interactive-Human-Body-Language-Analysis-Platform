@@ -1,4 +1,5 @@
 import './about.css';
+
 import React from 'react';
 
 function Card({title, subtitle, text, link1, link2}) {
@@ -37,7 +38,7 @@ function About() {
         <h1 className=''><span className='bolder'>About</span> <span className='bold'>US</span></h1>
 
       </div>
-      <div className='row justify-content-between w-100 m-0'>
+      <div className='row g-3 w-100 m-0'>
         {cardsData.map((card, index) => <Card key={index} {...card} />)}
       </div>
     </div>

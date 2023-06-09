@@ -1,11 +1,6 @@
 import { useState } from 'react';
 
-import {
-  Link,
-  useNavigate,
-} from 'react-router-dom';
-
-import Footer from '../utils/Footer/Footer';
+import { useNavigate } from 'react-router-dom';
 
 export default function RegistrationForm() {
   let navigate = useNavigate();
@@ -59,7 +54,7 @@ export default function RegistrationForm() {
     formData2.append("email", formData.email);
     formData2.append("confirmPassword", formData.confirmPassword);
     formData2.append("profileImage", formData.profileImage);
-    formData2.append("isAdmin", false);
+    formData2.append("isAdmin", 1);
     console.log(formData2.getAll("password"));
 
     for (let [key, value] of formData2.entries()) {
@@ -97,21 +92,19 @@ export default function RegistrationForm() {
           SetErrorData(temp);
         } // end of the if
         else {
-          navigate("/signin");
+          navigate("/adminpanel");
         } // end of the else
       });
   } // end of the async function
 
   return (
     <div className="">
-      <div className="py-5 full-background-svg">
-        <div className="container">
-          <div className="row shadow bg-light py-3 col-md-10 mx-auto">
+      <div className="py-5">
+        <div className="container ">
+          <div className="row shadow py-3 col-md-10 mx-auto">
             <div className="col-md-10 mx-auto">
               <div className="row mb-4 mt-5 justify-content-center">
-                <a href="/" className="no-color ">
-                  <h1 className="display"> -GestureSense- </h1>
-                </a>
+                <h1 className="display no-color"> Create a new admin </h1>
               </div>
               <form id="c_form-h" className="" noValidate>
                 <div className="row my-1">
@@ -295,26 +288,16 @@ export default function RegistrationForm() {
                 <div className="justify-content-center row mb-3">
                   <button
                     onClick={handleSubmit}
-                    className="btn blackbg white btn-lg btn-block offset-md-2 form-row col-4 col-md-8"
+                    className="btn blackbg white btn-lg btn-block offset-md-2 form-row col-4 col-md-8 grow"
                   >
-                    Sign up
+                    Submit
                   </button>
-                </div>
-                <div className="row justify-content-center mb-3">
-                  <h6 className="display-6">
-                    {" "}
-                    Already have an account?{" "}
-                    <Link to="/signin" className="fontw">
-                      Sign in
-                    </Link>{" "}
-                  </h6>
                 </div>
               </form>
             </div>
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

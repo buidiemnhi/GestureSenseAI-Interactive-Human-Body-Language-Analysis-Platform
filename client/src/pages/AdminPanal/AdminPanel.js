@@ -9,6 +9,7 @@ import Dashboard from '../profilePage/components/Dashboard/Dashboard';
 import EditProfile from '../profilePage/components/EditProfile/EditProfile';
 import UploadVideos from '../profilePage/components/UploadVideos/UploadVideos';
 import VideoGallery from '../profilePage/components/VideoGallery/VideoGallery';
+import CreateAdmin from './Components/CreateAdmin';
 import SideBarAdmin from './Components/SideBarAdmin';
 import Statpage from './Components/Statpage';
 import UserReview from './Components/UserReview';
@@ -63,7 +64,7 @@ function AdminPanel() {
 
 //use effect to fetch user data
   useEffect(() =>{
-    if(localStorage.getItem('isAdmin')==="false"){
+    if(localStorage.getItem('isAdmin')==="true"){
       fetchData()
     }else{
       naviagte('/profilepage')
@@ -84,7 +85,8 @@ function AdminPanel() {
 
               {currentView === 1 ? <UserReview /> : ""}
               {currentView === 2 ? <EditProfile profileData={profileData} /> : ""}
-              {currentView === 3 ? <Statpage /> : ""}
+              {currentView === 7 ? <CreateAdmin /> : ""}
+              {currentView === 3 ? <Statpage changeViewFuntion={ChangeViewFuntion}/> : ""}
               {currentView === 4 ? <Dashboard /> : ""}
               {currentView === 5 ? <UploadVideos /> : ""}
               {currentView === 6 ? <VideoGallery /> : ""}

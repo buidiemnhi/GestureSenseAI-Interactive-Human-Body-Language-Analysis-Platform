@@ -1,5 +1,7 @@
 import './navbar.css';
+
 import React from 'react';
+
 import { Link } from 'react-router-dom';
 
 function Navbar({ darkMode = false }) {
@@ -8,7 +10,7 @@ function Navbar({ darkMode = false }) {
   return (
     <nav className={`navbar navbar-expand-md w-100 ${modeClass}`}>
 
-      <a className={`${modeClass} navbar-brand font30 fontcolor ml-5 nohover `} href="#">
+      <a className={`${modeClass} navbar-brand font30 fontcolor ml-5 nohover growbig`} href="#">
         -GestureSense-
       </a>
 
@@ -17,18 +19,33 @@ function Navbar({ darkMode = false }) {
 
           <ul className="nav nav-pills">
               <li className={`nav-item m-3 ${modeClass}`}>
-                  <Link className={`nav-link font24 fontcolor px-3 ${modeClass}`} to="/"> Home</Link>
+                  <Link className={`nav-link font24 fontcolor px-3 ${modeClass} growbig`} to="/"> Home</Link>
               </li>
               <li className={`nav-item m-3 ${modeClass}`}>
-                  <a className={`nav-link font24 fontcolor px-3 ${modeClass}`} href="#WhatWeOffer">About</a>
+                  <a className={`nav-link font24 fontcolor px-3 ${modeClass} growbig`} href="#WhatWeOffer">About</a>
               </li>
               <li className={`nav-item m-3 ${modeClass}`}>
-                  <a className={`nav-link font24 fontcolor px-3 ${modeClass}`} href="#liveDemo">Features</a>
+                  <a className={`nav-link font24 fontcolor px-3 ${modeClass} growbig`} href="#liveDemo">Features</a>
               </li>
-              <li className={`nav-item m-3 ${modeClass}`}>
-                  <Link className={`nav-link font24 fontcolor px-3 ${modeClass}`} to="/signin">Sign in</Link>
-              </li>
-          </ul>
+                {localStorage.getItem('jwt_token') ? 
+                  (
+                    localStorage.getItem('isAdmin') === "true" ? 
+                    (
+                    <li className={`nav-item m-3 ${modeClass}`}>
+                      <Link className={`nav-link font24 fontcolor px-3 ${modeClass} growbig`} to="/Adminpanel">Admin panal</Link>
+                    </li>
+                    ) : (
+                    <li className={`nav-item m-3 ${modeClass}`}>
+                      <Link className={`nav-link font24 fontcolor px-3 ${modeClass} growbig`} to="/profilepage">Profile</Link>
+                    </li>
+                    )
+                    ) : (
+                    <li className={`nav-item m-3 ${modeClass}`}>
+                      <Link className={`nav-link font24 fontcolor px-3 ${modeClass} growbig`} to="/signin">Sign in</Link>
+                   </li>
+                  )
+                }
+            </ul>
           
         </div>
 

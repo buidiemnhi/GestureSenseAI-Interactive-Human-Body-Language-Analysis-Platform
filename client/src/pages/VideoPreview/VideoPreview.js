@@ -14,8 +14,11 @@ import Footer from '../landingPage/components/Footer/Footer';
 
 function VideoPreview() {
     const [vids,setVids] = useState()
-    const { id } = useParams();
+    const { id,first,second } = useParams();
     const [isdata,setIsData] = useState(false)
+    const [vidsCount,setVidsCount] = useState(0)
+    const [selectedVideo, setSelectedVideo] = useState(null);
+    console.log(vids)
 
     function handleDelete(vid_id){
         fetch(`http://127.0.0.1:5000//del-vid/${vid_id}`, {
@@ -27,9 +30,11 @@ function VideoPreview() {
         .then(response => response.json())
         .then(res=>console.log(res))
         .then(res=>{
-            setVids(vids.filter(vids => vids.video_id !== id));
+            const updatedVideos = vids.filter((video) => video.video_id !== vid_id);
+            setVidsCount(prevCount=>{return prevCount-1})
+            if(updatedVideos.length===0)setIsData(false)
+            setVids(updatedVideos);
         })
-
     }
 
     const goBack = () => {
@@ -41,54 +46,61 @@ function VideoPreview() {
         .then(response => response.json())
         .then(data => {
             const videos = data.Data
-            if(videos.length){
+            if(videos.length>0){
                 setIsData(true)
+                setVidsCount(videos.length)
             }
             setVids(videos)
         })
     }, [Navigate])
 
+
+  const openDeleteModal = (vid) => {
+    setSelectedVideo(vid)
+    const deleteModalElement = document.getElementById("deleteModal");
+    const deleteModal = new window.bootstrap.Modal(deleteModalElement);
+    deleteModal.show();
+  };
+
   return (
     <div>
-    <div className='py-4'>
+    <div className=''>
 
-      <div className='justifying'>
+      <div className='justifying blackbackground py-4 shadow'>
 
         <div className='mx-1 d-flex'>
-            <h3 className='my-auto growbig'>
+            <h3 className='my-auto exit growbig'>
                 <BiArrowBack onClick={goBack}/>
             </h3>
         </div>
         <div className='mx-auto'>
             <h1 className='display-8'>
-                You are reviewing omar hanafy's videos
+                You are reviewing {first} {second}'s videos
             </h1>
         </div>
-        <div className='mx-1 d-flex'>
+        <div className='mx-2 d-flex'>
             <h3 className='my-auto'>
-
+                {vidsCount} Videos
             </h3>            
         </div>
 
       </div>
 
-      <hr />
-
-      <div className="row w-100 mx-auto h-100">
+      <div className="row w-100 mx-auto my-5">
 {   isdata   ?
             <>
             {
                 vids.map((video)=>{
                 return(
-                    <div className="col-md-4 d-flex mb-3 " key={video.video_id}>
+                    <div className="col-md-4 d-flex mb-3 my-2" key={video.video_id}>
                         <div className="card w-75 mx-auto Brounded shadow-lg" >
-                            <video src={video.URL} className="object-fit-contain w-100 p-4" autoPlay controls />
+                            <video src={video?.URL} className="object-fit-contain w-100 p-4" autoPlay controls />
                             <div className="card-body">
                                 <h5 className="card-title fw-bold">{video.video_title}</h5>
                                 <p className="card-text fw-semibold">{video.video_description}</p>
                                 <p className="card-text fw-semibold">Video duration : {video.video_duration}</p>
                                 <p className="card-text fw-semibold">Upload date : {video.uploaded_date}</p>
-                                <button className='btn btn-danger d-flex flex-row align-items-center align-middle p-2' onClick={()=>handleDelete(video.video_id)}>
+                                <button className='btn btn-danger d-flex flex-row align-items-center align-middle p-2' onClick={()=>openDeleteModal(video.video_id)}>
                                     <FaTrash /> <h6 className='my-auto ml-1'>Delete</h6>
                                 </button>
                             </div>
@@ -101,6 +113,48 @@ function VideoPreview() {
         : <div className='col-12 mx-auto d-flex '><img src={process.env.PUBLIC_URL + '/imgs/2953962.jpg'} className='w-50 mx-auto'/></div>
 }
       </div>
+
+{/* modal */}
+
+    <div className="modal" id="deleteModal" tabIndex="-1" role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Deletion</h5>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to delete this video?</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  data-dismiss="modal"
+                  onClick={() => handleDelete(selectedVideo)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+    </div>
+
+{/* end modal */}
 
     </div>
     <Footer/>

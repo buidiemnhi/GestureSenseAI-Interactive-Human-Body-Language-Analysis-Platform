@@ -1,14 +1,33 @@
-import React, { useEffect } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
 import ReactApexChart from 'react-apexcharts';
+import { useNavigate } from 'react-router-dom';
 
-function Statpage() {
+function Statpage(props) {
+  const naviagte = useNavigate()
+  const [chartsData,setChartsData] = useState({
+    total_users:"",
+    total_videos:"",
+    total_videos_uploaded_this_month:[],
+    username_over_total_duration:[],
+    username_over_total_videos:[],
+  })
 
-  const chartOptions = {
+  const [barChartData,setBarChartData] = useState([])
+  const [barChartCount,setBarChartCount] = useState([])
+  const [barChartData2,setBarChartData2] = useState([])
+  const [barChartCount2,setBarChartCount2] = useState([])
+
+  console.log(chartsData)
+
+  const chartOptions1 = {
     series: [
       {
-        name: 'Series 1',
-        data: [30, 40, 35, 50, 49, 60, 70, 91, 125],
+        name: 'user name',
+        data: barChartCount,
       },
     ],
     options: {
@@ -16,12 +35,29 @@ function Statpage() {
         id: 'basic-line',
       },
       xaxis: {
-        categories: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        categories: barChartData,
+      },
+    },
+  };
+
+    const chartOptions2 = {
+    series: [
+      {
+        name: 'user name',
+        data: barChartCount2,
+      },
+    ],
+    options: {
+      chart: {
+        id: 'basic-line',
+      },
+      xaxis: {
+        categories: barChartData2,
       },
     },
   };
    
-  const chartOption = {
+  const chartOptions = {
     series: [44, 55, 13, 33],
     labels: ['Apple', 'Mango', 'Banana', 'Orange'],
     options: {
@@ -45,42 +81,69 @@ function Statpage() {
   useEffect(() => {
     fetch('http://127.0.0.1:5000/admin-statistics')
     .then(res=>res.json())
-    .then(res=>console.log(res))
+    .then(res=>{
+      setChartsData(res)
+      const username_over_total_videos = res.username_over_total_videos
+      const username_over_total_duration = res.username_over_total_duration
+      // handle user and uploaded video data
+      const dataArr = []
+      const countArr = []
+      username_over_total_videos.forEach(element => {
+        dataArr.push(element.name)
+        countArr.push(element.video_count)
+      });
+      setBarChartCount(countArr)
+      setBarChartData(dataArr)
+      //
+
+      //handle user and uploaded videos duration
+      const dataArr2 = []
+      const countArr2 = []
+      username_over_total_duration.forEach(element => {
+        dataArr2.push(element.username)
+        countArr2.push(element.video_duration)
+      });
+      setBarChartCount2(countArr2)
+      setBarChartData2(dataArr2)
+      //
+
+    })
   }, [])
   
 
   return (
-    <>
+    <div className='container pb-5'>
         <h3 className='my-4'>System statistics</h3>
         <div className='statsContainer d-flex w-100'>
+
             <div className='w-40 mx-auto card p-2 shadow round25 grow'>
                 <h3 className='my-4 mx-3'>System statistics</h3>         
                 <ReactApexChart
-                    options={chartOptions.options}
-                    series={chartOptions.series}
-                    type="line"
+                    options={chartOptions2.options}
+                    series={chartOptions2.series}
+                    type="bar"
                     height={350}
                     className=""
                 />
             </div>
-            <div className='w-40 mx-auto card p-2 shadow round25 grow'>
+            <div className='w-40 mx-auto card p-2 shadow round25 grow hight-fit'>
                 <h3 className='my-4 m-3'>System statistics</h3>
-                <div className='d-flex w-100 my-2'>
+                <div className='d-flex w-100 my-2 hight-fit'>
 
-                    <div className='text-center shadow p-2 smallstatcolorcard round25 text-white grow mx-auto'>
+                    <div className='text-center shadow p-2 smallstatcolorcard round25 text-white grow mx-auto' onClick={() => props.changeViewFuntion(1)}>
                         <h5>
-                            Total users count 
+                            Total users
                         </h5>
                         <h6 className='grow'>
-                            6
+                            {chartsData.total_users}
                         </h6>
                     </div>
                     <div className='text-center shadow p-2 smallstatcolorcard round25 text-white grow mx-auto'>
-                        <h5>
-                            Total videos count 
+                        <h5 className=''>
+                            Total videos 
                         </h5>
                         <h6>
-                            6
+                            {chartsData.total_videos}
                         </h6>
                     </div>
 
@@ -91,7 +154,7 @@ function Statpage() {
                         Total videos uploaded today 
                     </h5>
                     <h6>
-                        6
+                        {chartsData.total_videos_uploaded_this_month}
                     </h6>
                 </div>
 
@@ -99,11 +162,11 @@ function Statpage() {
         </div>
         <div className='statsContainer d-flex w-100 mt-5 '>
             <div className='w-40 mx-auto card p-2 shadow round25 grow'>
-                <h3 className='my-4 m-3'>System statistics</h3>         
+                <h3 className='my-4 m-3'>total uploaded videos by each user</h3>         
                 <ReactApexChart
-                    options={chartOptions.options}
-                    series={chartOptions.series}
-                    type="line"
+                    options={chartOptions1.options}
+                    series={chartOptions1.series}
+                    type="bar"
                     height={350}
                     className=""
                 />
@@ -111,15 +174,15 @@ function Statpage() {
             <div className='w-40 mx-auto card p-2 shadow round25 grow'>
                 <h3 className='my-4 m-3'>System statistics</h3>
                 <ReactApexChart
-                    options={chartOption.options}
-                    series={chartOption.series}
+                    options={chartOptions2.options}
+                    series={chartOptions2.series}
                     type="donut"
                     height={350}
                     className="my-auto"
                 />
             </div>
         </div>
-    </>
+    </div>
   )
 }
 
