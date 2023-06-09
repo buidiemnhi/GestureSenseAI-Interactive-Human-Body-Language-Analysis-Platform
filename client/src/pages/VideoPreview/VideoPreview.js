@@ -4,12 +4,20 @@ import React, {
 } from 'react';
 
 import { FaTrash } from 'react-icons/fa';
-import { useParams } from 'react-router-dom';
+import {
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 
 function VideoPreview() {
     const [vids,setVids] = useState()
     const { id } = useParams();
+<<<<<<< Updated upstream
 
+=======
+    const [isdata] = useState(false)
+    const naviagte = useNavigate()
+>>>>>>> Stashed changes
     function handleDelete(vid_id){
         fetch(`http://127.0.0.1:5000//del-vid/${vid_id}`, {
             method: 'DELETE',
@@ -24,10 +32,20 @@ function VideoPreview() {
         })
 
     }
+<<<<<<< Updated upstream
     
+=======
+
+
+    const goBack = () => {
+    window.history.back();
+    };
+>>>>>>> Stashed changes
+
 
     useEffect(() => {
-        fetch(`http://127.0.0.1:5000//videos/${id}`)
+        if(localStorage.getItem('isAdmin')==="false"){
+            fetch(`http://127.0.0.1:5000//videos/${id}`)
         .then(response => response.json())
         .then(data => {
             const videos = data.Data
@@ -52,6 +70,9 @@ function VideoPreview() {
             })
             setVids(videossArr)
         })
+        }else{
+            naviagte('/profilepage')
+        }
     }, [])
 
   return (

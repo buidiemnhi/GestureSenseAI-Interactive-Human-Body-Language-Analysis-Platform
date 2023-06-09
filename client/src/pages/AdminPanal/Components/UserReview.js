@@ -45,15 +45,16 @@ function UserReview() {
                             {user.isOnline ? <span className='btn btn-success'>Online</span> : <span className='btn btn-secondary'>Offline</span>}
                         </td>
                         <td>
-                        <button className='btn btn-danger d-flex flex-row align-items-center align-middle mb-2' onClick={()=>handleDelete(user.user_id)}>
+                        <button className='btn btn-danger d-flex flex-row align-items-center align-middle grow mb-2' onClick={()=>handleDelete(user.user_id)}>
                         <FaTrash /> <h6 className='my-auto ml-1'>Delete</h6>
                         </button>
-                            <Link to={`/user/${user.user_id}/videos`} className='btn btn-primary'>
+                            <Link to={`/user/${user.user_id}/videos`} className='btn btn-primary grow'>
                                 <IoEye className='fs-6' /> View videos
                             </Link>
                         </td>
                     </tr>
                 )
+<<<<<<< Updated upstream
             })
             setUsers(usersArr)
         })
@@ -224,6 +225,9 @@ function UserReview() {
                     </td>
                 </tr> */}
                     {users}
+=======
+            })}
+>>>>>>> Stashed changes
             </tbody>
         </table>
     </>

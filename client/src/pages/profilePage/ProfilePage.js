@@ -6,6 +6,8 @@ import {
   useState,
 } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import Dashboard from './components/Dashboard/Dashboard';
 import EditProfile from './components/EditProfile/EditProfile';
 import SideBar from './components/SideBar/SideBar';
@@ -14,7 +16,7 @@ import VideoGallery from './components/VideoGallery/VideoGallery';
 
 export default function ProfilePage() {
   const [currentView, setCurrentView] = useState(1)
-
+  const naviagte = useNavigate()
   // profiled data state 
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -26,7 +28,6 @@ export default function ProfilePage() {
     userImage: ""
   })
 
-  useEffect(() =>
     async function fetchData() {
       let jwtToken = localStorage.getItem('jwt_token');
       var myHeaders = new Headers();
@@ -53,7 +54,18 @@ export default function ProfilePage() {
         })
     }
 
+<<<<<<< Updated upstream
     , []);
+=======
+  useEffect(() =>{
+    if(localStorage.getItem('jwt_token')){
+      fetchData()
+    }else{
+      naviagte('/')
+    }
+  }
+  , []);
+>>>>>>> Stashed changes
 
 
   function ChangeViewFuntion(viewID) {

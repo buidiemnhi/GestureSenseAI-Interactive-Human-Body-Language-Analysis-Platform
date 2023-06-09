@@ -3,8 +3,16 @@ import Footer from "../utils/Footer/Footer";
 
 import { useState } from "react";
 
+<<<<<<< Updated upstream
 import { useSignIn } from "react-auth-kit";
 import { Link, useNavigate } from "react-router-dom";
+=======
+import { useSignIn } from 'react-auth-kit';
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
+>>>>>>> Stashed changes
 
 export default function LoginForm() {
   // state for the form data
@@ -93,11 +101,38 @@ export default function LoginForm() {
           ) {
             // end of if condition
 
+<<<<<<< Updated upstream
             localStorage.setItem("jwt_token", res.jwt);
             navigate("/Profilepage");
           } // end of if
         } // end of the else
       });
+=======
+          if(dataObject[key].isError){
+            temp.data[key].errorMsg = dataObject[key].msg
+          }
+          
+        }) // end of the .map
+        SetErrorData(temp)
+      }// end of the if
+
+      else{if(signIn({ token: res.jwt,
+      expiresIn: 1440,
+      tokenType: "Bearer",
+      authState: formData,
+      }// end of sign in parameters
+      ) // end of sign in 
+      ) // end of if condition
+    
+      {
+        localStorage.setItem('isAdmin',res.isAdmin)
+        localStorage.setItem('jwt_token',res.jwt);
+        navigate('/Adminpanel')
+      } // end of if
+    } // end of the else
+
+      })
+>>>>>>> Stashed changes
   } // end of the async function
 
   return (
