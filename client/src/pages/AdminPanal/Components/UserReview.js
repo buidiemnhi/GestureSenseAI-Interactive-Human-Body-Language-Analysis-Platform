@@ -54,7 +54,6 @@ function UserReview() {
                         </td>
                     </tr>
                 )
-<<<<<<< Updated upstream
             })
             setUsers(usersArr)
         })
@@ -225,9 +224,6 @@ function UserReview() {
                     </td>
                 </tr> */}
                     {users}
-=======
-            })}
->>>>>>> Stashed changes
             </tbody>
         </table>
     </>

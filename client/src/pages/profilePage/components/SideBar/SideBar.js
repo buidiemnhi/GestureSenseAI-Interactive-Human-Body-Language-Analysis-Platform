@@ -1,22 +1,9 @@
-import "./SideBar.css";
+import './SideBar.css';
 
-import React from "react";
+import React from 'react';
 
-<<<<<<< Updated upstream
-import { useSignOut } from "react-auth-kit";
-
-export default function SideBar(props) {
-  const signOut = useSignOut();
-
-  function logOutButton() {
-    localStorage.removeItem("jwt_token");
-    signOut();
-=======
 import { useSignOut } from 'react-auth-kit';
-import {
-  Link,
-  useNavigate,
-} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function SideBar(props) {
   const signOut = useSignOut()
@@ -26,7 +13,6 @@ export default function SideBar(props) {
     localStorage.clear();
     signOut()
     naviagte('/')
->>>>>>> Stashed changes
   }
 
   return (

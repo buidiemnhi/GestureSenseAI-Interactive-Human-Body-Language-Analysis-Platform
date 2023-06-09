@@ -1,11 +1,10 @@
 import React from 'react';
 
-import About from './components/About/About';
 import Footer from '../utils/Footer/Footer';
+import About from './components/About/About';
 import HeroSection from './components/Hero/HeroSection';
 import LiveDemo from './components/Livedemo/LiveDemo';
 import WhatWeOffer from './components/Whatweoffer/WhatWeOffer';
-import Chatbot from './components/Chatbot/Chatbot';
 
 function LandingPage() {
   return (
@@ -15,7 +14,7 @@ function LandingPage() {
         <WhatWeOffer/>
         <LiveDemo/>
         <Footer />
-        <Chatbot/>
+        {/* <Chatbot/> */}
     </div>
   )
 }

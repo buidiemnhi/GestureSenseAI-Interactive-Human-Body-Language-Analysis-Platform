@@ -54,9 +54,6 @@ export default function ProfilePage() {
         })
     }
 
-<<<<<<< Updated upstream
-    , []);
-=======
   useEffect(() =>{
     if(localStorage.getItem('jwt_token')){
       fetchData()
@@ -65,7 +62,6 @@ export default function ProfilePage() {
     }
   }
   , []);
->>>>>>> Stashed changes
 
 
   function ChangeViewFuntion(viewID) {

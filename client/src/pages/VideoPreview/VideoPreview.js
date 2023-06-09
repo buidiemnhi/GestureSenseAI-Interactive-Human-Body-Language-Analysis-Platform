@@ -12,12 +12,8 @@ import {
 function VideoPreview() {
     const [vids,setVids] = useState()
     const { id } = useParams();
-<<<<<<< Updated upstream
-
-=======
     const [isdata] = useState(false)
     const naviagte = useNavigate()
->>>>>>> Stashed changes
     function handleDelete(vid_id){
         fetch(`http://127.0.0.1:5000//del-vid/${vid_id}`, {
             method: 'DELETE',
@@ -32,15 +28,11 @@ function VideoPreview() {
         })
 
     }
-<<<<<<< Updated upstream
-    
-=======
 
 
     const goBack = () => {
     window.history.back();
     };
->>>>>>> Stashed changes
 
 
     useEffect(() => {
