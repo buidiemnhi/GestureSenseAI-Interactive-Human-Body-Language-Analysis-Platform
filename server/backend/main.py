@@ -73,7 +73,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(50), nullable=False)
     user_email = db.Column(db.String(60), nullable=False, unique=True)
     user_password = db.Column(db.String(250), nullable=False)
-    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    is_admin = db.Column(db.Integer, nullable=False)
     user_image = db.Column(db.String(250), nullable=True)  # will be changed to False
     user_birthdate = db.Column(db.String(50), nullable=True)  # will be changed to False
     lastLogin = db.Column(db.String(50), nullable=True, default=False)
@@ -94,14 +94,15 @@ class User(UserMixin, db.Model):
         return self.user_id
 
     # constructor to initialize the data
-    def __init__(self, user_first_name, user_last_name, user_email, user_password, user_image, user_birthdate,is_admin):
+    def __init__(self, user_first_name, user_last_name, user_email, user_password, user_image, user_birthdate,
+                 is_admin):
         self.first_name = user_first_name
         self.last_name = user_last_name
         self.user_email = user_email
         self.user_password = user_password
         self.user_image = user_image
         self.user_birthdate = user_birthdate
-        self.is_admin=is_admin
+        self.is_admin = is_admin
 
     def get_videos(self):
         return db.session.query(Video).filter_by(user_id=self.user_id).all()
@@ -202,7 +203,7 @@ def register():
         salt_length=8
     )
 
-    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate,_is_admin)
+    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate, _is_admin)
     db.session.add(new_user)
     db.session.commit()
 
@@ -971,7 +972,7 @@ def most_repeated_words(filename):
         text = re.sub(r'\d+:\d+:\d+,\d+ --> \d+:\d+:\d+,\d+\n', '', text)  # Remove timestamps
         text = re.sub(r'\n', ' ', text)  # Replace line breaks with spaces
         text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
-        text = re.sub(r'WEBVTT', '', text)  # Remove WEB VTT
+        text = re.sub(r'WEBVTT', '', text)  # Remove WEBVTT
 
         words = text.split()
 
@@ -982,7 +983,10 @@ def most_repeated_words(filename):
 
     most_repeated = [{"word": word, "count": count} for word, count in most_common if count == max_count]
 
-    result_json = jsonify({'Data': most_repeated})
+    counts = [count for word, count in most_common if count == max_count]
+    words = [word for word, count in most_common if count == max_count]
+
+    result_json = jsonify({'Counts': counts, 'Words': words})
     return result_json
 
 
