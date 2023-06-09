@@ -28,11 +28,15 @@ def test_model_new(path_with_file_extension, destination, landmarks):
 
         milliseconds_start = start2 % 1
         seconds_start = (int(start2) % 60) - 1
+        if seconds_start < 0:
+            seconds_start += 1 
         minutes_start = int(start2 / 60) % 60
         hours_start = int(start2 / 3600)
 
         milliseconds_end = end % 1
         seconds_end = (int(end) % 60) - 1
+        if seconds_end < 0:
+            seconds_end += 1
         minutes_end = int(end / 60) % 60
         hours_end = int(end / 3600)
         print(f"{hours_end:02}:{minutes_end:02}:{seconds_end:02},{int(f(milliseconds_end)):03}")
