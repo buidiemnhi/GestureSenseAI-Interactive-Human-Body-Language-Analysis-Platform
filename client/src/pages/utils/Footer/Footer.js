@@ -13,7 +13,8 @@ function Footer() {
                 <li className="list-inline-item"><a href="http://localhost:3000/signup">Sign Up</a></li>
                 <li className="list-inline-item"><a href="http://localhost:3000/Profilepage">Personal Page</a></li>
             </ul>
-            <p className="copyright"> GestureSense © 2023</p>
+            <p className="copyright"> <a className='no-color' href="/"> GestureSense © 2023
+              </a> </p>
         </footer>
     </div>
     </div>

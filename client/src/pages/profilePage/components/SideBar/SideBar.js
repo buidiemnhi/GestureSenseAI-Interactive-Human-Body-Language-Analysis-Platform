@@ -1,29 +1,51 @@
-import './SideBar.css';
+import "./SideBar.css";
 
-import React from 'react';
+import React from "react";
 
-import { useSignOut } from 'react-auth-kit';
+import { useSignOut } from "react-auth-kit";
 
 export default function SideBar(props) {
-  const signOut = useSignOut()
-  
-  function logOutButton(){
-    localStorage.removeItem('jwt_token');
+  const signOut = useSignOut();
+
+  function logOutButton() {
+    localStorage.removeItem("jwt_token");
     signOut();
   }
 
   return (
-    <div className='py-5 ml-3'>
-      <div className=''>
+    <div className="py-5 ml-3">
+      <div className="d-flex justify-content-center mt-2 mb-5">
+        <a className="navbar-brand fontcolor no-color" href="/">
+          -GestureSense-
+        </a>
+      </div>
+
+      <div className="">
         <img className="profileImg" src={props.sideBarData.userImage} />
-        <p className='mt-2 UserName'>{`${props.sideBarData.firstName} ${props.sideBarData.lastName}`}</p>
-        <p className='text-muted UserEmail'>{props.sideBarData.email}</p>
+        <p className="mt-2 UserName">{`${props.sideBarData.firstName} ${props.sideBarData.lastName}`}</p>
+        <p className="text-muted UserEmail">{props.sideBarData.email}</p>
       </div>
       <ul className="SideNavBar py-5 ">
-        <li><a href="#" onClick={() => props.changeViewFuntion(1)}>Dashboard</a></li>
-        <li><a href="#" onClick={() => props.changeViewFuntion(2)}>Video Gallery</a></li>
-        <li><a href="#" onClick={() => props.changeViewFuntion(3)}>Upload Video</a></li>
-        <li><a href="#" onClick={() => props.changeViewFuntion(4)}>Edit Profile</a></li>
+        <li>
+          <a href="#" onClick={() => props.changeViewFuntion(1)}>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="#" onClick={() => props.changeViewFuntion(2)}>
+            Video Gallery
+          </a>
+        </li>
+        <li>
+          <a href="#" onClick={() => props.changeViewFuntion(3)}>
+            Upload Video
+          </a>
+        </li>
+        <li>
+          <a href="#" onClick={() => props.changeViewFuntion(4)}>
+            Edit Profile
+          </a>
+        </li>
       </ul>
       <button
         type="button"
@@ -33,5 +55,5 @@ export default function SideBar(props) {
         Logout
       </button>
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import About from './components/About/About';
-import Footer from './components/Footer/Footer';
+import Footer from '../utils/Footer/Footer';
 import HeroSection from './components/Hero/HeroSection';
 import LiveDemo from './components/Livedemo/LiveDemo';
 import WhatWeOffer from './components/Whatweoffer/WhatWeOffer';
@@ -14,7 +14,7 @@ function LandingPage() {
         <About/>
         <WhatWeOffer/>
         <LiveDemo/>
-        <Footer/>
+        <Footer />
         <Chatbot/>
     </div>
   )

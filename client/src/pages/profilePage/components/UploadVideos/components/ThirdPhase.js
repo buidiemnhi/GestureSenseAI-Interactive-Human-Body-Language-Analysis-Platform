@@ -1,6 +1,7 @@
 import { React, useState, useEffect } from 'react'
 import { useWindowSize } from 'react-use';
 import Confetti from 'react-confetti'
+import { Navigate } from 'react-router-dom';
 
 
 
@@ -18,7 +19,7 @@ export default function ThirdPhase(props) {
 
   useEffect(() => {
     if (count === 0) {
-      props.setCurrentView(1);
+      props.ChangeViewFuntion(2);
     }
   }, [count, props.setCurrentView]);
 

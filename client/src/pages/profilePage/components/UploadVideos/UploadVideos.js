@@ -6,7 +6,7 @@ import FirstPhase from './components/FirstPhase';
 import SecoundPhase from './components/SecoundPhase';
 import ThirdPhase from './components/ThirdPhase';
 
-export default function UploadVideos() {
+export default function UploadVideos(props) {
     const [fullInputData, setFullInputData] = useState({
         video: null,
         video_title: null,
@@ -40,7 +40,6 @@ export default function UploadVideos() {
           try {
             console.log(fullInputData.IsShowLandmarksSelected)
             const response = await fetch("http://127.0.0.1:5000//upload-video", requestOptions);
-            setIsUploading(false)
             setCurrentView(3)
             //hide loader
             if (!response.ok) {
@@ -62,8 +61,10 @@ export default function UploadVideos() {
                 videoTitle: null,
                 videoDescription: null,
                 IsShowLandmarksSelected: false
-            })
+            }) 
             return "error";
+          } finally {
+            setIsUploading(false)
           }
     }
 
@@ -93,6 +94,7 @@ export default function UploadVideos() {
             {currentView === 3 && !isUploading ? 
                 <ThirdPhase
                 setCurrentView={setCurrentView}
+                ChangeViewFuntion={props.ChangeViewFuntion}
                 /> : ''
             }
 

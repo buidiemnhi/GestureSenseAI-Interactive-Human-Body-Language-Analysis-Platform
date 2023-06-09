@@ -11,7 +11,7 @@ function HeroSection() {
         <video autoPlay muted loop className='backgroundvid' src={process.env.PUBLIC_URL + '/videos/bg3.mp4'} type="video/mp4"/>
         
         <div className='content'>
-            <Navbar/>
+            <Navbar darkMode={false}/>
               <div className='row justify-content-start align-self-end w-100 ml-5 mb-5'>
                   <div className="col-md-5 p-0 fontcolor">
                       <h1>Uncover the secret dialect of the human form.</h1>

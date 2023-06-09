@@ -33,3 +33,28 @@ html {
 .Brounded{
   border-radius: 15px;
 }
+
+
+.Brounded{
+  border-radius: 15px;
+}
+
+a.no-color {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.no-color:hover {
+  color: #d36600;
+}
+
+
+.full-background-svg {
+  /* Full page background */
+  background: url('/public/imgs/wave.svg') no-repeat center center fixed; 
+  /* Cover entire page */
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}

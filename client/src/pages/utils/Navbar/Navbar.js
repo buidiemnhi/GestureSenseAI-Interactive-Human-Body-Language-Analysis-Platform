@@ -1,40 +1,40 @@
 import './navbar.css';
-
 import React from 'react';
-
 import { Link } from 'react-router-dom';
 
-function Navbar() {
+function Navbar({ darkMode = false }) {
+  const modeClass = darkMode ? 'bright-mode' : '';
+
   return (
-    <nav className="navbar navbar-expand-md w-100">
+    <nav className={`navbar navbar-expand-md w-100 ${modeClass}`}>
 
-    <a className="navbar-brand font30 fontcolor ml-5 nohover" href="#">
-    -GestureSense-
-    </a>
+      <a className={`${modeClass} navbar-brand font30 fontcolor ml-5 nohover `} href="#">
+        -GestureSense-
+      </a>
 
-    <div className="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
-      <div className="navbar-nav">
+      <div className="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
+        <div className="navbar-nav">
 
-        <ul className="nav nav-pills ">
-            <li className="nav-item m-3">
-                <Link className='nav-link font24 fontcolor px-3' to="/"> Home</Link>
-            </li>
-            <li className="nav-item m-3">
-                <a className="nav-link font24 fontcolor px-3" href="#WhatWeOffer">About</a>
-            </li>
-            <li className="nav-item m-3">
-                <a className="nav-link font24 fontcolor px-3" href="#liveDemo">Features</a>
-            </li>
-            <li className="nav-item m-3">
-                <Link className="nav-link font24 fontcolor px-3"  to="/signin">Sign in</Link>
-            </li>
-        </ul>
-        
+          <ul className="nav nav-pills">
+              <li className={`nav-item m-3 ${modeClass}`}>
+                  <Link className={`nav-link font24 fontcolor px-3 ${modeClass}`} to="/"> Home</Link>
+              </li>
+              <li className={`nav-item m-3 ${modeClass}`}>
+                  <a className={`nav-link font24 fontcolor px-3 ${modeClass}`} href="#WhatWeOffer">About</a>
+              </li>
+              <li className={`nav-item m-3 ${modeClass}`}>
+                  <a className={`nav-link font24 fontcolor px-3 ${modeClass}`} href="#liveDemo">Features</a>
+              </li>
+              <li className={`nav-item m-3 ${modeClass}`}>
+                  <Link className={`nav-link font24 fontcolor px-3 ${modeClass}`} to="/signin">Sign in</Link>
+              </li>
+          </ul>
+          
+        </div>
+
       </div>
 
-    </div>
-
-</nav>
+    </nav>
   )
 }
 

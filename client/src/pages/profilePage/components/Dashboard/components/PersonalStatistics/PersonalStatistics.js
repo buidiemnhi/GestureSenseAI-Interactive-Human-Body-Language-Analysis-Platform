@@ -27,7 +27,6 @@ export default function PersonalStatistics() {
             };
               const response = await fetch('http://127.0.0.1:5000//statistics-one', requestOptions );
               const data = await response.json();
-              console.log(data.Data)
               setLastUploadedVideoDate(data.Data.last_uploaded_date);
               setTotalVideosNumber(data.Data.total_videos_number)
               setTotalDuration(data.Data.total_duration)

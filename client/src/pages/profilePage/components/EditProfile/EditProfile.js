@@ -94,8 +94,8 @@ export default function EditProfile(props) {
   }
 
   return (
-    <div className="w-100 h-100 d-flex EditProfile">
-      <div className="container p-0 my-auto claculateHighAndWidth card w-100 py-3">
+    <div className="w-100 h-100 d-flex EditProfile ">
+      <div className="container p-0 my-auto claculateHighAndWidth card w-100 py-3 shadow border py-5">
         <div className="row w-full m-0 justify-content-center my-3">
           <div className="col-12 d-flex justify-content-start fontw my-2">
             <h2 className="mx-4">Edit personal data</h2>

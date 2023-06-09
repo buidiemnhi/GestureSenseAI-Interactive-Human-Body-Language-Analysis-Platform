@@ -70,8 +70,8 @@ export default function ProfilePage() {
             </div>
             <div className="col-sm-10">
               {currentView === 1 ? <Dashboard /> : ""}
-              {currentView === 2 ? <VideoGallery /> : ""}
-              {currentView === 3 ? <UploadVideos /> : ""}
+              {currentView === 2 ? <VideoGallery  /> : ""}
+              {currentView === 3 ? <UploadVideos ChangeViewFuntion={ChangeViewFuntion} /> : ""}
               {currentView === 4 ? <EditProfile profileData={profileData} /> : ""}
             </div>
             {/*<div className="col-sm-10 StatisticsPage" >
