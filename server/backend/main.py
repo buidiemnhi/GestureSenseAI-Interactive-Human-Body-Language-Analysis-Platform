@@ -1,6 +1,8 @@
 import json
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from sched import scheduler
+
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt, jwt_required)
@@ -14,6 +16,7 @@ from moviepy.editor import VideoFileClip
 from collections import Counter
 from collections import defaultdict
 from datetime import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from AI import *
 from chatbot import *
@@ -40,6 +43,9 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 
 @login_manager.user_loader
@@ -79,6 +85,7 @@ class User(UserMixin, db.Model):
     lastLogin = db.Column(db.String(50), nullable=True, default=False)
     user_state = db.Column(db.String(50), nullable=False, default="Active")  # active, deactivate, blocked
     isOnline = db.Column(db.Boolean, nullable=False, default=False)
+    last_activity = db.Column(db.DateTime, nullable=False)
     user_video = db.relationship("Video", backref='user', cascade="all, delete")
 
     def is_authenticated(self):
@@ -95,7 +102,7 @@ class User(UserMixin, db.Model):
 
     # constructor to initialize the data
     def __init__(self, user_first_name, user_last_name, user_email, user_password, user_image, user_birthdate,
-                 is_admin):
+                 is_admin, last_activity):
         self.first_name = user_first_name
         self.last_name = user_last_name
         self.user_email = user_email
@@ -103,6 +110,7 @@ class User(UserMixin, db.Model):
         self.user_image = user_image
         self.user_birthdate = user_birthdate
         self.is_admin = is_admin
+        self.last_activity = last_activity
 
     def get_videos(self):
         return db.session.query(Video).filter_by(user_id=self.user_id).all()
@@ -147,8 +155,8 @@ class Video(db.Model):
 
 # Create Database
 with app.app_context():
-    db.create_all()
     # db.drop_all()
+    db.create_all()
 
 
 # @app.route('/remove-video', methods=['GET', "POST"])
@@ -203,7 +211,7 @@ def register():
         salt_length=8
     )
 
-    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate, _is_admin)
+    new_user = User(_first_name, _last_name, _email, hashed_password, "", _user_birthdate, _is_admin, datetime.now())
     db.session.add(new_user)
     db.session.commit()
 
@@ -353,14 +361,6 @@ def edit_profile():
         return jsonify(SUCCESS_MESSAGE['Data'])
 
 
-def check_email_exist_for_edit(_email, user):
-    existing_email = User.query.filter_by(user_email=_email).first()
-    if _email == user.user_email:
-        return False
-    elif existing_email is not None:
-        return True
-
-
 @app.route('/upload-video', methods=['POST'])
 @jwt_required()
 def upload_video():
@@ -479,6 +479,15 @@ def logout():
     return 'u are logged out'
 
 
+@app.before_request
+def update_user_activity():
+    if current_user.is_authenticated:
+        user = User.query.get(current_user.user_id)
+        user.last_activity = datetime.now()
+        user.isOnline = True
+        db.session.commit()
+
+
 @app.route('/statistics-one', methods=['GET'])
 @jwt_required()
 def get_statistics_one():
@@ -549,7 +558,7 @@ def get_video_statistics(id):
 # ==========================admin========================================
 @app.route('/users', methods=['GET'])
 def get_all_users():
-    users = User.query.all()
+    users = User.query.filter_by(is_admin=False).all()
     user_list = []
     for user in users:
         user_data = {
@@ -559,7 +568,8 @@ def get_all_users():
             "user_email": user.user_email,
             "user_birthdate": user.user_birthdate,
             "lastLogin": user.lastLogin,
-            "isOnline": user.isOnline
+            "isOnline": user.isOnline,
+            "last_activity": user.last_activity
         }
         user_list.append(user_data)
 
@@ -616,7 +626,8 @@ def delete_video(id):
 def admin_statistics():
     total_users = User.query.count()
     total_videos = Video.query.count()
-
+    total_user_online = User.query.filter_by(isOnline=True).count()
+    total_user_offline = User.query.filter_by(isOnline=False).count()
     get_total_videos_over_username()
 
     return jsonify({
@@ -624,7 +635,10 @@ def admin_statistics():
         'total_videos': total_videos,
         'total_videos_uploaded_this_month': get_total_videos_uploaded_this_month(),
         'username_over_total_duration': get_total_duration_over_username(),
-        'username_over_total_videos': get_total_videos_over_username()
+        'username_over_total_videos': get_total_videos_over_username(),
+        'total_user_online': total_user_online,
+        'total_user_offline': total_user_offline
+
     })
 
 
@@ -778,6 +792,14 @@ def check_profileImage_empty(_user_image):
         return True
 
 
+def check_email_exist_for_edit(_email, user):
+    existing_email = User.query.filter_by(user_email=_email).first()
+    if _email == user.user_email:
+        return False
+    elif existing_email is not None:
+        return True
+
+
 def updateLastLogin():
     User.query.filter_by(user_id=current_user.user_id).update(dict(lastLogin=date.today()))
 
@@ -857,6 +879,18 @@ def delete_user_directory(directory_path):
         return {"message": f"Directory '{directory_path}' not found"}
     except Exception as e:
         return {"message": f"An error occurred: {str(e)}"}
+
+
+def check_user_activity():
+    with app.app_context():
+        timeout_period = timedelta(minutes=1)
+        inactive_users = User.query.filter(User.isOnline == True, User.last_activity < datetime.now() - timeout_period)
+        for user in inactive_users:
+            user.isOnline = False
+        db.session.commit()
+
+
+scheduler.add_job(check_user_activity, 'interval', minutes=1)  # Run the task every 15 minutes
 
 
 def get_openai_meaning(video_path, sub2):
