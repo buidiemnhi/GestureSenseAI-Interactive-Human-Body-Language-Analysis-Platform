@@ -1,14 +1,17 @@
-import { React, useState, useEffect } from 'react'
+import {
+  React,
+  useEffect,
+  useState,
+} from 'react';
+
+import Confetti from 'react-confetti';
+import { useNavigate } from 'react-router-dom';
 import { useWindowSize } from 'react-use';
-import Confetti from 'react-confetti'
-import { Navigate } from 'react-router-dom';
-
-
 
 export default function ThirdPhase(props) {
   const { width, height } = useWindowSize()
   const [count, setCount] = useState(5);
-
+  const navigate = useNavigate()
   useEffect(() => {
     const interval = setInterval(() => {
       setCount((prevCount) => prevCount - 1);

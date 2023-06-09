@@ -64,7 +64,7 @@ function AdminPanel() {
 
 //use effect to fetch user data
   useEffect(() =>{
-    if(localStorage.getItem('isAdmin')==="true"){
+    if(localStorage.getItem('isAdmin')==="1"){
       fetchData()
     }else{
       naviagte('/profilepage')

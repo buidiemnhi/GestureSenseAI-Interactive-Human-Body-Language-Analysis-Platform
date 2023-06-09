@@ -59,7 +59,7 @@ export default function RegistrationForm() {
     formData2.append("email", formData.email);
     formData2.append("confirmPassword", formData.confirmPassword);
     formData2.append("profileImage", formData.profileImage);
-    formData2.append("isAdmin", false);
+    formData2.append("isAdmin", 0);
     console.log(formData2.getAll("password"));
 
     for (let [key, value] of formData2.entries()) {

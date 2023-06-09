@@ -49,6 +49,14 @@ export default function SideBar(props) {
             Edit Profile
           </a>
         </li>
+        { localStorage.getItem('isAdmin') === "1" &&
+        <li>
+          <a href="/adminpanel" >
+            Admin panel 
+          </a>
+        </li>
+        }
+
       </ul>
       <button
         type="button"

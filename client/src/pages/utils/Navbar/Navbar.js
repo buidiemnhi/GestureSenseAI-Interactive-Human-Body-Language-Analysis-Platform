@@ -29,7 +29,7 @@ function Navbar({ darkMode = false }) {
               </li>
                 {localStorage.getItem('jwt_token') ? 
                   (
-                    localStorage.getItem('isAdmin') === "true" ? 
+                    localStorage.getItem('isAdmin') === "1" ? 
                     (
                     <li className={`nav-item m-3 ${modeClass}`}>
                       <Link className={`nav-link font24 fontcolor px-3 ${modeClass} growbig`} to="/Adminpanel">Admin panal</Link>
