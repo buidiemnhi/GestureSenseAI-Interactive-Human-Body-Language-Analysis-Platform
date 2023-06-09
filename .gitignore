@@ -3,7 +3,7 @@ video landmark +SRT/
 coords.csv
 filtered/
 server/backend/db.sqlite
-*.sqlite
+db.sqlite
 
 
 server/.idea/misc.xml
@@ -14,4 +14,5 @@ server/backend/.idea/misc.xml
 *.iml
 server/backend/.idea/backend_GP.iml
 server/backend/.idea/misc.xml
+server/backend/db.sqlite
 server/backend/db.sqlite
