@@ -22,6 +22,14 @@ export default function EditProfile(props) {
     // userRoleError:"user",
   });
 
+  const today = new Date();
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(today.getFullYear() - 18);
+  // Format the date to match the required format (yyyy-mm-dd) for input type date
+  const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
+
+
+
   function handleData(event) {
     const { name, value, type, files } = event.target;
 
@@ -153,6 +161,7 @@ export default function EditProfile(props) {
                   type="date"
                   className="form-control"
                   name="userBD"
+                  max={maxDate} // set the max date to be 18 years ago
                   value={formData.userBD}
                   onChange={handleData}
                 />
@@ -165,6 +174,7 @@ export default function EditProfile(props) {
                   aria-label="Upload"
                   name="profileImage"
                   onChange={handleData}
+                  accept="image/*"
                   required
                 />
               </div>
