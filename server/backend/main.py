@@ -42,7 +42,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
@@ -465,13 +464,12 @@ def get_image(filename, id):
     return send_from_directory(photo_path, filename)
 
 
-@app.route("/logout")
+@app.route("/logout", method='POST')
 @login_required
 def logout():
     updateIsOnline()
     db.session.commit()
     logout_user()
-    return 'u are logged out'
 
 
 @app.before_request
@@ -645,8 +643,11 @@ def admin_statistics():
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     question = request.json['question']
-    result = query(question)
-    return result
+    print(question)
+    result = query_2(question)
+    return jsonify({
+        "result": result
+    })
 
 
 ########################################################################################################################
@@ -884,7 +885,7 @@ def get_openai_meaning(video_path, sub2):
     file_path = os.path.join(video_path, sub2)
     with open(file_path, "r") as file:
         content = file.read()
-    result = query(content)
+    result = query_1(content)
     return result
 
 
