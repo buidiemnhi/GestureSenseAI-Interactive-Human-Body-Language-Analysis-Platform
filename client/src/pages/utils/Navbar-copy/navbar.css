@@ -1,0 +1,36 @@
+.navbar {
+  height: 70px; /* set the desired height here */
+  background-color: 181818;
+  }
+  
+.font24{
+    font-size: 24px
+}
+
+.fontcolor{
+    color: #181818;
+}
+
+.activebackground{
+    background-color: #181818;
+}
+
+a:hover {
+    text-decoration: none;
+    color: w;
+  }
+
+.nohover:hover{
+    text-decoration: none;
+    color: white;
+  }
+
+.font30{
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.bright-mode{
+  color: #181818;
+  background-color: transparent;
+}
