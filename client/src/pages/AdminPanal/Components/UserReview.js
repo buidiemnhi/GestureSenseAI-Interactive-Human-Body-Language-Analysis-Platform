@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 function UserReview() {
     const [users,setUsers] = useState([])
     const [selectedVideo, setSelectedVideo] = useState(null);
-
+    const [isdata,setIsData] = useState(false)
     function handleDelete(id){
         console.log(id)
         fetch(`http://127.0.0.1:5000//del-usr/${id}`, {
@@ -26,11 +26,19 @@ function UserReview() {
             setUsers(updatedUsers)
         })
         
-
     }
 
     useEffect(() => {
-        fetch('http://127.0.0.1:5000//users')
+      let jwtToken = localStorage.getItem('jwt_token');
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${jwtToken}`);
+      myHeaders.append("Cookie", `session=.${jwtToken}`);
+      myHeaders.append("Content-Type", "application/json");
+      var requestOptions = {
+        method: 'GET',
+        headers: myHeaders,
+      };
+        fetch('http://127.0.0.1:5000//users',requestOptions)
         .then(response => response.json())
         .then(data => {
             setUsers(data.Data)
@@ -72,7 +80,7 @@ function UserReview() {
                         <td class="align-middle">{user.user_birthdate}</td>
                         <td class="align-middle">{user.lastLogin}</td>
                         <td className='align-middle'>
-                            {user.isOnline ? <span className='btn btn-success'>Online</span> : <span className='btn btn-secondary'>Offline</span>}
+                          {user.isOnline ? <span className='btn btn-success'>Online</span> : <span className='btn btn-secondary'>Offline</span>}
                         </td>
                         <td>
                         <button className='btn btn-danger d-flex flex-row align-items-center align-middle grow mb-2' onClick={()=>openDeleteModal(user.user_id)}>
@@ -88,6 +96,7 @@ function UserReview() {
             }
             </tbody>
         </table>
+
 {/* modal */}
 
     <div className="modal" id="deleteModal" tabIndex="-1" role="dialog">

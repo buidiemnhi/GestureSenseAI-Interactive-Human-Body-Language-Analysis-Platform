@@ -23,7 +23,7 @@ function App() {
           <Route path='/' element={<LandingPage/>} />
           <Route path='/Profilepage' element={<ProfilePage/>}/>
           <Route path='/adminpanel' element={<AdminPanel/>}/>
-          <Route path='/user/:id/videos' element={<VideoPreview/>}/>
+          <Route path='/user/:id/:first/:second/videos' element={<VideoPreview/>}/>
         </Routes>
     </div>
   );

@@ -42,7 +42,16 @@ function VideoPreview() {
     };
 
     useEffect(() => {
-        fetch(`http://127.0.0.1:5000//videos/${id}`)
+      let jwtToken = localStorage.getItem('jwt_token');
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${jwtToken}`);
+      myHeaders.append("Cookie", `session=.${jwtToken}`);
+      myHeaders.append("Content-Type", "application/json");
+      var requestOptions = {
+        method: 'GET',
+        headers: myHeaders,
+      };
+        fetch(`http://127.0.0.1:5000//videos/${id}`,requestOptions)
         .then(response => response.json())
         .then(data => {
             const videos = data.Data
@@ -93,9 +102,9 @@ function VideoPreview() {
                 vids.map((video)=>{
                 return(
                     <div className="col-md-4 d-flex mb-3 my-2" key={video.video_id}>
-                        <div className="card w-75 mx-auto Brounded shadow-lg" >
+                        <div className="card w-75  mx-auto Brounded shadow-lg" >
                             <video src={video?.URL} className="object-fit-contain w-100 p-4" autoPlay controls />
-                            <div className="card-body">
+                            <div className="card-body hight-fit">
                                 <h5 className="card-title fw-bold">{video.video_title}</h5>
                                 <p className="card-text fw-semibold">{video.video_description}</p>
                                 <p className="card-text fw-semibold">Video duration : {video.video_duration}</p>

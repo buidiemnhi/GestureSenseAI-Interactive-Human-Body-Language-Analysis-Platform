@@ -557,6 +557,7 @@ def get_video_statistics(id):
 
 # ==========================admin========================================
 @app.route('/users', methods=['GET'])
+@jwt_required()
 def get_all_users():
     users = User.query.filter_by(is_admin=False).all()
     user_list = []
@@ -578,6 +579,7 @@ def get_all_users():
 
 # Function to delete a user
 @app.route('/del-usr/<int:id>', methods=['DELETE'])
+@jwt_required()
 def delete_user(id):
     user = User.query.get(id)
     user_dir_path = os.path.join(get_app_path(), app.config['DATA'], get_user_folder_name(user))
@@ -592,6 +594,7 @@ def delete_user(id):
 
 
 @app.route('/videos/<int:id>', methods=['GET'])
+@jwt_required()
 def get_user_videos(id):
     videos = Video.query.filter_by(user_id=id).all()
     total_videos = 0
@@ -612,6 +615,7 @@ def get_user_videos(id):
 
 # Function to delete a video
 @app.route('/del-vid/<int:id>', methods=['DELETE'])
+@jwt_required()
 def delete_video(id):
     video = Video.query.get(id)
     if video:
@@ -623,6 +627,7 @@ def delete_video(id):
 
 
 @app.route('/admin-statistics', methods=['GET'])
+@jwt_required()
 def admin_statistics():
     total_users = User.query.count()
     total_videos = Video.query.count()
