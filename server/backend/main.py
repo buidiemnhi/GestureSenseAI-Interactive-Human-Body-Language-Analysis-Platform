@@ -597,7 +597,6 @@ def get_user_videos(id):
         total_videos += 1
         video_data = {
             'URL': f'http://localhost:5000/videos/{video.video_name}/{id}',
-            'username': f"{user.first_name} {user.last_name}",
             'video_id': video.video_id,
             'video_title': video.video_title,
             'video_description': video.video_description,
@@ -605,7 +604,8 @@ def get_user_videos(id):
             'uploaded_date': video.video_date.split(".")[0]
         }
         video_list.append(video_data)
-    return jsonify({'Data': video_list, 'TotalVideos': total_videos})
+    return jsonify({'Data': video_list, 'TotalVideos': total_videos,
+                    'username': f"{user.first_name} {user.last_name}"})
 
 
 # Function to delete a video

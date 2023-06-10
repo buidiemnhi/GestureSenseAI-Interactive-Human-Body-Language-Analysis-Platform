@@ -4,11 +4,9 @@ import React, {
 } from 'react';
 
 import { FaTrash } from 'react-icons/fa';
-import { IoEye } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 
-function UserReview() {
+function UserReview(props) {
     const [users,setUsers] = useState([])
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [isdata,setIsData] = useState(false)
@@ -65,6 +63,11 @@ function UserReview() {
     deleteModal.show();
   };
 
+  function UserVideos(userID){
+    props.changeUserId(userID)
+  } 
+
+
   return (
     <>  
       <div className='w-100 d-flex justify-content-between'>
@@ -105,9 +108,9 @@ function UserReview() {
                             <button className='btn btn-danger fs-6 d-flex flex-row justify-content-center align-items-center align-middle grow mb-2 w-100 ' onClick={()=>openDeleteModal(user.user_id)}>
                             <FaTrash className='fs-6' /> <h6 className='my-auto ml-1 fs-6'>Delete</h6>
                             </button>
-                                <Link to={`/user/${user.user_id}/${user.first_name}/${user.last_name}/videos`} className='btn btn-primary grow fs-6'>
-                                    <IoEye className='fs-6' /> View videos
-                                </Link>
+                            <button onClick={()=>UserVideos(user.user_id)} className='btn btn-primary grow fs-6'>
+                              view videos
+                            </button>
                             </td>
                         </tr>
                     )

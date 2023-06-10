@@ -3,21 +3,19 @@ import React, {
   useState,
 } from 'react';
 
-import { BiArrowBack } from 'react-icons/bi';
 import { FaTrash } from 'react-icons/fa';
 import {
   Navigate,
   useParams,
 } from 'react-router-dom';
 
-import Footer from '../landingPage/components/Footer/Footer';
-
-function VideoPreview() {
+function VideoPreview(props) {
     const [vids,setVids] = useState()
     const { id,first,second } = useParams();
     const [isdata,setIsData] = useState(false)
     const [vidsCount,setVidsCount] = useState(0)
     const [selectedVideo, setSelectedVideo] = useState(null);
+    const [userName,setUserName]= useState('')
     console.log(vids)
 
     function handleDelete(vid_id){
@@ -53,10 +51,12 @@ function VideoPreview() {
         method: 'GET',
         headers: myHeaders,
       };
-        fetch(`http://127.0.0.1:5000//videos/${id}`,requestOptions)
+        fetch(`http://127.0.0.1:5000//videos/${props.id}`,requestOptions)
         .then(response => response.json())
         .then(data => {
+            console.log(data)
             const videos = data.Data
+            setUserName(data.username)
             if(videos.length>0){
                 setIsData(true)
                 setVidsCount(videos.length)
@@ -77,16 +77,10 @@ function VideoPreview() {
     <div>
     <div className=''>
 
-      <div className='justifying blackbackground py-4 shadow'>
-
-        <div className='mx-1 d-flex'>
-            <h3 className='my-auto exit growbig'>
-                <BiArrowBack onClick={goBack}/>
-            </h3>
-        </div>
+      <div className='justifying py-4 '>
         <div className='mx-auto'>
             <h1 className='display-8'>
-                You are reviewing {first} {second}'s videos
+                You are reviewing {userName}'s videos
             </h1>
         </div>
         <div className='mx-2 d-flex'>
@@ -168,7 +162,6 @@ function VideoPreview() {
 {/* end modal */}
 
     </div>
-    <Footer/>
     </div>
   )
 }

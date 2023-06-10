@@ -11,9 +11,22 @@ export default function SideBarAdmin(props) {
   const naviagte = useNavigate()
 
   function logOutButton(){
-    localStorage.clear();
-    signOut()
-    naviagte('/')
+      let jwtToken = localStorage.getItem('jwt_token');
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${jwtToken}`);
+      myHeaders.append("Content-Type", "application/json");
+      var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+      };
+fetch('http://127.0.0.1:5000/logout', {
+  headers: {
+    'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+  },
+  method: "POST"
+})
+    .then(()=>localStorage.clear())
+    .finally(()=>naviagte('/'))
   }
 
   return (

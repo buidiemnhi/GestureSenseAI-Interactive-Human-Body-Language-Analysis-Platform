@@ -9,6 +9,7 @@ import Dashboard from '../profilePage/components/Dashboard/Dashboard';
 import EditProfile from '../profilePage/components/EditProfile/EditProfile';
 import UploadVideos from '../profilePage/components/UploadVideos/UploadVideos';
 import VideoGallery from '../profilePage/components/VideoGallery/VideoGallery';
+import VideoPreview from '../VideoPreview/VideoPreview';
 import CreateAdmin from './Components/CreateAdmin';
 import SideBarAdmin from './Components/SideBarAdmin';
 import Statpage from './Components/Statpage';
@@ -17,10 +18,17 @@ import UserReview from './Components/UserReview';
 function AdminPanel() {
   const naviagte = useNavigate()
   const [currentView, setCurrentView] = useState(1)
-
+  const [id,setId] = useState(1)
+  console.log(id)
   function ChangeViewFuntion(viewID) {
     setCurrentView(viewID)
   }
+
+  function changeUserId(userID){
+    setId(userID)
+    setCurrentView(8)
+  }
+
 
     async function fetchData() {
       let jwtToken = localStorage.getItem('jwt_token');
@@ -83,13 +91,14 @@ function AdminPanel() {
             </div>
              <div className="col-sm-10 d-flex flex-column ">
 
-              {currentView === 1 ? <UserReview /> : ""}
+              {currentView === 1 ? <UserReview changeUserId={changeUserId} changeViewFuntion={ChangeViewFuntion}/> : ""}
               {currentView === 2 ? <EditProfile profileData={profileData} /> : ""}
               {currentView === 7 ? <CreateAdmin /> : ""}
               {currentView === 3 ? <Statpage changeViewFuntion={ChangeViewFuntion}/> : ""}
               {currentView === 4 ? <Dashboard /> : ""}
               {currentView === 5 ? <UploadVideos /> : ""}
               {currentView === 6 ? <VideoGallery /> : ""}
+              {currentView === 8 ? <VideoPreview id={id}/> : ""}
             </div>
           </div>
         </div>
