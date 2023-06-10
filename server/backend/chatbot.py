@@ -20,7 +20,7 @@ prompt = PromptTemplate(
 )
 
 chain = LLMChain(
-    llm=ChatOpenAI(temperature=0.9, model_name="gpt-3.5-turbo"),
+    llm=ChatOpenAI(temperature=0.3, model_name="gpt-3.5-turbo"),
     prompt=prompt,
     memory=ConversationBufferWindowMemory(k=15),
 )
