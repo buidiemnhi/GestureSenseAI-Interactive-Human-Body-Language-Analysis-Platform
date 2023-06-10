@@ -34,7 +34,7 @@ export default function SideBarAdmin(props) {
         <li className='mb-3 grow' ><span className='text-arrow'onClick={() => props.changeViewFuntion(2)}>Edit Profile</span></li>
         <li className='mb-3 grow' ><span className='text-arrow'onClick={() => props.changeViewFuntion(7)}>Create admin</span></li>
         <li className='mb-3 grow' ><span className='text-arrow'onClick={() => props.changeViewFuntion(3)}>System statistics</span></li>
-        <li className='mb-3 grow' ><a className='text-arrow' href='/profilepage'>User view</a></li>
+        <li className='mb-3 grow' ><a className='text-arrow p-0' href='/profilepage'>User view</a></li>
       </ul>
 
       <button

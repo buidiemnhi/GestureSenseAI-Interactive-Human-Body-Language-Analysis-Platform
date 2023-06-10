@@ -10,6 +10,17 @@ export default function SideBar(props) {
   const naviagte = useNavigate()
 
   function logOutButton(){
+    //   let jwtToken = localStorage.getItem('jwt_token');
+    //   var myHeaders = new Headers();
+    //   myHeaders.append("Authorization", `Bearer ${jwtToken}`);
+    //   myHeaders.append("Content-Type", "application/json");
+    //   var requestOptions = {
+    //     method: 'GET',
+    //     headers: myHeaders,
+    //   };
+    // fetch('http://127.0.0.1:5000/logout',requestOptions)
+    // .then(res=>res.json())
+    // .then(response=>console.log(response))
     localStorage.clear();
     signOut()
     naviagte('/')

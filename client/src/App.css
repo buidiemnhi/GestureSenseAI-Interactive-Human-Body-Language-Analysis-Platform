@@ -122,3 +122,9 @@ a.no-color:hover {
 .hight-fit{
   height: fit-content;
 }
+
+.isonline{
+  border-radius: 50%;
+  height: 25px;
+}
+

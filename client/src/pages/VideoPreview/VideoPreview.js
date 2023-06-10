@@ -21,11 +21,13 @@ function VideoPreview() {
     console.log(vids)
 
     function handleDelete(vid_id){
+        let jwtToken = localStorage.getItem('jwt_token');
         fetch(`http://127.0.0.1:5000//del-vid/${vid_id}`, {
             method: 'DELETE',
-            // headers: {
-            // 'Content-Type': 'application/json',
-            // },
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwtToken}`,
+            },
         })
         .then(response => response.json())
         .then(res=>console.log(res))

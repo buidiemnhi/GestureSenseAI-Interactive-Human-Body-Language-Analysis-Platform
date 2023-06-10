@@ -20,6 +20,9 @@ function Statpage(props) {
   const [barChartCount,setBarChartCount] = useState([])
   const [barChartData2,setBarChartData2] = useState([])
   const [barChartCount2,setBarChartCount2] = useState([])
+  const [onlineUsers,setOnlineUsers] = useState(0)
+  const [offlineUsers,setOfflineUsers] = useState(0)
+
 
   console.log(chartsData)
 
@@ -58,8 +61,8 @@ function Statpage(props) {
   };
    
   const chartOptions = {
-    series: [44, 55, 13, 33],
-    labels: ['Apple', 'Mango', 'Banana', 'Orange'],
+    series: [onlineUsers,offlineUsers],
+    labels: ['online', 'offline'],
     options: {
       chart: {
         type: 'donut',
@@ -79,12 +82,22 @@ function Statpage(props) {
   };
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/admin-statistics')
+    let jwtToken = localStorage.getItem('jwt_token');
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", `Bearer ${jwtToken}`);
+    myHeaders.append("Cookie", `session=.${jwtToken}`);
+    myHeaders.append("Content-Type", "application/json");
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders,
+    };
+    fetch('http://127.0.0.1:5000/admin-statistics',requestOptions)
     .then(res=>res.json())
     .then(res=>{
       setChartsData(res)
       const username_over_total_videos = res.username_over_total_videos
       const username_over_total_duration = res.username_over_total_duration
+
       // handle user and uploaded video data
       const dataArr = []
       const countArr = []
@@ -107,6 +120,10 @@ function Statpage(props) {
       setBarChartData2(dataArr2)
       //
 
+      //handle online and offline
+      setOnlineUsers(res.total_user_online)
+      setOfflineUsers(res.total_user_offline)
+      //
     })
   }, [])
   
@@ -117,7 +134,7 @@ function Statpage(props) {
         <div className='statsContainer d-flex w-100'>
 
             <div className='w-40 mx-auto card p-2 shadow round25 grow'>
-                <h3 className='my-4 mx-3'>System statistics</h3>         
+                <h3 className='my-4 mx-3'>Total durations of the video uploaded by each user</h3>         
                 <ReactApexChart
                     options={chartOptions2.options}
                     series={chartOptions2.series}
@@ -126,6 +143,7 @@ function Statpage(props) {
                     className=""
                 />
             </div>
+
             <div className='w-40 mx-auto card p-2 shadow round25 grow hight-fit'>
                 <h3 className='my-4 m-3'>System statistics</h3>
                 <div className='d-flex w-100 my-2 hight-fit'>
@@ -157,30 +175,52 @@ function Statpage(props) {
                         {chartsData.total_videos_uploaded_this_month}
                     </h6>
                 </div>
-
+                <div className='d-flex w-100 my-2 hight-fit'>
+                    <div className='text-center shadow p-2 smallstatcolorcard round25 text-white grow mx-auto' onClick={() => props.changeViewFuntion(1)}>
+                        <h5>
+                            Online users
+                        </h5>
+                        <h6 className='grow'>
+                            {onlineUsers}
+                        </h6>
+                    </div>
+                    <div className='text-center shadow p-2 smallstatcolorcard round25 text-white grow mx-auto'>
+                        <h5 className=''>
+                            Offline users 
+                        </h5>
+                        <h6>
+                            {offlineUsers}
+                        </h6>
+                    </div>
+                </div>
             </div>
         </div>
         <div className='statsContainer d-flex w-100 mt-5 '>
+
             <div className='w-40 mx-auto card p-2 shadow round25 grow'>
-                <h3 className='my-4 m-3'>total uploaded videos by each user</h3>         
+
+              <h3 className='my-4 m-3'>Total uploaded videos by each user</h3>         
+              <ReactApexChart
+              options={chartOptions1.options}
+              series={chartOptions1.series}
+              type="bar"
+              height={350}
+              className=""
+              />
+
+            </div>
+
+            <div className='w-40 mx-auto card p-2 shadow round25 grow'>
+                <h3 className='my-4 m-3'>Total online and offline users</h3>
                 <ReactApexChart
-                    options={chartOptions1.options}
-                    series={chartOptions1.series}
-                    type="bar"
-                    height={350}
-                    className=""
+                  options={chartOptions.options}
+                  series={chartOptions.series}
+                  type="donut"
+                  height={350}
+                  className="my-auto"
                 />
             </div>
-            <div className='w-40 mx-auto card p-2 shadow round25 grow'>
-                <h3 className='my-4 m-3'>System statistics</h3>
-                <ReactApexChart
-                    options={chartOptions2.options}
-                    series={chartOptions2.series}
-                    type="donut"
-                    height={350}
-                    className="my-auto"
-                />
-            </div>
+
         </div>
     </div>
   )
