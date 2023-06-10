@@ -526,23 +526,21 @@ def get_statistics_two():
     })
 
 
-@app.route('/video-statistics/<int:id>/', methods=['GET'])
+@app.route('/video-statistics', methods=['POST'])
 @jwt_required()
-def get_video_statistics(id):
+def get_video_statistics():
+    video_id = request.json["video_id"]
     token = get_jwt()
     user = get_current_user(token)
     _user_id = user.user_id
-
-    _video_id = id
     #
     user = User.query.get(_user_id)
     user_folder_name = get_user_folder_name(user)
     #
-    video = Video.query.get(_video_id)
+    video = Video.query.get(video_id)
     video_title = video.video_subtitle1_path
 
     srt_path = os.path.join(get_app_path(), app.config['DATA'], user_folder_name, 'video_srt', video_title)
-    print(srt_path)
     result = most_repeated_words(srt_path)
     return result
 
