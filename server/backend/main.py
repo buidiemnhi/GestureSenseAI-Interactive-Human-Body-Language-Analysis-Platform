@@ -464,7 +464,7 @@ def get_image(filename, id):
     return send_from_directory(photo_path, filename)
 
 
-@app.route("/logout", method='POST')
+@app.route("/logout", methods=['POST'])
 @login_required
 def logout():
     updateIsOnline()
