@@ -1,7 +1,5 @@
-import json
 import re
-from datetime import date, datetime, timedelta
-from sched import scheduler
+from datetime import date
 
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -14,7 +12,6 @@ from werkzeug.utils import secure_filename
 import shutil
 from moviepy.editor import VideoFileClip
 from collections import Counter
-from collections import defaultdict
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -44,8 +41,6 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-scheduler = BackgroundScheduler()
-scheduler.start()
 
 
 @login_manager.user_loader
@@ -484,7 +479,6 @@ def update_user_activity():
     if current_user.is_authenticated:
         user = User.query.get(current_user.user_id)
         user.last_activity = datetime.now()
-        user.isOnline = True
         db.session.commit()
 
 
@@ -884,18 +878,6 @@ def delete_user_directory(directory_path):
         return {"message": f"Directory '{directory_path}' not found"}
     except Exception as e:
         return {"message": f"An error occurred: {str(e)}"}
-
-
-def check_user_activity():
-    with app.app_context():
-        timeout_period = timedelta(minutes=1)
-        inactive_users = User.query.filter(User.isOnline == True, User.last_activity < datetime.now() - timeout_period)
-        for user in inactive_users:
-            user.isOnline = False
-        db.session.commit()
-
-
-scheduler.add_job(check_user_activity, 'interval', minutes=1)  # Run the task every 15 minutes
 
 
 def get_openai_meaning(video_path, sub2):
