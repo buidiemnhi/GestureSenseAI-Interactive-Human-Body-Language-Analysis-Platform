@@ -26,6 +26,6 @@ chain = LLMChain(
 )
 
 
-def query(Question):
+def query_2(Question):
     response = chain.predict(human_input=Question)
     return response

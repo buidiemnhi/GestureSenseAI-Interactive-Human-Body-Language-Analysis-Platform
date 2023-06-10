@@ -25,7 +25,7 @@ chain = LLMChain(
 )
 
 
-def query(VTTcontent):
+def query_1(VTTcontent):
     VTTcontent = VTTcontent.replace("WEBVTT", "")
     response = chain.predict(human_input=VTTcontent)
     return response
