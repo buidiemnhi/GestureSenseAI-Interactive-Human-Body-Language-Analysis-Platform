@@ -465,11 +465,15 @@ def get_image(filename, id):
 
 
 @app.route("/logout", methods=['POST'])
-@login_required
+@jwt_required()
 def logout():
-    updateIsOnline()
+    token = get_jwt()
+    updateIsOnline(token)
     db.session.commit()
     logout_user()
+    return jsonify({
+        "message": "Logout successful"
+    })
 
 
 @app.before_request
@@ -584,18 +588,19 @@ def delete_user(id):
 
 
 @app.route('/videos/<int:id>', methods=['GET'])
-@jwt_required()
 def get_user_videos(id):
     videos = Video.query.filter_by(user_id=id).all()
+    user = User.query.get(id)
     total_videos = 0
     video_list = []
     for video in videos:
         total_videos += 1
         video_data = {
             'URL': f'http://localhost:5000/videos/{video.video_name}/{id}',
-            "video_id": video.video_id,
-            "video_title": video.video_title,
-            "video_description": video.video_description,
+            'username': f"{user.first_name} {user.last_name}",
+            'video_id': video.video_id,
+            'video_title': video.video_title,
+            'video_description': video.video_description,
             'video_duration': str(video.video_duration) + " Sec",
             'uploaded_date': video.video_date.split(".")[0]
         }
@@ -802,8 +807,9 @@ def updateLastLogin():
     User.query.filter_by(user_id=current_user.user_id).update(dict(lastLogin=date.today()))
 
 
-def updateIsOnline():
-    User.query.filter_by(user_id=current_user.user_id).update(dict(isOnline=False))
+def updateIsOnline(token):
+    user = get_current_user(token)
+    user.isOnline = 0
 
 
 def update_changes(_email, _first_name, _last_name, _user_birthdate, hashed_password, user, user_image_path):
