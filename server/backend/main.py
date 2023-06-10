@@ -1,4 +1,3 @@
-import json
 import re
 from datetime import date
 
@@ -42,8 +41,6 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-scheduler = BackgroundScheduler()
-scheduler.start()
 
 
 @login_manager.user_loader
@@ -621,6 +618,7 @@ def delete_video(id):
         return jsonify({"message": "Video deleted successfully"})
     else:
         return jsonify({"message": "Video not found"})
+
 
 @app.route('/admin-statistics', methods=['GET'])
 @jwt_required()
