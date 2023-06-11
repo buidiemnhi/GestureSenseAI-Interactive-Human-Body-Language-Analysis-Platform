@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-export default function RegistrationForm() {
+export default function CreateAdmin({changeViewFuntion}) {
   let navigate = useNavigate();
   // state for the form data
   const [formData, setformData] = useState({
@@ -92,7 +92,7 @@ export default function RegistrationForm() {
           SetErrorData(temp);
         } // end of the if
         else {
-          navigate("/adminpanel");
+          changeViewFuntion(1);
         } // end of the else
       });
   } // end of the async function

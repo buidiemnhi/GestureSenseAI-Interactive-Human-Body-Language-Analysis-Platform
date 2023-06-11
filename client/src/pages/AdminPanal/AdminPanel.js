@@ -93,7 +93,7 @@ function AdminPanel() {
 
               {currentView === 1 ? <UserReview changeUserId={changeUserId} changeViewFuntion={ChangeViewFuntion}/> : ""}
               {currentView === 2 ? <EditProfile profileData={profileData} /> : ""}
-              {currentView === 7 ? <CreateAdmin /> : ""}
+              {currentView === 7 ? <CreateAdmin changeViewFuntion={ChangeViewFuntion}/> : ""}
               {currentView === 3 ? <Statpage changeViewFuntion={ChangeViewFuntion}/> : ""}
               {currentView === 4 ? <Dashboard /> : ""}
               {currentView === 5 ? <UploadVideos /> : ""}
