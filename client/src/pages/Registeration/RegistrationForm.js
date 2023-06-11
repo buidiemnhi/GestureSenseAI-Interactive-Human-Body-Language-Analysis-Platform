@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom';
 
 import Footer from '../utils/Footer/Footer';
+import Navbar from '../utils/Navbar-copy/Navbar';
 
 export default function RegistrationForm() {
   let navigate = useNavigate();
@@ -104,8 +105,9 @@ export default function RegistrationForm() {
 
   return (
     <div className="">
+      <Navbar/>
       <div className="py-5 full-background-svg">
-        <div className="container">
+        <div className="container mt-5">
           <div className="row shadow bg-light py-3 col-md-10 mx-auto">
             <div className="col-md-10 mx-auto">
               <div className="row mb-4 mt-5 justify-content-center">

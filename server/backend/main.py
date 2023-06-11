@@ -422,10 +422,10 @@ def display_all_videos():
             'openai_meaning': video.openai_meaning,
             'subtitles': [
                 {
-                    'subtitle_1': f'http://localhost:5000/videos/{video.video_subtitle1_path}/{id}',
+                    'subtitle_2': f'http://localhost:5000/videos/{video.video_subtitle2_path}/{id}'
                 },
                 {
-                    'subtitle_2': f'http://localhost:5000/videos/{video.video_subtitle2_path}/{id}'
+                    'subtitle_1': f'http://localhost:5000/videos/{video.video_subtitle1_path}/{id}',
                 }
             ]
         }

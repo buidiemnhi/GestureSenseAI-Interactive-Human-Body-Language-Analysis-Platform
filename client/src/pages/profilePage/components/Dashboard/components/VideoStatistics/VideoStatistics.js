@@ -1,26 +1,25 @@
-import "../../../../../../../node_modules/video-react/dist/video-react.css";
-import "./ThirdSection.css";
-import Cookies from "js-cookie";
+import '../../../../../../../node_modules/video-react/dist/video-react.css';
+import './ThirdSection.css';
 
-import { React, useState, useEffect } from "react";
+import {
+  React,
+  useEffect,
+  useState,
+} from 'react';
 
-import Chart from "react-apexcharts";
+import Cookies from 'js-cookie';
+import Chart from 'react-apexcharts';
 import {
   BigPlayButton,
   ClosedCaptionButton,
   ControlBar,
   Player,
-} from "video-react";
-
+} from 'video-react';
 
 export default function VideoStatistics() {
-
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState([]);
-
-  function handleSelect(event) {
-    setSelectedOption(event.target.value);
-  }
+  const [videoChartMotionConuter, setVideoChartMotionConuter] = useState([]);
 
   useEffect(() => {
     const GetAllTheVideosForStat = async () => {
@@ -38,68 +37,83 @@ export default function VideoStatistics() {
           requestOptions
         );
         const data = await response.json();
-        setOptions(data.Data.videos);        
-        setSelectedOption(data.Data.videos[0].URL)
-  
+        setOptions(data.Data.videos);
+        setSelectedOption(data.Data.videos[0].URL);
+        let MotionConuterData = await GetVideoStat(data.Data.videos[0].video_id)
+        setVideoChartMotionConuter(MotionConuterData)
       } catch (error) {
         console.error("Error:", error);
       }
     };
-  
+
     GetAllTheVideosForStat();
   }, []);
+
+
+
+
+
+
+
+  async function GetVideoStat(video_id) {
+    try {
+      const cookieValue = Cookies.get("_auth");
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${cookieValue}`);
+      myHeaders.append("Cookie", `session=.${cookieValue}`);
+      myHeaders.append("Content-Type", "application/json"); // Added this line
   
+      var requestOptions = {
+        method: "POST", // Changed to POST
+        headers: myHeaders,
+        body: JSON.stringify({
+          "video_id": video_id  // Added body
+        })
+      };
+  
+      const response = await fetch(
+        `http://127.0.0.1:5000/video-statistics`, // removed video_id from url
+        requestOptions
+      );
+  
+      const data = await response.json();
 
-  let tempData = {
-    series: [
-      {
-        name: "Series 1",
-        data: [80, 50, 30, 40, 100, 20],
-        color: "#3F4E4F",
-      },
-      {
-        name: "Series 2",
-        data: [10, 30, 40, 80, 40, 80],
-        color: "#A27B5C",
-      },
-    ],
-    options: {
-      chart: {
-        height: 350,
-        type: "radar",
-        dropShadow: {
-          enabled: true,
-          blur: 1,
-          left: 1,
-          top: 1,
-        },
-      },
-      title: {
-        text: "",
-      },
-      stroke: {
-        width: 2,
-        colors: ["#3F4E4F", "#A27B5C"],
-      },
-      fill: {
-        opacity: 0.1,
-        colors: ["#3F4E4F", "#A27B5C"],
-      },
-      markers: {
-        size: 0,
-      },
-      xaxis: {
-        categories: ["2011", "2012", "2013", "2014", "2015", "2016"],
-      },
-    },
-  };
+      return data;
+  
+    } catch (error) {
+      console.error("Error:", error);
+      return {
+        "Counts": [],
+        "Words": []
+      };
+    }
+  }
 
-  let tempData2 = {
+
+
+
+    async function handleSelect(event) {
+    const selectedValue = event.target.value;
+    setSelectedOption(selectedValue);
+
+    const selectedOption = options.find(
+      (option) => option.URL === selectedValue
+    );
+    
+    let MotionConuterData = await GetVideoStat(selectedOption.video_id)
+    setVideoChartMotionConuter(MotionConuterData)
+
+
+    if (selectedOption) {
+      console.log(selectedOption.video_id);
+    }
+  }
+  let MotionConuter = {
     series: [
       {
         name: "# of Detection/Video",
-        data: [400, 430, 448, 470, 540, 580, 690],
-        color: "#3F4E4F",
+        data: videoChartMotionConuter.Counts ? videoChartMotionConuter.Counts.slice() : [],
+        color: "#181818",
       },
     ],
     options: {
@@ -112,24 +126,25 @@ export default function VideoStatistics() {
           borderRadius: 4,
           horizontal: true,
         },
+        stroke: {
+          width: 2,
+          colors: ["#181818", "#A27B5C"],
+        },
+        fill: {
+          opacity: 0.1,
+          colors: ["#181818", "#A27B5C"],
+        },
       },
       dataLabels: {
         enabled: false,
       },
       xaxis: {
-        categories: [
-          "Hand gestures",
-          "Posture",
-          "Eye contact",
-          "Microexpressions",
-          "Body language in context",
-          "Emotional state",
-          "Intentions",
-        ],
+        categories: videoChartMotionConuter.Words ? videoChartMotionConuter.Words.slice() : [],
       },
     },
   };
-  return (
+    
+    return (
     <div className="m-3 mt-5 ThirdSection">
       <h3 className="display-5">Video Statistics</h3>
       <div className="m-auto d-flex flew-row">
@@ -154,7 +169,11 @@ export default function VideoStatistics() {
             <h4>Choose the video</h4>
             <p>from the list</p>
             <div className="dropdown-container">
-              <select className="dropdown" select={selectedOption} onChange={handleSelect}>
+              <select
+                className="dropdown"
+                select={selectedOption}
+                onChange={handleSelect}
+              >
                 {options.map((option, index) => (
                   <option key={option.video_id} value={option.URL}>
                     {option.title}
@@ -167,19 +186,10 @@ export default function VideoStatistics() {
       </div>
       <hr className="my-5" />
       <div className="mx-auto row justify-content-between">
-        <div className="col-5">
+        <div className="col-11">
           <Chart
-            options={tempData.options}
-            series={tempData.series}
-            type="radar"
-            height={250}
-            width={270}
-          />
-        </div>
-        <div className="col-7">
-          <Chart
-            options={tempData2.options}
-            series={tempData2.series}
+            options={MotionConuter.options}
+            series={MotionConuter.series}
             type="bar"
             height={250}
             width={"100%"}

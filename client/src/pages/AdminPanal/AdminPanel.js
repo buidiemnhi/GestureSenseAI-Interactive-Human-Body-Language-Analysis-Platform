@@ -17,7 +17,7 @@ import UserReview from './Components/UserReview';
 
 function AdminPanel() {
   const naviagte = useNavigate()
-  const [currentView, setCurrentView] = useState(1)
+  const [currentView, setCurrentView] = useState(3)
   const [id,setId] = useState(1)
   console.log(id)
   function ChangeViewFuntion(viewID) {

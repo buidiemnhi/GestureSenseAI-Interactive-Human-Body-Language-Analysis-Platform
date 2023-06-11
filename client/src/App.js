@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 
 import AdminPanel from './pages/AdminPanal/AdminPanel';
+import Chatbot from './pages/landingPage/components/Chatbot/Chatbot';
 import LandingPage from './pages/landingPage/LandingPage';
 import LoginForm from './pages/Login/LoginForm';
 import ProfilePage from './pages/profilePage/ProfilePage';
@@ -23,6 +24,7 @@ function App() {
           <Route path='/Profilepage' element={<ProfilePage/>}/>
           <Route path='/adminpanel' element={<AdminPanel/>}/>
         </Routes>
+        <Chatbot/>
     </div>
   );
 }

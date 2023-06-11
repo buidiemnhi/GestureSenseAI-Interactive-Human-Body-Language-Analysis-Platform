@@ -55,7 +55,7 @@ export default function FirstPhase(props) {
       type="file"
       name="video"
       id="video-input"
-      accept="video/*"
+      accept="video/mp4"
       style={{ display: 'none' }}
       onChange={handleFileChange}
     />

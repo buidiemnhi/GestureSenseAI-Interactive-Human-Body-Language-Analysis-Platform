@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 
 import Footer from '../utils/Footer/Footer';
+import Navbar from '../utils/Navbar-copy/Navbar';
 
 export default function LoginForm() {
   // state for the form data
@@ -106,7 +107,7 @@ export default function LoginForm() {
 
   return (
     <div>
-
+      <Navbar/>
       <div className="py-5 d-flex align-items-center containerh full-background-svg ">
         <div className="container ">
           <div className="row bg-white shadow mb-5 rounded border ">

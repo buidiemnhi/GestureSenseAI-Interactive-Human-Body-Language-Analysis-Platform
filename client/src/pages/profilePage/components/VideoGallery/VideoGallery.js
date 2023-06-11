@@ -1,5 +1,11 @@
-import { React, useEffect, useState } from "react";
-import "./VideoGallery.css";
+import './VideoGallery.css';
+
+import {
+  React,
+  useEffect,
+  useState,
+} from 'react';
+
 /*global $ */
 
 export default function VideoGallery() {
@@ -71,7 +77,6 @@ export default function VideoGallery() {
             >
               {video.subtitles.map((subtitle, subtitleIndex) =>
                 Object.values(subtitle)
-                  .slice()
                   .reverse()
                   .map((subtitleUrl, urlIndex) => (
                     <track
@@ -82,8 +87,8 @@ export default function VideoGallery() {
                       default={true}
                       label={` ${
                         subtitleIndex === 1
-                          ? "Body Language Decoded"
-                          : "Movements Decoded"
+                          ? "Movement"
+                          : "Meaning"
                       }`}
                     />
                   ))

@@ -2,6 +2,7 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
+    color: whitesmoke;
   }
   
   .chat-icon {
@@ -16,10 +17,12 @@
   .chat-box {
     width: 500px;
     height: 500px;
-    background-color: white;
-    color: #181818;
+    background-color: #181818ef;
+    color: whitesmoke;
     border: 1px solid #181818;
     border-radius: 20px;
+    overflow: hidden;
+
   }
   .chat-text-input {
     width: 500px;
@@ -34,3 +37,40 @@
     height: 80%;
   }
   
+  
+  .user {
+    border-radius: 10px 10px 0px 20px;
+    padding: 8px;
+    background-color: #696969;
+    width: 60%;
+    margin-left: auto;
+    text-align: right;
+  }
+  
+  .bot {
+    border-radius: 10px 10px 10px 0px;
+    padding: 8px;
+    background-color: #696969;
+    text-align: left;
+    max-width: 70%;
+
+  }
+  
+  .borderRadiusChatInput {
+    border-radius: 20px 0px 0px 20px;
+  }  
+  .borderRadiusChatBtn {
+    border-radius: 0px 20px 20px 0px;
+    background-color: #d36600 !important;
+  }
+
+  .MessagesSection {
+    height: 100%;
+    overflow-y: auto; /* Enable vertical scrolling */
+  }
+
+  .word-break {
+    word-wrap: break-word;
+    /* OR */
+    overflow-wrap: break-word;
+  }
