@@ -11,8 +11,8 @@ function LiveDemo() {
         </div>
 
         <div className='row w-100 m-0 justify-content-center'>
-          <div  className="col-md-10">
-            <video src={process.env.PUBLIC_URL + '/videos/bg.mp4'} className="object-fit-contain w-100 " autoPlay loop controls />
+          <div  className="col-md-12">
+            <video src={process.env.PUBLIC_URL + '/videos/website video.mp4'} className="object-fit-contain w-100 " autoPlay loop controls />
           </div>
         </div>
     </div >

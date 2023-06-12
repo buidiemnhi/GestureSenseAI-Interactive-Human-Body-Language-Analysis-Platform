@@ -159,9 +159,9 @@ def test_model_new(path_with_file_extension, destination, landmarks):
                     sentence = sentence[-5:]
 
                 # write the video frame to the device
-                if (landmarks):
+                if (landmarks == 'true'):
                     writer.write(image)
-                else:
+                elif(landmarks == 'false'):
                     writer.write(curr_frame)
 
                 # Get status box

@@ -152,7 +152,6 @@ with app.app_context():
     # db.drop_all()
     db.create_all()
 
-
 # @app.route('/remove-video', methods=['GET', "POST"])
 def remove_video(video_id):
     current_user.remove_video(video_id)
@@ -168,6 +167,7 @@ def register():
     _user_birthdate = request.form['userBD']
     _user_image = request.files['profileImage']
     _is_admin = request.form['isAdmin']
+
 
     existing_email = User.query.filter_by(user_email=_email).first()
     is_first_name_invalid = not validate_first_name(_first_name)
@@ -546,6 +546,7 @@ def get_video_statistics():
 
     srt_path = os.path.join(get_app_path(), app.config['DATA'], user_folder_name, 'video_srt', video_title)
     result = most_repeated_words(srt_path)
+    print(result)
     return result
 
 
@@ -992,28 +993,27 @@ def clean_word(word):
 def most_repeated_words(filename):
     with open(filename, 'r') as file:
         text = file.read()
-
-        # Remove timestamps and other non-word characters
         text = re.sub(r'<.*?>', '', text)  # Remove HTML tags if present
         text = re.sub(r'\d+:\d+:\d+,\d+ --> \d+:\d+:\d+,\d+\n', '', text)  # Remove timestamps
         text = re.sub(r'\n', ' ', text)  # Replace line breaks with spaces
         text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
         text = re.sub(r'WEBVTT', '', text)  # Remove WEBVTT
+        text = re.sub(r'0000\d{5}', '', text)  # Remove numbers in the format 0000xxxxx
 
         words = text.split()
 
-        word_counts = Counter(clean_word(word) for word in words if not re.search(r'\d', word))
+        word_counts = Counter(words)
 
     most_common = word_counts.most_common()
-    max_count = most_common[0][1]
 
-    most_repeated = [{"word": word, "count": count} for word, count in most_common if count == max_count]
+    counts = [count for word, count in most_common]
+    words = [word for word, count in most_common]
 
-    counts = [count for word, count in most_common if count == max_count]
-    words = [word for word, count in most_common if count == max_count]
-
-    result_json = jsonify({'Counts': counts, 'Words': words})
+    result_json = {'Counts': counts, 'Words': words}
+    print(result_json)
     return result_json
+
+
 
 
 # Run server
